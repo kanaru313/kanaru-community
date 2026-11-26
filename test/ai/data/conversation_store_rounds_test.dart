@@ -221,6 +221,22 @@ void main() {
       expect((await store.message(id))!.message.state, AiMessageState.allowed);
     });
 
+    test('an Allow keeps the hash of the call it was given for', () async {
+      final a = await addStreaming(store, chat);
+      final r = await store.completeRound(
+        messageId: a,
+        finalParts: [call('c')],
+        calls: [ToolCardDraft(call: call('c'), needsConfirm: true)],
+      );
+      final id = r.cardIds.single;
+      await store.resolveConfirm(id, ConfirmStatus.allowed, approvalHash: 'h1');
+      final confirm = (await store.message(id))!.message.parts
+          .whereType<ConfirmPart>()
+          .single;
+      expect(confirm.status, ConfirmStatus.allowed);
+      expect(confirm.approvalHash, 'h1');
+    });
+
     test('a denied answer skips the card and keeps the reason', () async {
       final a = await addStreaming(store, chat);
       final r = await store.completeRound(

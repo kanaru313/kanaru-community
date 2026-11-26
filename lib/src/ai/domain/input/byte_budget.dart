@@ -11,11 +11,12 @@ const chatBytesPerToken = 2;
 const chatContextShare = 0.75;
 
 /// The input limit of a model: the smaller of [chatMaxInputBytes] and
-/// `context × 2 bytes × 0.75 − maxOutputTokens`. Never below 0.
+/// `context × 2 bytes × 0.75 − maxOutputTokens × 2 bytes` (the reserved reply
+/// is counted in bytes like the input). Never below 0.
 int chatInputByteLimit({required int context, int? maxOutputTokens}) {
   final tokenBudget =
       (context * chatBytesPerToken * chatContextShare).floor() -
-      (maxOutputTokens ?? 0);
+      (maxOutputTokens ?? 0) * chatBytesPerToken;
   final limit = tokenBudget < chatMaxInputBytes
       ? tokenBudget
       : chatMaxInputBytes;

@@ -80,7 +80,13 @@ class ToolBatch {
     final conversation = snap.conversation;
     final plugin = await ctx.env.plugin(conversation);
     final round = ctx.roundOf(snap, card);
-    final approval = ctx.approvals[call.id];
+    // The Allow is bound to the call the user saw: its hash is stored with
+    // the card, so the check holds after a restart too. A card that needed no
+    // confirmation has none.
+    final confirm = confirmOf(card);
+    final approvedHash = confirm?.status == ConfirmStatus.allowed
+        ? confirm?.approvalHash
+        : null;
     final decision = mayExecute(
       call: call,
       tool: tool,
@@ -98,15 +104,9 @@ class ToolBatch {
               installGeneration: plugin.installGeneration,
               model: plugin.model,
             ),
-      // An Allow given for another conversation never matches.
-      approvedHash: approval == null
-          ? null
-          : approval.conversationId == ctx.conversationId
-          ? approval.hash
-          : '',
+      approvedHash: approvedHash,
     );
     if (decision is ExecRefused) {
-      ctx.approvals.remove(call.id);
       await _skip(
         card,
         notAllowedNowText(decision.reason),
@@ -121,7 +121,6 @@ class ToolBatch {
       to: AiMessageState.running,
     );
     if (!started) return false;
-    ctx.approvals.remove(call.id);
     return _execute(card, call, tool!);
   }
 

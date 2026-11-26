@@ -92,6 +92,7 @@ Map<String, Object?> partToJson(AiPart part) => switch (part) {
     'callId': part.callId,
     'status': part.status.name,
     if (part.reason != null) 'reason': part.reason,
+    if (part.approvalHash != null) 'approvalHash': part.approvalHash,
   },
   DonePart() => {
     't': 'done',
@@ -190,6 +191,7 @@ AiPart? _known(Map<String, Object?> j) {
         callId: _str(j, 'callId'),
         status: status,
         reason: _optStr(j, 'reason'),
+        approvalHash: _optStr(j, 'approvalHash'),
       );
     case 'done':
       return DonePart(

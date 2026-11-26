@@ -55,7 +55,9 @@ class CreatePlaylistTool extends WriteTool {
       ]);
       return ToolOutcome.ok(
         jsonEncode({
-          'playlistId': made.id,
+          'playlistId': ?made.id,
+          if (made.id == null)
+            'note': 'created; look its id up with list_playlists',
           'name': name,
           'tracks': made.count,
           if (t.absent.isNotEmpty) 'notFound': t.absent,
@@ -169,6 +171,16 @@ class RemoveFromPlaylistTool extends WriteTool {
     final current = await env.playlists.entries(id);
     if (current == null) return WritePlan.refuse('playlist $id not found');
     final wanted = ids.toSet();
+    // Only entries the card shows are removed: `current` keeps the entries
+    // whose song the user can see, so a guessed entry id of a hidden song
+    // is reported as not in the playlist.
+    final removable = [
+      for (final e in current.entries)
+        if (wanted.contains(e.entryId)) e.entryId,
+    ];
+    if (removable.isEmpty) {
+      return WritePlan.refuse('none of the entries is in playlist $id');
+    }
     final shown = [
       for (final e in current.entries)
         if (wanted.contains(e.entryId)) snapshotOf(e.track),
@@ -179,7 +191,7 @@ class RemoveFromPlaylistTool extends WriteTool {
         tracks: shown,
       ),
       () async {
-        final res = await env.playlistsWrite.removeEntries(id, ids);
+        final res = await env.playlistsWrite.removeEntries(id, removable);
         if (res == null) return ToolOutcome.error('playlist $id not found');
         final titles = await env.library.visibleOf([
           for (final e in res.removed) e.trackId,

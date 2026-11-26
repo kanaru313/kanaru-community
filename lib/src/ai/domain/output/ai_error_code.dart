@@ -32,3 +32,17 @@ enum AiErrorCode {
     return server;
   }
 }
+
+/// Codes the app itself stores with a failed message, next to the contract
+/// codes of [AiErrorCode] (the stored data stays `{code, kind,
+/// retryAfterSec?}`; no host, no provider text). They exist so a card that the
+/// contract code cannot tell apart is rebuilt the same after a reload:
+///
+/// - `network`: the request never got an answer (stored kind `server`).
+/// - `host_not_allowed`: the host is blocked or not consented to.
+/// - `limit_reached`: the turn hit its item or call limit.
+///
+/// Every other card is stored under the snake-case name of its kind
+/// (`timeout`, `plugin_error`, ...). A plugin can never produce these codes:
+/// `AiErrorCode.parse` only knows the contract.
+const appErrorCodes = {'network', 'host_not_allowed', 'limit_reached'};

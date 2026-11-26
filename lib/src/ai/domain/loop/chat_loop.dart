@@ -75,7 +75,8 @@ class ChatLoop {
     }
     // Every card is resolved.
     final hadCalls = last.parts.any((p) => p is ToolCallPart);
-    if (!hadCalls && cards.isEmpty) return const Done();
+    // A flattened turn keeps tool rows for display but no calls: it is over.
+    if (!hadCalls) return const Done();
     if (completed > settings.maxRounds) return const Done();
     return _model(nextRound, settings, capabilities, armed);
   }

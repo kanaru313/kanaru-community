@@ -34,9 +34,7 @@ String buildChatSystemPrompt({
           'tools. Prefer small, reversible changes.',
   };
   final custom = sanitizeText(instructions, keepLineBreaks: true).trim();
-  final cut = custom.length > chatInstructionsMaxChars
-      ? custom.substring(0, chatInstructionsMaxChars)
-      : custom;
+  final cut = clipRunes(custom, chatInstructionsMaxChars);
   return [
     'You are the assistant inside Kanaru, a music player. You help the user '
         'with their own library, queue, playlists, lyrics and listening '

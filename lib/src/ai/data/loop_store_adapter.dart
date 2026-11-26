@@ -123,8 +123,12 @@ class LoopStoreAdapter implements LoopStore {
   }
 
   @override
-  Future<bool> approve(int messageId) =>
-      store.resolveConfirm(messageId, ConfirmStatus.allowed);
+  Future<bool> approve(int messageId, {required String approvalHash}) => store
+      .resolveConfirm(
+        messageId,
+        ConfirmStatus.allowed,
+        approvalHash: approvalHash,
+      );
 
   @override
   Future<void> endTurn(int turnId) async {

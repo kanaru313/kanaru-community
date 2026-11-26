@@ -64,9 +64,13 @@ Future<List<AiMessageRow>> _turnRows(
       .get();
 }
 
-/// Stores the turn of user message [turnId] as text only: tool call parts,
-/// tool rows and provider blobs go together, so no tool call is left without
-/// its blob. An assistant row left without parts or text is deleted.
+/// Stores the turn of user message [turnId] as text only: tool call and
+/// result parts and provider blobs go together, so no tool call is left
+/// without its blob. What the user sees of the turn stays: tool rows keep
+/// their done, confirm and error parts (a tool row left with nothing is
+/// deleted), so the turn's item usage (`TurnItemUsage` counts done parts, and
+/// retry or restart never reset it) and its "what the AI changed" cards
+/// survive. An assistant row left without parts or text is deleted.
 /// Returns false (and changes nothing) when the turn is still running or
 /// [turnId] is not a user message.
 Future<bool> flattenTurnIn(AppDatabase db, int turnId) async {
@@ -76,12 +80,32 @@ Future<bool> flattenTurnIn(AppDatabase db, int turnId) async {
   if (rows.any((r) => _liveStates.contains(r.state))) return false;
   for (final r in rows) {
     if (r.role == 'tool') {
-      await (db.delete(db.aiMessages)..where((m) => m.id.equals(r.id))).go();
+      await _flattenTool(db, r);
     } else if (r.role == 'assistant') {
       await _flattenAssistant(db, r);
     }
   }
   return true;
+}
+
+Future<void> _flattenTool(AppDatabase db, AiMessageRow r) async {
+  List<AiPart> kept;
+  try {
+    kept = [
+      for (final p in decodeParts(r.partsJson))
+        if (p is! ToolCallPart && p is! ToolResultPart) p,
+    ];
+  } on AiPartsException {
+    // Nothing readable to keep.
+    kept = const [];
+  }
+  if (kept.isEmpty) {
+    await (db.delete(db.aiMessages)..where((m) => m.id.equals(r.id))).go();
+    return;
+  }
+  await (db.update(db.aiMessages)..where((m) => m.id.equals(r.id))).write(
+    AiMessagesCompanion(partsJson: Value(encodeParts(kept))),
+  );
 }
 
 Future<void> _flattenAssistant(AppDatabase db, AiMessageRow r) async {

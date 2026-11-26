@@ -3,6 +3,7 @@ import 'dart:convert';
 import '../conversation/ai_message.dart';
 import '../conversation/parts.dart';
 import '../text/text_sanitizer.dart';
+import 'byte_budget.dart';
 
 /// A stored message as the input builder reads it: the message and its
 /// provider blob text (kept out of [AiMessage] because the UI never needs it).
@@ -61,13 +62,19 @@ class HistoryTurn {
     return true;
   }
 
-  /// Whether flattening changes what is sent (it has calls, results or a blob).
+  /// Whether flattening changes what is sent (it has calls, results or a
+  /// blob). A turn that was flattened already keeps tool rows for display
+  /// only: they carry neither, so they do not count.
   bool get hasToolData => rows.any(
     (r) =>
-        r.message.role == AiMessageRole.tool ||
         r.providerJson != null ||
-        r.message.parts.any((p) => p is ToolCallPart),
+        r.message.parts.any((p) => p is ToolCallPart || p is ToolResultPart),
   );
+
+  /// Whether an assistant row of the turn holds the store's too-large marker
+  /// instead of its blob: the turn cannot be sent whole.
+  bool get hasOversizeBlob =>
+      assistants.any((r) => r.providerJson == oversizeBlobText);
 }
 
 /// Groups [rows] (in `seq` order) into turns. Rows before the first user
@@ -294,4 +301,21 @@ List<Map<String, Object?>> mergeSameRole(List<Map<String, Object?>> messages) {
     }
   }
   return out;
+}
+
+/// Bytes the request shrinks by when result [id] of [turn] is replaced by the
+/// placeholder.
+int elisionSaving(HistoryTurn turn, String id) {
+  for (final row in turn.rows) {
+    for (final p in row.message.parts) {
+      if (p is ToolResultPart && p.id == id) {
+        final before = jsonByteLength(wireParts(p.content));
+        final after = jsonByteLength(
+          wireParts(const [TextPart(elidedResultText)]),
+        );
+        return before > after ? before - after : 0;
+      }
+    }
+  }
+  return 0;
 }

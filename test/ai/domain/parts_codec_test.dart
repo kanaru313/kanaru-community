@@ -49,6 +49,7 @@ final _allParts = <AiPart>[
       callId: 't1-r1-1',
       status: s,
       reason: s == ConfirmStatus.denied ? 'user' : null,
+      approvalHash: s == ConfirmStatus.allowed ? 'abc123' : null,
     ),
   const DonePart(callId: 't1-r1-1'),
   const DonePart(

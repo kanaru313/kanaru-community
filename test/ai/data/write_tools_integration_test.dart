@@ -135,6 +135,19 @@ void main() {
       final writable = await store.listWritable();
       expect(writable.singleWhere((p) => p.name == 'Fresh').id, id);
     });
+
+    test(
+      'a failing read-back after create does not undo or repeat it',
+      () async {
+        final a = await track('Once');
+        final port = PlaylistsWritePortImpl(store: _FlakyStore(db));
+        final made = await port.create('Once', [a]);
+        expect(made.id, isNull);
+        expect(made.count, 1);
+        final all = await db.select(db.playlists).get();
+        expect(all.where((p) => p.name == 'Once'), hasLength(1));
+      },
+    );
   });
 
   group('queue on the real player', () {
@@ -192,4 +205,13 @@ void main() {
       expect(left, isNot(contains(items[2].entryId)));
     });
   });
+}
+
+/// A store whose read-back after a create fails.
+class _FlakyStore extends PlaylistRepository {
+  _FlakyStore(super.db);
+
+  @override
+  Future<List<WritablePlaylist>> listWritable() =>
+      Future.error(StateError('db went away'));
 }

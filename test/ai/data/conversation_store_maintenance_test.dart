@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/ai/data/conversation_store.dart';
 import 'package:kanaru/src/ai/domain/conversation/ai_message.dart';
 import 'package:kanaru/src/ai/domain/conversation/parts.dart';
+import 'package:kanaru/src/ai/domain/conversation/track_ref_snapshot.dart';
+import 'package:kanaru/src/ai/domain/tools/item_caps.dart';
 import 'package:kanaru/src/database/database.dart';
 
 import 'conversation_store_fixtures.dart';
@@ -137,6 +139,64 @@ void main() {
       expect(rows[2].message.parts, [const TextPart('final')]);
       expect(rows.every((m) => m.providerJson == null), isTrue);
     });
+
+    test(
+      'flattening keeps what the turn changed: item usage and done cards',
+      () async {
+        final u = await addUser(store, chat);
+        final round = await toolRound(
+          store,
+          chat,
+          callId: 'c',
+          blob: 'b' * (256 * 1024 + 1),
+        );
+        await store.transition(
+          round.card,
+          from: AiMessageState.allowed,
+          to: AiMessageState.running,
+        );
+        await store.transition(
+          round.card,
+          from: AiMessageState.running,
+          to: AiMessageState.done,
+          parts: [
+            call('c'),
+            ToolResultPart(
+              id: 'c',
+              name: 'search_library',
+              content: const [TextPart('ok')],
+            ),
+            DonePart(
+              callId: 'c',
+              removed: [
+                for (var i = 0; i < 40; i++)
+                  TrackRefSnapshot(trackId: i, title: 't$i'),
+              ],
+            ),
+          ],
+        );
+
+        Future<TurnItemUsage> usage() async => TurnItemUsage.fromParts([
+          for (final m in await all()) ...m.message.parts,
+        ]);
+        expect((await usage()).removed, 40);
+
+        // The turn ends (blob over its cap) and is flattened; a restart or a
+        // reinstall flattens again. The retry of the turn still sees 40.
+        expect(await store.endTurn(u), isTrue);
+        expect(await store.clearProviderBlobs(installId: 'plug'), 0);
+        final rows = await all();
+        final card = rows.singleWhere(
+          (m) => m.message.role == AiMessageRole.tool,
+        );
+        expect(card.message.parts.whereType<ToolCallPart>(), isEmpty);
+        expect(card.message.parts.whereType<ToolResultPart>(), isEmpty);
+        expect(card.message.parts.whereType<DonePart>(), hasLength(1));
+        expect((await usage()).removed, 40);
+        expect((await usage()).canRemove(11), isFalse);
+        expect((await usage()).canRemove(10), isTrue);
+      },
+    );
 
     test('a normal turn is not flattened at turn end', () async {
       final u = await turnWithTools('a');

@@ -7,8 +7,8 @@ import 'tool_args.dart';
 import 'tool_env.dart';
 import 'tool_rows.dart';
 
-/// Most characters of lyrics one result carries.
-const int lyricsMaxChars = 12000;
+/// Room kept for the fixed fields of a lyrics result (id, flags, offsets).
+const int _lyricsOverheadBytes = 256;
 
 class GetLyricsTool extends AiTool {
   const GetLyricsTool();
@@ -18,14 +18,20 @@ class GetLyricsTool extends AiTool {
   @override
   String get description =>
       'The lyrics of one song by id, as plain text without timestamps '
-      '(at most $lyricsMaxChars characters). Only lyrics the app already '
-      'has; it never searches online.';
+      'in pages of whole lines. A cut result gives nextOffset: call again '
+      'with that offset for the rest. Only lyrics the app already has; it '
+      'never searches online.';
   @override
   AiToolGroup get group => AiToolGroup.lyrics;
   @override
   Map<String, Object?> get parameters => objectSchema(
     {
       'trackId': {'type': 'integer', 'description': 'Song id.'},
+      'offset': {
+        'type': 'integer',
+        'minimum': 0,
+        'description': 'Index of the first line to return (paging).',
+      },
     },
     required: const ['trackId'],
   );
@@ -41,29 +47,43 @@ class GetLyricsTool extends AiTool {
       case LyricsAbsent(:final reason):
         return ToolOutcome.ok(jsonEncode({'trackId': id, 'lyrics': reason}));
       case LyricsFound(:final lines, :final synced):
-        final buffer = StringBuffer();
+        final start = args.offset > lines.length ? lines.length : args.offset;
+        // The budget is the UTF-8 size of the encoded JSON, so CJK and
+        // accented text cannot pass the result cap. `\n` costs 2 bytes.
+        final budget = toolResultMaxBytes - _lyricsOverheadBytes;
+        final taken = <String>[];
         var used = 0;
-        var truncated = false;
-        for (final raw in lines) {
-          final line = sanitizeText(raw);
-          final cost = line.runes.length + 1;
-          if (used + cost > lyricsMaxChars) {
-            truncated = true;
-            break;
+        var next = start;
+        for (; next < lines.length; next++) {
+          var line = sanitizeText(lines[next]);
+          var cost = _jsonBytes(line) + 2;
+          if (cost > budget && taken.isEmpty) {
+            // One huge line: cut it so a page always moves forward. A rune
+            // costs at most 6 bytes once escaped.
+            line = clipRunes(line, budget ~/ 6 - 1);
+            cost = _jsonBytes(line) + 2;
           }
-          buffer.writeln(line);
+          if (used + cost > budget) break;
+          taken.add(line);
           used += cost;
         }
+        final truncated = next < lines.length;
         return ToolOutcome.ok(
           jsonEncode({
             'trackId': id,
             'synced': synced,
             'truncated': truncated,
-            'text': buffer.toString().trimRight(),
+            'offset': start,
+            if (truncated) 'nextOffset': next,
+            'text': taken.join('\n').trimRight(),
           }),
         );
     }
   }
+
+  /// Bytes of [text] as a JSON string body (quotes left out).
+  static int _jsonBytes(String text) =>
+      utf8.encode(jsonEncode(text)).length - 2;
 }
 
 class GetListeningStatsTool extends AiTool {

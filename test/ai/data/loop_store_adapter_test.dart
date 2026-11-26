@@ -156,8 +156,8 @@ void main() {
       callId: 'c1',
       needsConfirm: true,
     );
-    expect(await adapter.approve(round.card), isTrue);
-    expect(await adapter.approve(round.card), isFalse);
+    expect(await adapter.approve(round.card, approvalHash: 'h'), isTrue);
+    expect(await adapter.approve(round.card, approvalHash: 'h'), isFalse);
     final card = (await store.message(round.card))!.message;
     expect(card.state, AiMessageState.allowed);
     expect(

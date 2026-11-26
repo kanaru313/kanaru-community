@@ -56,7 +56,7 @@ class GetNowPlayingTool extends AiTool {
         'loaded': true,
         'playing': now.playing,
         'track': track == null ? 'unavailable' : trackRowText(track),
-        'trackId': id,
+        'trackId': ?(track == null ? null : id),
         'positionSec': now.positionMs ~/ 1000,
         'durationSec': ?(now.durationMs == null
             ? null
@@ -82,7 +82,8 @@ class GetQueueTool extends AiTool {
       'The play queue in play order. Without offset it returns a window of '
       'up to 50 entries around the current one. Each item is '
       '"entryId|trackId|title|artist|album|year"; entryId is what '
-      'remove_from_queue takes.';
+      'remove_from_queue takes. A song that is not available shows an empty '
+      'trackId.';
   @override
   AiToolGroup get group => AiToolGroup.queue;
   @override
@@ -109,7 +110,7 @@ class GetQueueTool extends AiTool {
     final rows = [
       for (final e in window)
         byId[e.trackId] == null
-            ? joinRow([e.entryId, e.trackId, '(unavailable)'])
+            ? joinRow([e.entryId, null, '(unavailable)'])
             : joinRow([
                 e.entryId,
                 e.trackId,
@@ -180,7 +181,8 @@ class GetTrackInfoTool extends AiTool {
       'Details of up to 50 songs by id: title, artist, album, year, genre, '
       'language and length. Items are '
       '"id|title|artist|album|year|genre|language|durationSec". Ids that '
-      'are not in the library are listed in notFound.';
+      'are not in the library are listed in notFound. A cut result gives '
+      'nextOffset: send the same ids again with that offset.';
   @override
   AiToolGroup get group => AiToolGroup.trackInfo;
   @override
@@ -192,14 +194,24 @@ class GetTrackInfoTool extends AiTool {
         'maxItems': toolPageMax,
         'description': 'Song ids.',
       },
+      'offset': offsetProperty,
     },
     required: const ['trackIds'],
   );
 
   @override
   Future<ToolOutcome> call(Map<String, Object?> args, ToolEnv env) async {
-    final ids = args.intList('trackIds');
-    if (ids.isEmpty) return const ToolOutcome.error('trackIds is empty');
+    final all = args.intList('trackIds');
+    if (all.isEmpty) return const ToolOutcome.error('trackIds is empty');
+    // Paging over the ids: `nextOffset` of a cut result is the offset to
+    // send back with the same ids.
+    final offset = args.offset > all.length ? all.length : args.offset;
+    final ids = all.sublist(offset);
+    if (ids.isEmpty) {
+      return ToolOutcome.ok(
+        listResult(rows: const [], total: all.length, offset: offset),
+      );
+    }
     final r = await env.library.details(ids);
     final rows = [
       for (final d in r.found)
@@ -217,8 +229,8 @@ class GetTrackInfoTool extends AiTool {
     return ToolOutcome.ok(
       listResult(
         rows: rows,
-        total: rows.length,
-        offset: 0,
+        total: all.length,
+        offset: offset,
         head: {if (r.absent.isNotEmpty) 'notFound': r.absent},
       ),
     );

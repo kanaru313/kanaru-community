@@ -184,9 +184,10 @@ abstract interface class LoopStore {
     LoopError? error,
   });
 
-  /// `pending -> allowed` (the confirm part takes the status); false when the
-  /// card was not pending.
-  Future<bool> approve(int messageId);
+  /// `pending -> allowed` (the confirm part takes the status and the
+  /// [approvalHash] of the call the user saw); false when the card was not
+  /// pending.
+  Future<bool> approve(int messageId, {required String approvalHash});
 
   /// Call when a turn ends (flattens it when a blob was too large).
   Future<void> endTurn(int turnId);

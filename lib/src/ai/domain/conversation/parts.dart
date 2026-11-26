@@ -144,7 +144,12 @@ enum ConfirmStatus {
 
 /// The card that asks the user to allow a write tool call.
 class ConfirmPart extends AiPart {
-  const ConfirmPart({required this.callId, required this.status, this.reason});
+  const ConfirmPart({
+    required this.callId,
+    required this.status,
+    this.reason,
+    this.approvalHash,
+  });
 
   /// The [ToolCallPart.id] the card is about.
   final String callId;
@@ -153,15 +158,21 @@ class ConfirmPart extends AiPart {
   /// Why it was denied (a short code), only with [ConfirmStatus.denied].
   final String? reason;
 
+  /// Hash of the call (name and arguments) the user saw when they allowed
+  /// it; only with [ConfirmStatus.allowed]. Stored with the card so the
+  /// check before the call runs survives a restart.
+  final String? approvalHash;
+
   @override
   bool operator ==(Object other) =>
       other is ConfirmPart &&
       other.callId == callId &&
       other.status == status &&
-      other.reason == reason;
+      other.reason == reason &&
+      other.approvalHash == approvalHash;
 
   @override
-  int get hashCode => Object.hash(callId, status, reason);
+  int get hashCode => Object.hash(callId, status, reason, approvalHash);
 }
 
 /// The queue a tool replaced, enough to offer "play the old queue again".

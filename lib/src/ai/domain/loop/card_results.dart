@@ -7,6 +7,7 @@ const stoppedByUserText = 'not run: stopped by the user';
 const newMessageText = 'not run: the user sent a new message instead';
 const deniedByUserText = 'not run: the user declined this action';
 const expiredText = 'not run: the request expired';
+const tooLargeSkippedText = 'not run: the conversation grew too large to go on';
 const limitSkippedText = 'not run: the limit for this turn was reached';
 const toolTimedOutText = 'the tool took too long and was stopped';
 const writeTimedOutText =

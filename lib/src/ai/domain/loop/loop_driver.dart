@@ -13,6 +13,7 @@ import 'card_answers.dart';
 import 'card_results.dart';
 import 'chat_loop.dart';
 import 'driver_results.dart';
+import 'flight_gate.dart';
 import 'loop_context.dart';
 import 'loop_ports.dart';
 import 'loop_state.dart';
@@ -80,8 +81,7 @@ class LoopDriver {
   TurnState _state = TurnState.idle;
   ChatOutcomeView? _lastView;
 
-  Completer<void>? _flight;
-  bool _wake = false;
+  final _gate = FlightGate();
   bool _disposed = false;
 
   TurnState get turnState => _state;
@@ -97,7 +97,7 @@ class LoopDriver {
   ChatOutcomeView? get lastView => _lastView;
 
   /// The one in-flight future; null when no turn runs.
-  Future<void>? get inFlight => _flight?.future;
+  Future<void>? get inFlight => _gate.current?.future;
 
   // ── Triggers ───────────────────────────────────────────────────────────
 
@@ -160,12 +160,8 @@ class LoopDriver {
       );
       return CardAnswer.refused;
     }
-    final won = await _store.approve(card.id);
+    final won = await _store.approve(card.id, approvalHash: callHash(call));
     if (!won) return CardAnswer.notPending;
-    _ctx.approvals[callId] = Approval(
-      hash: callHash(call),
-      conversationId: conversationId,
-    );
     _kick();
     return CardAnswer.accepted;
   }
@@ -191,7 +187,7 @@ class LoopDriver {
   /// finishes, later calls are `skipped`, no next round starts. Completes
   /// when the turn future has ended.
   Future<void> stop() async {
-    final flight = _flight;
+    final flight = _gate.current;
     if (flight != null) {
       _ctx.stopRequested = true;
       _runner.cancel();
@@ -200,7 +196,7 @@ class LoopDriver {
     }
     final parked = _reserve();
     if (parked == null) {
-      await _flight?.future;
+      await _gate.current?.future;
       return;
     }
     await _fly(
@@ -215,31 +211,7 @@ class LoopDriver {
   /// The chat's permission was changed to read-only: write calls still
   /// pending or allowed and not run are denied at once.
   Future<void> applyPermission() async {
-    try {
-      final snap = await _ctx.snapshot();
-      final transcript = snap?.transcript;
-      if (snap == null || transcript == null) return;
-      if (snap.conversation.permission != AiPermission.readOnly) return;
-      final last = transcript.assistants.lastOrNull;
-      if (last == null) return;
-      for (final card in transcript.cardsOf(last)) {
-        final open =
-            card.state == AiMessageState.pending ||
-            card.state == AiMessageState.allowed;
-        final call = callOf(card);
-        final tool = call == null ? null : _env.registry.byName(call.name);
-        if (!open || call == null || tool?.risk != ToolRisk.write) continue;
-        await _cards.answer(
-          card,
-          call,
-          notAllowedNowText(ExecRefusal.readOnly),
-          ConfirmStatus.denied,
-          reason: ExecRefusal.readOnly.code,
-        );
-      }
-    } on Object catch (e, s) {
-      _report(e, s);
-    }
+    await _cards.denyOpenWrites();
     await inspect();
   }
 
@@ -247,12 +219,12 @@ class LoopDriver {
   /// (call it when a conversation opens). Cards past 24 hours are marked
   /// expired. Returns what a tap could do next; null while a turn runs.
   Future<LoopAction?> inspect() async {
-    if (_flight != null) return null;
+    if (_gate.busy) return null;
     try {
       var action = await _peek();
       if (action is ExpireCards) {
         final snap = await _ctx.snapshot();
-        if (snap != null && _flight == null) {
+        if (snap != null && !_gate.busy) {
           await _cards.expire(snap, action.cardIds);
           action = await _peek();
         }
@@ -279,17 +251,10 @@ class LoopDriver {
   // ── Flight ─────────────────────────────────────────────────────────────
 
   /// Claims the single flight, or null when one is running.
-  Completer<void>? _reserve() {
-    if (_flight != null) return null;
-    _ctx.stopRequested = false;
-    _wake = false;
-    return _flight = Completer<void>();
-  }
+  Completer<void>? _reserve() =>
+      _gate.reserve(onClaim: () => _ctx.stopRequested = false);
 
-  void _release(Completer<void> flight) {
-    if (identical(_flight, flight)) _flight = null;
-    if (!flight.isCompleted) flight.complete();
-  }
+  void _release(Completer<void> flight) => _gate.release(flight);
 
   /// A user answer arrived: start a flight, or tell the one running to look
   /// again before it parks.
@@ -297,7 +262,7 @@ class LoopDriver {
     if (_disposed) return;
     final flight = _reserve();
     if (flight == null) {
-      _wake = true;
+      _gate.wakeRunning();
       return;
     }
     unawaited(_fly(flight));
@@ -355,12 +320,9 @@ class LoopDriver {
         case AwaitConfirms():
           // An answer that came in while this step ran is picked up here;
           // the flight is released in the same step as the check.
-          if (_wake) {
-            _wake = false;
-            continue;
-          }
+          if (_gate.takeWake()) continue;
           _setState(TurnState.awaitingConfirm);
-          _release(_flight!);
+          _release(_gate.current!);
           return;
         case RunTools(:final cards):
           _setState(TurnState.runningTools);

@@ -1,7 +1,10 @@
 import '../conversation/ai_message.dart';
 import '../conversation/parts.dart';
+import '../permission.dart';
+import '../tools/ai_tool.dart';
 import 'card_results.dart';
 import 'loop_context.dart';
+import 'may_execute.dart';
 
 /// Answers the tool cards of the latest turn without running them (deny,
 /// expire, skip). Every move is a compare-and-set, so a card another caller
@@ -65,12 +68,15 @@ class CardAnswers {
     }
   }
 
-  /// Skips every pending and allowed card of the latest turn.
+  /// Skips every pending and allowed card of the conversation, the latest
+  /// turn and earlier ones: a card is valid until the next user message, so
+  /// none may stay open behind it (an open card keeps its turn from being
+  /// flattened).
   Future<void> skipOpen(String text, ConfirmStatus status) async {
     final snap = await ctx.snapshot();
-    final transcript = snap?.transcript;
-    if (snap == null || transcript == null) return;
-    for (final card in transcript.rows) {
+    if (snap == null) return;
+    for (final row in snap.history) {
+      final card = row.message;
       final open =
           card.role == AiMessageRole.tool &&
           (card.state == AiMessageState.pending ||
@@ -79,6 +85,36 @@ class CardAnswers {
       if (open && call != null) {
         await answer(card, call, text, status);
       }
+    }
+  }
+
+  /// The chat is read-only now: write calls of the newest round that are
+  /// still pending or allowed-not-run are denied at once.
+  Future<void> denyOpenWrites() async {
+    try {
+      final snap = await ctx.snapshot();
+      final transcript = snap?.transcript;
+      if (snap == null || transcript == null) return;
+      if (snap.conversation.permission != AiPermission.readOnly) return;
+      final last = transcript.assistants.lastOrNull;
+      if (last == null) return;
+      for (final card in transcript.cardsOf(last)) {
+        final open =
+            card.state == AiMessageState.pending ||
+            card.state == AiMessageState.allowed;
+        final call = callOf(card);
+        final tool = call == null ? null : ctx.env.registry.byName(call.name);
+        if (!open || call == null || tool?.risk != ToolRisk.write) continue;
+        await answer(
+          card,
+          call,
+          notAllowedNowText(ExecRefusal.readOnly),
+          ConfirmStatus.denied,
+          reason: ExecRefusal.readOnly.code,
+        );
+      }
+    } on Object catch (e, s) {
+      ctx.report(e, s);
     }
   }
 }

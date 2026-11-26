@@ -6,14 +6,6 @@ import '../tools/item_caps.dart';
 import 'loop_ports.dart';
 import 'loop_state.dart';
 
-/// The user's Allow of one call: the call it saw, in one conversation.
-class Approval {
-  const Approval({required this.hash, required this.conversationId});
-
-  final String hash;
-  final int conversationId;
-}
-
 /// The conversation as one loop step read it.
 class LoopSnapshot {
   const LoopSnapshot({
@@ -73,9 +65,6 @@ class LoopContext {
 
   /// The user asked to stop the turn.
   bool stopRequested = false;
-
-  /// Allows given in this session, by call id.
-  final Map<String, Approval> approvals = {};
 
   /// Reads the conversation; null when it is gone.
   Future<LoopSnapshot?> snapshot() async {

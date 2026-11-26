@@ -177,7 +177,7 @@ class FakePlaybackWrite implements PlaybackWritePort {
 class FakePlaylistsWrite implements PlaylistsWritePort {
   /// Ids of playlists that exist (0 = Favorites).
   Set<int> known = {0, 7};
-  int nextId = 11;
+  int? nextId = 11;
   List<int> alreadyThere = [];
   List<QueueEntryRef> held = [];
   final List<({String name, List<int> ids})> created = [];
@@ -185,7 +185,7 @@ class FakePlaylistsWrite implements PlaylistsWritePort {
   final List<({int id, List<int> ids})> removals = [];
 
   @override
-  Future<({int id, int count})> create(String name, List<int> trackIds) async {
+  Future<({int? id, int count})> create(String name, List<int> trackIds) async {
     created.add((name: name, ids: trackIds));
     return (id: nextId, count: trackIds.length);
   }

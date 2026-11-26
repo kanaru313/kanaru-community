@@ -91,14 +91,27 @@ class PlaylistsWritePortImpl implements PlaylistsWritePort {
   }
 
   @override
-  Future<({int id, int count})> create(String name, List<int> trackIds) async {
+  Future<({int? id, int count})> create(String name, List<int> trackIds) async {
+    // The playlist exists after this call. Whatever fails after it is
+    // swallowed on purpose: reporting an error would make the model create the
+    // playlist a second time.
     final uid = await store.createPlaylist(
       name: name,
       tracks: [for (final id in trackIds) TrackId(id)],
     );
-    final writable = await store.listWritable();
-    final made = writable.firstWhere((p) => p.uid == uid);
-    return (id: made.id, count: trackIds.length);
+    int? id;
+    var count = trackIds.length;
+    try {
+      final writable = await store.listWritable();
+      for (final p in writable) {
+        if (p.uid == uid) id = p.id;
+      }
+      final held = await store.loadPlaylist(uid);
+      if (held != null) count = held.entries.length;
+    } on Object {
+      // keep what is known
+    }
+    return (id: id, count: count);
   }
 
   @override
@@ -148,7 +161,9 @@ class PlaylistsWritePortImpl implements PlaylistsWritePort {
     final target = await _target(playlistId);
     if (target == null) return null;
     final uids = await store.resolveEntryIds(target.uid, entryIds);
-    if (uids.isEmpty) return (name: target.name, removed: const <QueueEntryRef>[]);
+    if (uids.isEmpty) {
+      return (name: target.name, removed: const <QueueEntryRef>[]);
+    }
     final removed = await store.removeEntriesNow(
       target.uid,
       uids.values.toList(),

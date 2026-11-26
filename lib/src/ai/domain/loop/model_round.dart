@@ -15,6 +15,13 @@ import 'loop_context.dart';
 import 'loop_ports.dart';
 import 'loop_state.dart';
 
+const _tooLargeView = ChatOutcomeView(
+  end: ChatMessageEnd.error,
+  card: ChatCardKind.tooLarge,
+  action: ChatCardAction.newConversation,
+  errorCode: AiErrorCode.tooLarge,
+);
+
 /// How a model round ended, for the pump.
 class RoundResult {
   const RoundResult.next() : goOn = true, state = TurnState.idle, view = null;
@@ -92,13 +99,7 @@ class ModelRound {
     if (messageId == null) return const RoundResult.end(TurnState.idle);
 
     if (built is ChatInputTooLarge) {
-      const view = ChatOutcomeView(
-        end: ChatMessageEnd.error,
-        card: ChatCardKind.tooLarge,
-        action: ChatCardAction.newConversation,
-        errorCode: AiErrorCode.tooLarge,
-      );
-      return _storeFailure(messageId, view);
+      return _storeFailure(messageId, _tooLargeView);
     }
     final input = (built as ChatInputBuilt).input;
 
@@ -184,10 +185,47 @@ class ModelRound {
       );
       // Someone else ended the message (a stop got in first).
       if (commit == null) return const RoundResult.end(TurnState.idle);
+      // The blob did not fit, so this turn can never be sent whole again and
+      // a running turn is never flattened: the turn ends here. Calls of the
+      // round do not run (a reply without calls ends the turn on its own and
+      // is flattened when it does).
+      if (commit.blobTooLarge && drafts.isNotEmpty) {
+        await _skipDrafts(commit.cardIds, drafts);
+        return const RoundResult.end(TurnState.error, _tooLargeView);
+      }
       return const RoundResult.next();
     } on LoopStoreTooLarge {
       // The store marked the message `error(too_large)`.
       return const RoundResult.end(TurnState.error);
+    }
+  }
+
+  /// Moves the cards stored for [drafts] to `skipped` with the too-large
+  /// text; a card someone else moved first is left alone.
+  Future<void> _skipDrafts(List<int> ids, List<CardDraft> drafts) async {
+    for (var i = 0; i < ids.length && i < drafts.length; i++) {
+      final draft = drafts[i];
+      try {
+        await ctx.store.transition(
+          ids[i],
+          from: draft.needsConfirm
+              ? AiMessageState.pending
+              : AiMessageState.allowed,
+          to: AiMessageState.skipped,
+          parts: [
+            draft.call,
+            if (draft.needsConfirm)
+              ConfirmPart(
+                callId: draft.call.id,
+                status: ConfirmStatus.denied,
+                reason: AiErrorCode.tooLarge.wire,
+              ),
+            errorResult(draft.call, tooLargeSkippedText),
+          ],
+        );
+      } on Object catch (e, s) {
+        ctx.report(e, s);
+      }
     }
   }
 
@@ -245,11 +283,15 @@ class ModelRound {
   /// card's own name in snake case (`limit_reached`, `timeout`); nothing for
   /// a plain stop.
   String? _codeOf(ChatOutcomeView view) {
+    final card = view.card;
+    if (card == ChatCardKind.network || card == ChatCardKind.hostNotAllowed) {
+      return snakeCase(card!.name);
+    }
     final code = view.errorCode?.wire;
     if (code != null) return code;
-    final card = view.card;
     if (card == null || card == ChatCardKind.stopped) return null;
-    if (card == ChatCardKind.limitReached) return limitReachedCode;
+    // A network or blocked-host failure is the contract's `server` on the
+    // wire; the app stores its own code so the card survives a reload.
     return snakeCase(card.name);
   }
 }

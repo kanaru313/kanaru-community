@@ -457,6 +457,7 @@ class ConversationStore {
     int messageId,
     ConfirmStatus status, {
     String? reason,
+    String? approvalHash,
   }) async {
     if (status == ConfirmStatus.pending) {
       throw ArgumentError('pending is not an answer');
@@ -469,7 +470,14 @@ class ConversationStore {
       final parts = [
         for (final p in decodeParts(row.partsJson))
           p is ConfirmPart
-              ? ConfirmPart(callId: p.callId, status: status, reason: reason)
+              ? ConfirmPart(
+                  callId: p.callId,
+                  status: status,
+                  reason: reason,
+                  approvalHash: status == ConfirmStatus.allowed
+                      ? approvalHash
+                      : null,
+                )
               : p,
       ];
       final to = status == ConfirmStatus.allowed

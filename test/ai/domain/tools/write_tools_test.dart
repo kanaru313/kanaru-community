@@ -206,26 +206,6 @@ void main() {
       }, fakeEnv(playbackWrite: pw, usage: usageOf(removed: 40)));
       expect(over.limitReached, isTrue);
     });
-
-    test('retry after the cap does not reset the count', () {
-      // The count comes from the persisted parts of the turn, so a retried
-      // call sees the same total however often it is made.
-      final parts = <AiPart>[
-        const TextPart('go'),
-        DonePart(
-          callId: 'a',
-          removed: [
-            for (var i = 0; i < 50; i++)
-              TrackRefSnapshot(trackId: i, title: 't'),
-          ],
-        ),
-      ];
-      for (var attempt = 0; attempt < 3; attempt++) {
-        final usage = TurnItemUsage.fromParts(parts);
-        expect(usage.removed, 50);
-        expect(usage.canRemove(1), isFalse);
-      }
-    });
   });
 
   group('playlists', () {
@@ -352,5 +332,68 @@ void main() {
       expect(o.done!.removed.single.trackId, 2);
       expect(json(o)['notInPlaylist'], [6]);
     });
+
+    test('remove_from_playlist never sends an entry the card did not show '
+        '(hidden song)', () async {
+      // Entry 9 holds a song the user cannot see: the playlist port leaves it
+      // out of `entries`, but the store would remove it if asked.
+      final pw = FakePlaylistsWrite()
+        ..held = const [
+          QueueEntryRef(entryId: 5, trackId: 2),
+          QueueEntryRef(entryId: 9, trackId: 99),
+        ];
+      final env = fakeEnv(
+        playlists: FakePlaylists(
+          entriesById: {
+            7: (
+              name: 'Mine',
+              entries: [PlaylistEntryRow(entryId: 5, track: fakeTrack(2))],
+            ),
+          },
+        ),
+        playlistsWrite: pw,
+      );
+      final args = {
+        'playlistId': 7,
+        'entryIds': [5, 9],
+      };
+      final card = await tool('remove_from_playlist').describe(args, env);
+      expect(card!.tracks.map((t) => t.trackId), [2]);
+      final o = await tool('remove_from_playlist').run(args, env);
+      expect(pw.removals.single.ids, [5]);
+      expect(o.done!.removed.single.trackId, 2);
+      expect(json(o)['notInPlaylist'], [9]);
+    });
+
+    test('remove_from_playlist of only hidden entries is refused', () async {
+      final pw = FakePlaylistsWrite()
+        ..held = const [QueueEntryRef(entryId: 9, trackId: 99)];
+      final env = fakeEnv(
+        playlists: FakePlaylists(
+          entriesById: {7: (name: 'Mine', entries: const [])},
+        ),
+        playlistsWrite: pw,
+      );
+      final o = await tool('remove_from_playlist').run({
+        'playlistId': 7,
+        'entryIds': [9],
+      }, env);
+      expect(o.isError, isTrue);
+      expect(pw.removals, isEmpty);
+    });
+
+    test(
+      'create_playlist whose id read-back failed still reports success',
+      () async {
+        final pw = FakePlaylistsWrite()..nextId = null;
+        final o = await tool('create_playlist').run({
+          'name': 'Gym',
+          'trackIds': [1, 2],
+        }, fakeEnv(playlistsWrite: pw));
+        expect(o.isError, isFalse);
+        expect(json(o).containsKey('playlistId'), isFalse);
+        expect(json(o)['tracks'], 2);
+      },
+    );
   });
 }

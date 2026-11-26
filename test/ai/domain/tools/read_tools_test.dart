@@ -86,6 +86,7 @@ void main() {
         ),
       );
       expect(hidden['track'], 'unavailable');
+      expect(hidden.containsKey('trackId'), isFalse);
     });
 
     test('rejects an unexpected argument', () async {
@@ -136,8 +137,8 @@ void main() {
       );
       expect(r['items'], [
         '101|2|Song 2|Artist|Album|2002',
-        r'102|3|(unavailable)',
-        r'103|4|(unavailable)',
+        r'102||(unavailable)',
+        r'103||(unavailable)',
       ]);
     });
 
@@ -184,6 +185,35 @@ void main() {
       expect(r['notFound'], [99]);
     });
 
+    test('offset pages over the given ids', () async {
+      final r = _decode(
+        await tool('get_track_info').run({
+          'trackIds': [1, 2, 3],
+          'offset': 2,
+        }, fakeEnv()),
+      );
+      expect(r['items'], ['3|Song 3|Artist|Album|2003|Pop|vi|215']);
+      expect(r['total'], 3);
+      expect(r['offset'], 2);
+    });
+
+    test('a cut result hands out a nextOffset that works', () async {
+      final titles = {for (var i = 1; i <= 50; i++) i: '|' * 199};
+      final env = fakeEnv(library: FakeLibrary(trackCount: 50, titles: titles));
+      final ids = [for (var i = 1; i <= 50; i++) i];
+      final first = _decode(
+        await tool('get_track_info').run({'trackIds': ids}, env),
+      );
+      expect(first['truncated'], true);
+      final next = first['nextOffset'] as int;
+      final second = _decode(
+        await tool('get_track_info')
+            .run({'trackIds': ids, 'offset': next}, env),
+      );
+      expect(second['offset'], next);
+      expect((second['items'] as List).first, startsWith('${next + 1}|'));
+    });
+
     test('empty list and more than 50 ids are refused', () async {
       final empty = await tool('get_track_info')
           .run({'trackIds': []}, fakeEnv());
@@ -207,19 +237,54 @@ void main() {
       expect(r['truncated'], false);
     });
 
-    test('cut at a line boundary over the character limit', () async {
+    test('cut at a line boundary and paged with nextOffset', () async {
       final line = 'x' * 999;
       final env = fakeEnv(
         lyrics: FakeLyrics(
-          LyricsFound(lines: List.filled(20, line), synced: false),
+          LyricsFound(lines: List.filled(40, line), synced: false),
         ),
       );
-      final r = _decode(await tool('get_lyrics').run({'trackId': 1}, env));
+      final out = await tool('get_lyrics').run({'trackId': 1}, env);
+      expect(utf8.encode(out.text).length, lessThanOrEqualTo(16 * 1024));
+      final r = _decode(out);
       final text = r['text'] as String;
       expect(r['truncated'], true);
-      expect(text.length, lessThanOrEqualTo(lyricsMaxChars));
       expect(text.split('\n').every((l) => l.length == 999), isTrue);
+      expect(r['nextOffset'], text.split('\n').length);
+      final page2 = _decode(
+        await tool('get_lyrics')
+            .run({'trackId': 1, 'offset': r['nextOffset']}, env),
+      );
+      expect(page2['offset'], r['nextOffset']);
+      expect((page2['text'] as String).isNotEmpty, isTrue);
     });
+
+    test('CJK lyrics stay under the 16 KiB byte cap', () async {
+      // 3 bytes per character: a character budget would give about 36 KB.
+      final line = '歌' * 100;
+      final env = fakeEnv(
+        lyrics: FakeLyrics(
+          LyricsFound(lines: List.filled(200, line), synced: false),
+        ),
+      );
+      final out = await tool('get_lyrics').run({'trackId': 1}, env);
+      expect(utf8.encode(out.text).length, lessThanOrEqualTo(16 * 1024));
+      expect(_decode(out)['truncated'], true);
+    });
+
+    test(
+      'one line longer than the cap is clipped so paging moves on',
+      () async {
+        final env = fakeEnv(
+          lyrics: FakeLyrics(
+            LyricsFound(lines: ['歌' * 20000, '歌' * 20000], synced: false),
+          ),
+        );
+        final out = await tool('get_lyrics').run({'trackId': 1}, env);
+        expect(utf8.encode(out.text).length, lessThanOrEqualTo(16 * 1024));
+        expect(_decode(out)['nextOffset'], 1);
+      },
+    );
 
     test('hidden track is not found and lyrics are never read', () async {
       final env = fakeEnv(

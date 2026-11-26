@@ -18,6 +18,18 @@ void main() {
     expect(p.trimRight(), endsWith('Be brief.'));
   });
 
+  test('instructions are cut by characters, never inside an emoji', () {
+    final emoji = '\u{1F3B5}' * (chatInstructionsMaxChars + 5);
+    final p = buildChatSystemPrompt(
+      permission: AiPermission.ask,
+      boundary: 'k',
+      instructions: emoji,
+    );
+    final tail = p.substring(p.indexOf('general instructions:\n') + 22);
+    expect(tail.runes.length, chatInstructionsMaxChars);
+    expect(tail.runes.every((r) => r == 0x1F3B5), isTrue);
+  });
+
   test('read-only prompt says writes are impossible', () {
     final p = buildChatSystemPrompt(
       permission: AiPermission.readOnly,

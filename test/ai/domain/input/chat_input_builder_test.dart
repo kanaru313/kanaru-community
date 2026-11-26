@@ -359,7 +359,7 @@ void main() {
         );
         expect(
           chatInputByteLimit(context: 32768, maxOutputTokens: 4096),
-          chatInputByteLimit(context: 32768) - 4096,
+          chatInputByteLimit(context: 32768) - 4096 * chatBytesPerToken,
         );
       },
     );
@@ -395,27 +395,73 @@ void main() {
     );
   });
 
-  test('an oversize marker or unreadable blob flattens its turn', () {
-    final history = [
+  test('an oversize marker or unreadable blob flattens an older turn', () {
+    List<HistoryRow> older(String blob) => [
       user('go'),
       row(AiMessageRole.assistant, [
         const TextPart('t'),
         callPart('t1-r1-0'),
-      ], blob: '{"tooLarge":true}'),
+      ], blob: blob),
       row(AiMessageRole.tool, [
         callPart('t1-r1-0'),
         resultPart('t1-r1-0', 'r'),
       ]),
+      user('next'),
     ];
-    expect(roles(build(history)), ['user', 'assistant']);
-    final bad = [
-      history[0],
-      row(AiMessageRole.assistant, [
-        const TextPart('t'),
-        callPart('t1-r1-0'),
-      ], blob: 'not json'),
-      history[2],
+    expect(roles(build(older('{"tooLarge":true}'))), [
+      'user',
+      'assistant',
+      'user',
+    ]);
+    expect(roles(build(older('not json'))), ['user', 'assistant', 'user']);
+  });
+
+  test(
+    'a running turn whose blob is the oversize marker is never flattened',
+    () {
+      final history = [
+        user('go'),
+        row(AiMessageRole.assistant, [
+          const TextPart('t'),
+          callPart('t1-r1-0'),
+        ], blob: '{"tooLarge":true}'),
+        row(AiMessageRole.tool, [
+          callPart('t1-r1-0'),
+          resultPart('t1-r1-0', 'r'),
+        ]),
+      ];
+      // The request is tiny, yet sending it flat would hide the call and its
+      // result from the model: it is a too-large result instead.
+      expect(build(history), isA<ChatInputTooLarge>());
+    },
+  );
+
+  test('a long chat is trimmed by size, newest turns and the goal stay', () {
+    final history = [
+      for (var t = 1; t <= 600; t++) ...[
+        user(t == 1 ? 'the original goal' : 'q$t'),
+        ...round('$t', 1, 'a$t', ['x' * 1024]),
+      ],
+      user('now'),
     ];
-    expect(roles(build(bad)), ['user', 'assistant']);
+    final watch = Stopwatch()..start();
+    final r = build(
+      history,
+      caps: const ChatCapabilities(tools: true, context: 32768),
+    );
+    watch.stop();
+    final limit = chatInputByteLimit(context: 32768);
+    expect(r, isA<ChatInputBuilt>());
+    expect((r as ChatInputBuilt).bytes, lessThanOrEqualTo(limit));
+    final texts = [
+      for (final m in messagesOf(r))
+        for (final p in (m['parts']! as List).cast<Map>()) p['text'],
+    ];
+    expect(texts.first, 'the original goal');
+    expect(texts.last, 'now');
+    expect(texts, contains('q600'));
+    expect(texts, isNot(contains('q2')));
+    // Re-encoding the whole input at every step took seconds here.
+    expect(watch.elapsedMilliseconds, lessThan(2000));
   });
 }

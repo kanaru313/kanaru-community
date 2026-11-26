@@ -28,8 +28,10 @@ abstract interface class PlaybackWritePort {
 
 abstract interface class PlaylistsWritePort {
   /// Creates a playlist holding [trackIds] (already visible) and returns its
-  /// id and how many tracks it holds.
-  Future<({int id, int count})> create(String name, List<int> trackIds);
+  /// id and how many tracks it holds. Once the playlist exists this never
+  /// throws: a failed read-back gives a null `id` (and the requested count),
+  /// so the caller reports success and the model does not create it twice.
+  Future<({int? id, int count})> create(String name, List<int> trackIds);
 
   /// Adds [trackIds] to playlist [playlistId]; null when it is not a
   /// writable playlist. `addedTrackIds` are the tracks that went in,
