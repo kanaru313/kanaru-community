@@ -36,7 +36,6 @@ class DesktopTopBar extends ConsumerWidget {
     final scanning = ref.watch(scanStatusProvider).value is ScanRunning;
     final soon = l10n.appComingSoon;
     final panel = ref.watch(rightPanelProvider);
-    final hasChat = ref.watch(chatPanelSurfaceProvider) != null;
     void toggle(RightPanelKind kind) =>
         ref.read(rightPanelProvider.notifier).toggle(kind);
     return ColoredBox(
@@ -102,16 +101,12 @@ class DesktopTopBar extends ConsumerWidget {
                 selected: panel == RightPanelKind.queue,
                 onPressed: () => toggle(RightPanelKind.queue),
               ),
-              // A registered action (Pro chat) replaces the button below.
-              if (actions.isEmpty)
-                _BarButton(
-                  icon: KIcons.ai,
-                  tooltip: hasChat
-                      ? '${l10n.appAiChat} (Ctrl+J)'
-                      : '${l10n.appAiChat} · $soon',
-                  selected: panel == RightPanelKind.chat,
-                  onPressed: hasChat ? () => toggle(RightPanelKind.chat) : null,
-                ),
+              _BarButton(
+                icon: KIcons.ai,
+                tooltip: '${l10n.appAiChat} (Ctrl+J)',
+                selected: panel == RightPanelKind.chat,
+                onPressed: () => toggle(RightPanelKind.chat),
+              ),
               for (final action in actions) action.builder(context),
               const SizedBox(width: KSpace.x2),
             ],

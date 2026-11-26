@@ -4,18 +4,22 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru/kanaru.dart';
 import 'package:kanaru/l10n/gen/app_localizations.dart';
+import 'package:kanaru/src/ai/ui/chat_host.dart';
 import 'package:kanaru/src/database/state/database_providers.dart';
 import 'package:kanaru/src/extension/state/extension_providers.dart';
 import 'package:kanaru/src/library/domain/scan_status.dart';
 import 'package:kanaru/src/library/state/scan_providers.dart';
 import 'package:kanaru/src/platform/state/settings_providers.dart';
 import 'package:kanaru/src/playback/state/playback_providers.dart';
+import 'package:kanaru/src/playback/state/player_ready.dart';
 import 'package:kanaru/src/shell/state/nav_history.dart';
 import 'package:kanaru/src/shell/state/right_panel.dart';
+import 'package:kanaru/src/shell/ui/chat_host_shell.dart';
 import 'package:kanaru/src/shell/ui/desktop_shell.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../ai/ui/support/chat_ui_support.dart';
 import '../../playback/support/controller_harness.dart';
 import '../../playback/support/sleep_timer_harness.dart'
     show sleepTickerOverride;
@@ -26,11 +30,17 @@ import '../../support/player_phase_override.dart';
 /// A [DesktopShell] on a real controller (in-memory database, fake engine),
 /// with a list page at `/` and a second page at `/other`.
 class DesktopHost extends UiHost {
-  DesktopHost(super.h, super.container, {required this.routerRef})
-    : super(router: routerRef);
+  DesktopHost(
+    super.h,
+    super.container, {
+    required this.routerRef,
+    required this.chat,
+  }) : super(router: routerRef);
 
   final GoRouter routerRef;
-  int chatTaps = 0;
+
+  /// The stand-in chat session behind the chat panel.
+  final FakeChatSession chat;
   int pageTaps = 0;
 }
 
@@ -38,11 +48,20 @@ Future<DesktopHost> pumpDesktopShell(
   WidgetTester tester, {
   Size size = const Size(1280, 800),
 
-  /// Installs a stand-in chat surface (the public build has none) and opens
-  /// the right panel on it.
+  /// Opens the right panel on the chat (over a stand-in session).
   bool withChat = false,
   bool play = true,
+
+  /// What the player phase starts as; [PlayerPhase.notCreated] shows the shell
+  /// before it created the player.
+  PlayerPhase playerPhase = PlayerPhase.ready,
+
+  /// Settings written before the shell starts (a panel saved open).
+  Map<String, Object?> savedSettings = const {},
   List<Override> overrides = const [],
+
+  /// The registry the shell reads (nav items, top bar actions); empty when null.
+  ExtensionRegistry? registry,
 
   /// Extra pages inside the shell (album and artist pages, for example).
   List<RouteBase> routes = const [],
@@ -51,6 +70,9 @@ Future<DesktopHost> pumpDesktopShell(
   tester.view.physicalSize = size;
   addTearDown(tester.view.reset);
   final h = (await tester.runAsync(() => Harness.create()))!;
+  for (final e in savedSettings.entries) {
+    await tester.runAsync(() => h.settings.write(e.key, e.value));
+  }
   late DesktopHost host;
   late GoRouter router;
   router = GoRouter(
@@ -88,35 +110,24 @@ Future<DesktopHost> pumpDesktopShell(
       ),
     ],
   );
-  final registry = ExtensionRegistry();
-  if (withChat) {
-    registry.addPanelSurface(
-      PanelSurface(
-        id: 'chat',
-        order: 0,
-        body: (_) => GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => host.chatTaps++,
-          child: const Center(child: Text('chat panel')),
-        ),
-        menu: (_) => const Icon(KIcons.moreVert, key: ValueKey('chat menu')),
-      ),
-    );
-  }
+  final extensions = registry ?? ExtensionRegistry();
+  final chat = FakeChatSession();
   final container = ProviderContainer(
     overrides: [
-      playerPhaseOverride(),
+      playerPhaseOverride(playerPhase),
       sleepTickerOverride(h),
-      extensionRegistryProvider.overrideWithValue(registry),
+      extensionRegistryProvider.overrideWithValue(extensions),
       playerControllerProvider.overrideWithValue(h.c),
       appDatabaseProvider.overrideWithValue(h.db),
       settingsStoreProvider.overrideWithValue(h.settings),
       scanStatusProvider.overrideWith((ref) => Stream.value(const ScanIdle())),
       libraryScanCommandsProvider.overrideWithValue(NoopScanCommands()),
+      ...chatUiOverrides(session: chat),
+      chatHostProvider.overrideWith((ref) => ChatHostShell(ref, () => router)),
       ...overrides,
     ],
   );
-  host = DesktopHost(h, container, routerRef: router);
+  host = DesktopHost(h, container, routerRef: router, chat: chat);
   addTearDown(() async {
     // Unmount first, so nothing builds against a disposed container.
     await tester.pumpWidget(const SizedBox());

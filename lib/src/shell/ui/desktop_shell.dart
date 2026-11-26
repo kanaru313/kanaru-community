@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
@@ -10,6 +12,7 @@ import '../../library/ui/selection/selection_bar.dart';
 import '../../playback/state/playback_providers.dart';
 import '../../playback/state/player_ready.dart';
 import '../state/nav_history.dart';
+import '../../ai/state/chat_view/chat_view_state.dart';
 import '../state/right_panel.dart';
 import '../../playback/state/now_playing_panel.dart';
 import 'desktop_history_input.dart';
@@ -148,15 +151,19 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     return handleDesktopPlaybackKey(event, ref.read(playerControllerProvider));
   }
 
-  /// Ctrl+Shift+Q toggles the queue panel, Ctrl+J the chat (when this build
-  /// has one). Both work while Now Playing is open: the panel stays usable.
+  /// Ctrl+Shift+Q toggles the queue panel, Ctrl+J the chat, Ctrl+Shift+O
+  /// opens the chat on a new conversation. All work while Now Playing is open:
+  /// the panel stays usable.
   bool _onPanelKey(LogicalKeyboardKey key) {
     final shift = HardwareKeyboard.instance.isShiftPressed;
     final RightPanelKind kind;
-    if (key == LogicalKeyboardKey.keyQ && shift) {
+    if (key == LogicalKeyboardKey.keyO && shift) {
+      ref.read(rightPanelProvider.notifier).show(RightPanelKind.chat);
+      unawaited(ref.read(chatViewProvider.notifier).startNewConversation());
+      return true;
+    } else if (key == LogicalKeyboardKey.keyQ && shift) {
       kind = RightPanelKind.queue;
     } else if (key == LogicalKeyboardKey.keyJ && !shift) {
-      if (ref.read(chatPanelSurfaceProvider) == null) return false;
       kind = RightPanelKind.chat;
     } else {
       return false;
@@ -203,9 +210,18 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
     });
   }
 
-  /// Back (Esc with no focus, the mouse Back button) closes Now Playing
-  /// before it walks the history. True when it did.
+  /// The open chat panel gets Back first: rename mode, then the history list
+  /// each take one step. True when it did.
+  bool _chatTakesBack() {
+    if (ref.read(rightPanelProvider) != RightPanelKind.chat) return false;
+    return ref.read(chatViewProvider.notifier).back();
+  }
+
+  /// Back (Esc with no focus, the mouse Back button) steps the chat back
+  /// first, then closes Now Playing, before it walks the history. True when
+  /// it did.
   bool _closeNowPlaying() {
+    if (_chatTakesBack()) return true;
     if (!ref.read(nowPlayingPanelProvider).open) return false;
     ref.read(nowPlayingPanelProvider.notifier).close();
     return true;
@@ -355,7 +371,8 @@ class _DesktopShellState extends ConsumerState<DesktopShell> {
 
 /// The right panel, held back while it would read the player before the shell
 /// created it: a panel saved open on the queue builds a body that watches the
-/// queue, and that would create the player during the first build. Until the
+/// queue, and one saved open on the chat will read what is playing; either
+/// would create the player during the first build. Until the
 /// player exists an empty box of the panel's size stands in (no layout jump).
 class _RightPanelGate extends ConsumerWidget {
   const _RightPanelGate();
@@ -363,7 +380,7 @@ class _RightPanelGate extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final waiting =
-        ref.watch(rightPanelProvider) == RightPanelKind.queue &&
+        ref.watch(rightPanelProvider) != RightPanelKind.closed &&
         !ref.watch(playerCreatedProvider);
     if (!waiting) return const RightPanelHost();
     final scheme = Theme.of(context).colorScheme;

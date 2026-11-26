@@ -3,5 +3,89 @@
   "aiChatPlayContextLabel": "Trợ lý AI",
   "@aiChatPlayContextLabel": {
     "description": "Tên ngữ cảnh phát khi trợ lý AI bắt đầu một hàng đợi."
+  },
+  "aiChatNewTitle": "Cuộc trò chuyện mới",
+  "@aiChatNewTitle": {
+    "description": "Title of a conversation that has no name yet, and the menu row that starts one."
+  },
+  "aiChatMenuTooltip": "Tuỳ chọn trò chuyện",
+  "@aiChatMenuTooltip": {
+    "description": "Tooltip of the ⋮ button of the chat header."
+  },
+  "aiChatMenuHistory": "Lịch sử trò chuyện",
+  "@aiChatMenuHistory": {
+    "description": "Menu row that opens the list of past conversations."
+  },
+  "aiChatMenuRename": "Đổi tên",
+  "@aiChatMenuRename": {
+    "description": "Menu row that renames the open conversation; also the tooltip of its title."
+  },
+  "aiChatMenuDelete": "Xoá cuộc trò chuyện này",
+  "@aiChatMenuDelete": {
+    "description": "Menu row that deletes the open conversation."
+  },
+  "aiChatMenuSettings": "Cài đặt AI",
+  "@aiChatMenuSettings": {
+    "description": "Menu row that opens the AI settings page."
+  },
+  "aiChatRenameField": "Tên cuộc trò chuyện",
+  "@aiChatRenameField": {
+    "description": "Label of the name field while renaming."
+  },
+  "aiChatRenameSave": "Lưu tên",
+  "@aiChatRenameSave": {
+    "description": "Tooltip of the button that saves the new name."
+  },
+  "aiChatCloseMobile": "Đóng trò chuyện",
+  "@aiChatCloseMobile": {
+    "description": "Tooltip of the button that closes the chat page on the phone."
+  },
+  "aiChatClosePanel": "Đóng khung (Ctrl+J)",
+  "@aiChatClosePanel": {
+    "description": "Tooltip of the button that closes the chat panel on desktop."
+  },
+  "aiChatDeleteTitle": "Xoá cuộc trò chuyện này?",
+  "@aiChatDeleteTitle": {
+    "description": "Title of the confirm dialog before a conversation is deleted."
+  },
+  "aiChatDeleteBody": "Tin nhắn và ảnh đính kèm của cuộc này bị xoá khỏi máy. Không hoàn tác được.",
+  "@aiChatDeleteBody": {
+    "description": "Body of the confirm dialog before a conversation is deleted."
+  },
+  "aiChatDeleteConfirm": "Xoá",
+  "@aiChatDeleteConfirm": {
+    "description": "Confirm button of the delete dialog."
+  },
+  "aiChatEmptyTitle": "Hỏi gì về nhạc của bạn?",
+  "@aiChatEmptyTitle": {
+    "description": "Greeting of an empty conversation."
+  },
+  "aiChatEmptyBody": "AI đọc được thư viện, bài đang phát, lời và hàng đợi qua các công cụ bạn bật trong Cài đặt.",
+  "@aiChatEmptyBody": {
+    "description": "Line under the greeting of an empty conversation."
+  },
+  "aiChatGuideTitle": "Chọn một dịch vụ AI",
+  "@aiChatGuideTitle": {
+    "description": "Heading shown when no AI chat plugin is installed."
+  },
+  "aiChatGuideBody": "Kanaru không có máy chủ AI riêng. Bạn dùng dịch vụ của mình; dữ liệu đi thẳng tới dịch vụ đó.",
+  "@aiChatGuideBody": {
+    "description": "Line under the heading shown when no AI chat plugin is installed."
+  },
+  "aiChatGuideCloudTitle": "Dịch vụ đám mây",
+  "@aiChatGuideCloudTitle": {
+    "description": "Title of the cloud option of the no-plugin guide."
+  },
+  "aiChatGuideCloudBody": "Claude, Gemini, OpenAI… Cài plugin rồi nhập API key của bạn (lưu trong cài đặt của plugin).",
+  "@aiChatGuideCloudBody": {
+    "description": "Description of the cloud option of the no-plugin guide."
+  },
+  "aiChatGuideCloudAction": "Mở kho plugin AI",
+  "@aiChatGuideCloudAction": {
+    "description": "Button that opens the plugin store on the AI chat plugins."
+  },
+  "aiChatGuideFoot": "Cài plugin là đồng ý cho nó gửi dữ liệu tới các địa chỉ nó khai. Chat không hỏi thêm.",
+  "@aiChatGuideFoot": {
+    "description": "Consent line at the foot of the no-plugin guide."
   }
 }

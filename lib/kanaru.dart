@@ -11,6 +11,8 @@ import 'package:media_kit/media_kit.dart';
 
 import 'kanaru_bootstrap.dart';
 import 'kanaru_error_app.dart';
+import 'src/ai/ai_extension.dart';
+import 'src/ai/ui/chat_host.dart';
 import 'src/database/app_database.dart';
 import 'src/database/state/database_providers.dart';
 import 'src/extension/kanaru_extension.dart';
@@ -36,9 +38,11 @@ import 'src/platform/data/native_library.dart';
 import 'src/platform/state/device_id_provider.dart';
 import 'src/platform/state/platform_providers.dart';
 import 'src/platform/state/settings_providers.dart';
+import 'src/router/state/router_provider.dart';
 import 'src/router/ui/kanaru_app.dart';
 import 'src/screens/screens_extension.dart';
 import 'src/screens/settings/state/appearance_settings.dart';
+import 'src/shell/ui/chat_host_shell.dart';
 
 export 'src/database/database.dart';
 export 'src/extension/domain/license.dart';
@@ -55,12 +59,19 @@ const List<KanaruExtension> builtInExtensions = [
   LibraryExtension(),
   LyricsExtension(),
   OnlineExtension(),
+  AiExtension(),
 ];
 
 /// The default translation target follows the app language: the lyrics module
 /// cannot read the appearance setting, so the app hands it over here.
 final translationAppLanguageOverride = translationAppLanguageProvider
     .overrideWith((ref) => ref.watch(appLanguageProvider).name);
+
+/// The chat reaches the shell and the router only through [ChatHost]; the app
+/// supplies the shell's implementation here.
+final chatHostOverride = chatHostProvider.overrideWith(
+  (ref) => ChatHostShell(ref, () => ref.read(routerProvider)),
+);
 
 /// Starts the app: native library, paths, settings, device id, database, extensions, then the UI.
 /// [extensions] are registered after the built-in ones. A startup failure is
@@ -124,6 +135,7 @@ Future<void> runKanaru({List<KanaruExtension> extensions = const []}) async {
         localLyricsReaderProvider.overrideWithValue(NativeLocalLyricsReader()),
         songLyricsEntryProvider.overrideWithValue(const LyricsSongEntry()),
         translationAppLanguageOverride,
+        chatHostOverride,
       ],
       child: const KanaruApp(),
     ),

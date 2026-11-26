@@ -3,5 +3,89 @@
   "aiChatPlayContextLabel": "AI assistant",
   "@aiChatPlayContextLabel": {
     "description": "Name of the play context when the AI assistant starts a queue."
+  },
+  "aiChatNewTitle": "New conversation",
+  "@aiChatNewTitle": {
+    "description": "Title of a conversation that has no name yet, and the menu row that starts one."
+  },
+  "aiChatMenuTooltip": "Chat options",
+  "@aiChatMenuTooltip": {
+    "description": "Tooltip of the ⋮ button of the chat header."
+  },
+  "aiChatMenuHistory": "Chat history",
+  "@aiChatMenuHistory": {
+    "description": "Menu row that opens the list of past conversations."
+  },
+  "aiChatMenuRename": "Rename",
+  "@aiChatMenuRename": {
+    "description": "Menu row that renames the open conversation; also the tooltip of its title."
+  },
+  "aiChatMenuDelete": "Delete this conversation",
+  "@aiChatMenuDelete": {
+    "description": "Menu row that deletes the open conversation."
+  },
+  "aiChatMenuSettings": "AI settings",
+  "@aiChatMenuSettings": {
+    "description": "Menu row that opens the AI settings page."
+  },
+  "aiChatRenameField": "Conversation name",
+  "@aiChatRenameField": {
+    "description": "Label of the name field while renaming."
+  },
+  "aiChatRenameSave": "Save name",
+  "@aiChatRenameSave": {
+    "description": "Tooltip of the button that saves the new name."
+  },
+  "aiChatCloseMobile": "Close chat",
+  "@aiChatCloseMobile": {
+    "description": "Tooltip of the button that closes the chat page on the phone."
+  },
+  "aiChatClosePanel": "Close panel (Ctrl+J)",
+  "@aiChatClosePanel": {
+    "description": "Tooltip of the button that closes the chat panel on desktop."
+  },
+  "aiChatDeleteTitle": "Delete this conversation?",
+  "@aiChatDeleteTitle": {
+    "description": "Title of the confirm dialog before a conversation is deleted."
+  },
+  "aiChatDeleteBody": "Its messages and attached images are removed from this device. This cannot be undone.",
+  "@aiChatDeleteBody": {
+    "description": "Body of the confirm dialog before a conversation is deleted."
+  },
+  "aiChatDeleteConfirm": "Delete",
+  "@aiChatDeleteConfirm": {
+    "description": "Confirm button of the delete dialog."
+  },
+  "aiChatEmptyTitle": "What do you want to ask about your music?",
+  "@aiChatEmptyTitle": {
+    "description": "Greeting of an empty conversation."
+  },
+  "aiChatEmptyBody": "The AI can read your library, the playing song, lyrics and the queue through the tools you turn on in Settings.",
+  "@aiChatEmptyBody": {
+    "description": "Line under the greeting of an empty conversation."
+  },
+  "aiChatGuideTitle": "Choose an AI service",
+  "@aiChatGuideTitle": {
+    "description": "Heading shown when no AI chat plugin is installed."
+  },
+  "aiChatGuideBody": "Kanaru has no AI server of its own. You use your own service; data goes straight to it.",
+  "@aiChatGuideBody": {
+    "description": "Line under the heading shown when no AI chat plugin is installed."
+  },
+  "aiChatGuideCloudTitle": "Cloud service",
+  "@aiChatGuideCloudTitle": {
+    "description": "Title of the cloud option of the no-plugin guide."
+  },
+  "aiChatGuideCloudBody": "Claude, Gemini, OpenAI… Install a plugin, then enter your API key (kept in the plugin's settings).",
+  "@aiChatGuideCloudBody": {
+    "description": "Description of the cloud option of the no-plugin guide."
+  },
+  "aiChatGuideCloudAction": "Open the AI plugin store",
+  "@aiChatGuideCloudAction": {
+    "description": "Button that opens the plugin store on the AI chat plugins."
+  },
+  "aiChatGuideFoot": "Installing a plugin lets it send data to the addresses it declares. The chat does not ask again.",
+  "@aiChatGuideFoot": {
+    "description": "Consent line at the foot of the no-plugin guide."
   }
 }

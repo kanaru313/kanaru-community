@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/ai/state/chat_view/chat_view_state.dart';
 import 'package:kanaru/src/screens/now_playing/ui/desktop/desktop_now_playing.dart';
 import 'package:kanaru/src/playback/state/now_playing_panel.dart';
 import 'package:kanaru/src/shell/ui/player_bar.dart';
@@ -171,16 +172,21 @@ void main() {
     await settleSlide(tester);
     expect(_state(host).covered, isTrue);
     expect(find.byType(DesktopNowPlaying), findsOneWidget);
-    expect(find.text('chat panel'), findsOneWidget);
-    expect(find.text('chat panel').hitTestable(), findsOneWidget);
-    await tester.tap(find.text('chat panel'));
-    expect(host.chatTaps, 1);
+    expect(find.text('New conversation'), findsOneWidget);
+    expect(find.text('New conversation').hitTestable(), findsOneWidget);
+    // A tap on the title starts a rename: the chat takes the pointer.
+    bool renaming() => host.container.read(chatViewProvider).renaming;
+    await tester.tap(find.text('New conversation'));
+    await tester.pump();
+    expect(renaming(), isTrue);
+    host.container.read(chatViewProvider.notifier).cancelRename();
     // Mid-slide too.
     _panel(host).close();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
-    await tester.tap(find.text('chat panel'));
-    expect(host.chatTaps, 2);
+    await tester.tap(find.text('New conversation'));
+    await tester.pump();
+    expect(renaming(), isTrue);
     await settleSlide(tester);
   });
 
@@ -190,7 +196,9 @@ void main() {
     await tester.pump();
     await settleSlide(tester);
     final screen = tester.getRect(find.byType(DesktopNowPlaying));
-    final chat = tester.getRect(find.text('chat panel'));
+    final chat = tester.getRect(
+      find.text('What do you want to ask about your music?'),
+    );
     expect(screen.right, lessThanOrEqualTo(1280 - 420 + 0.5));
     expect(chat.left, greaterThanOrEqualTo(screen.right - 0.5));
     // From under the top bar to the bottom: the player bar's place included.

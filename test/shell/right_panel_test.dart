@@ -16,6 +16,7 @@ import '../support/icon_button_finders.dart';
 
 const _queueTip = 'Queue (Ctrl+Shift+Q)';
 const _chatTip = 'AI chat (Ctrl+J)';
+const _greeting = 'What do you want to ask about your music?';
 
 RightPanelKind _kind(DesktopHost host) =>
     host.container.read(rightPanelProvider);
@@ -123,35 +124,20 @@ void main() {
     await _settle(tester, host);
   });
 
-  testWidgets('without a chat the AI button is dimmed and Ctrl+J is free', (
-    tester,
-  ) async {
-    final host = await pumpDesktopShell(tester);
-    final ai = find.descendant(
-      of: find.byType(DesktopTopBar),
-      matching: find.byIcon(KIcons.ai),
-    );
-    expect(iconButtonAround(tester, ai).enabled, isFalse);
-    await _ctrl(tester, LogicalKeyboardKey.keyJ);
-    expect(_kind(host), RightPanelKind.closed);
-  });
-
-  testWidgets('the AI button and Ctrl+J toggle the chat when there is one', (
-    tester,
-  ) async {
+  testWidgets('the AI button and Ctrl+J toggle the chat', (tester) async {
     final host = await pumpDesktopShell(tester, withChat: true);
     // withChat opens it; close with the button, open with the shortcut.
     expect(_kind(host), RightPanelKind.chat);
     expect(_tonal(tester, _chatTip), isTrue);
-    expect(find.text('AI chat'), findsWidgets);
-    expect(find.byKey(const ValueKey('chat menu')), findsOneWidget);
+    expect(find.text('New conversation'), findsOneWidget);
+    expect(byIconButton('Chat options'), findsOneWidget);
     await tester.tap(byAnyIconButton(_chatTip));
     await _settle(tester, host);
     expect(_kind(host), RightPanelKind.closed);
     await _ctrl(tester, LogicalKeyboardKey.keyJ);
     await _settle(tester, host);
     expect(_kind(host), RightPanelKind.chat);
-    expect(find.text('chat panel'), findsOneWidget);
+    expect(find.text(_greeting), findsOneWidget);
   });
 
   group('switching slides in top bar order', () {
@@ -172,13 +158,13 @@ void main() {
       // Mid-slide both are live: the queue leaves left, the chat comes from
       // the right.
       final queueNow = tester.getTopLeft(find.byType(QueueRow).first).dx;
-      final chatNow = tester.getTopLeft(find.text('chat panel')).dx;
+      final chatNow = tester.getTopLeft(find.text(_greeting)).dx;
       expect(queueNow, lessThan(1280 - rightPanelWidth));
       expect(chatNow, greaterThan(1280 - rightPanelWidth / 2));
       await _settle(tester, host);
       expect(find.byType(QueueRow), findsNothing);
       expect(
-        tester.getCenter(find.text('chat panel')).dx,
+        tester.getCenter(find.text(_greeting)).dx,
         closeTo(1280 - rightPanelWidth / 2, 1),
       );
     });
@@ -186,22 +172,19 @@ void main() {
     testWidgets('Chat to Queue moves the content right', (tester) async {
       final host = await pumpDesktopShell(tester, withChat: true);
       await _settle(tester, host);
-      final chatRest = tester.getCenter(find.text('chat panel')).dx;
+      final chatRest = tester.getCenter(find.text(_greeting)).dx;
       host.container
           .read(rightPanelProvider.notifier)
           .show(RightPanelKind.queue);
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 120));
-      expect(
-        tester.getCenter(find.text('chat panel')).dx,
-        greaterThan(chatRest),
-      );
+      expect(tester.getCenter(find.text(_greeting)).dx, greaterThan(chatRest));
       expect(
         tester.getTopLeft(find.byType(QueueRow).first).dx,
         lessThan(1280 - rightPanelWidth),
       );
       await _settle(tester, host);
-      expect(find.text('chat panel'), findsNothing);
+      expect(find.text(_greeting), findsNothing);
       expect(find.byType(QueueRow), findsWidgets);
     });
 
