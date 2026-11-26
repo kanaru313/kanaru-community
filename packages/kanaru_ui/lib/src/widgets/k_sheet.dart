@@ -49,6 +49,31 @@ Future<T?> showKSheet<T>(
   KSheetDialog dialog = KSheetDialog.standard,
   bool alwaysBottom = false,
   FocusNode? returnFocus,
+}) => showKSheetScrimmed<T>(
+  context,
+  builder: builder,
+  draggable: draggable,
+  maxHeightFraction: maxHeightFraction,
+  fixedHeight: fixedHeight,
+  useRootNavigator: useRootNavigator,
+  dialog: dialog,
+  alwaysBottom: alwaysBottom,
+  returnFocus: returnFocus,
+);
+
+/// [showKSheet] with a scrim alpha for the plain bottom sheet. Internal to
+/// kanaru_ui (hidden from the barrel): only [showKAdaptiveSheet] uses it.
+Future<T?> showKSheetScrimmed<T>(
+  BuildContext context, {
+  required WidgetBuilder builder,
+  bool draggable = true,
+  double maxHeightFraction = 0.85,
+  bool fixedHeight = false,
+  bool useRootNavigator = false,
+  KSheetDialog dialog = KSheetDialog.standard,
+  bool alwaysBottom = false,
+  double? scrimAlpha,
+  FocusNode? returnFocus,
 }) {
   final result = _show<T>(
     context,
@@ -59,6 +84,7 @@ Future<T?> showKSheet<T>(
     useRootNavigator: useRootNavigator,
     dialog: dialog,
     alwaysBottom: alwaysBottom,
+    scrimAlpha: scrimAlpha,
   );
   if (returnFocus == null) return result;
   return result.whenComplete(() {
@@ -78,6 +104,7 @@ Future<T?> _show<T>(
   required bool useRootNavigator,
   required KSheetDialog dialog,
   required bool alwaysBottom,
+  double? scrimAlpha,
 }) {
   final modal = dialog == KSheetDialog.modal;
   final size = MediaQuery.sizeOf(context);
@@ -128,6 +155,9 @@ Future<T?> _show<T>(
     useSafeArea: true,
     showDragHandle: true,
     enableDrag: draggable,
+    barrierColor: scrimAlpha == null
+        ? null
+        : Theme.of(context).colorScheme.scrim.withValues(alpha: scrimAlpha),
     shape: KShape.of(
       BorderRadius.vertical(top: KRadius.xl.topLeft),
       continuous: true,

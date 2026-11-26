@@ -105,12 +105,13 @@ Future<T?> showKAdaptiveSheet<T>(
       returnFocus: returnFocus,
     );
   }
-  return showKSheet<T>(
+  return showKSheetScrimmed<T>(
     context,
     builder: builder,
     maxHeightFraction: _adaptiveSheetHeight,
     useRootNavigator: true,
     alwaysBottom: true,
+    scrimAlpha: _sideSheetScrim,
     returnFocus: returnFocus,
   );
 }

@@ -122,38 +122,39 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Esc with the popover closed still reaches other handlers', (
-    tester,
-  ) async {
-    useWindow(tester, const Size(400, 800));
-    var seen = 0;
-    final node = FocusNode();
-    addTearDown(node.dispose);
-    await tester.pumpWidget(
-      host(
-        Focus(
-          focusNode: node,
-          autofocus: true,
-          onKeyEvent: (_, e) {
-            if (e is KeyDownEvent &&
-                e.logicalKey == LogicalKeyboardKey.escape) {
-              seen++;
-            }
-            return KeyEventResult.ignored;
-          },
-          child: _icon(_short),
+  testWidgets(
+    'Esc reaches other handlers while closed; an open popover consumes it',
+    (tester) async {
+      useWindow(tester, const Size(1300, 800));
+      var seen = 0;
+      final node = FocusNode();
+      addTearDown(node.dispose);
+      await tester.pumpWidget(
+        host(
+          Focus(
+            focusNode: node,
+            autofocus: true,
+            onKeyEvent: (_, e) {
+              if (e is KeyDownEvent &&
+                  e.logicalKey == LogicalKeyboardKey.escape) {
+                seen++;
+              }
+              return KeyEventResult.ignored;
+            },
+            child: _icon(_short),
+          ),
         ),
-      ),
-    );
-    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-    expect(seen, 1);
-    await tester.tap(byIconButton('Giải thích'));
-    await tester.pumpAndSettle();
-    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-    await tester.pumpAndSettle();
-    expect(find.text(_short), findsNothing);
-    expect(seen, 2, reason: 'closing on Esc does not consume the key');
-  });
+      );
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      expect(seen, 1);
+      await tester.tap(byIconButton('Giải thích'));
+      await tester.pumpAndSettle();
+      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      await tester.pumpAndSettle();
+      expect(find.text(_short), findsNothing);
+      expect(seen, 1, reason: 'Esc that closes the popover is consumed');
+    },
+  );
 
   testWidgets('scrolling the page closes the popover', (tester) async {
     useWindow(tester, const Size(400, 800));
@@ -229,5 +230,60 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     expect(find.text(_short), findsNothing);
+  });
+
+  testWidgets('mobile: a pinned popover leaves a focused field alone', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(400, 800));
+    final field = FocusNode();
+    addTearDown(field.dispose);
+    await tester.pumpWidget(
+      host(
+        Column(
+          children: [
+            TextField(focusNode: field, autofocus: true),
+            _icon(_short),
+          ],
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(byIconButton('Giải thích'));
+    await tester.pumpAndSettle();
+    expect(find.text(_short), findsOneWidget);
+    expect(field.hasFocus, isTrue);
+  });
+
+  testWidgets('desktop: Tab out of a pinned panel closes it', (tester) async {
+    useWindow(tester, const Size(1300, 800));
+    await tester.pumpWidget(
+      host(Column(children: [_icon(_short), const TextField()])),
+    );
+    await tester.tap(byIconButton('Giải thích'));
+    await tester.pumpAndSettle();
+    expect(find.text(_short), findsOneWidget);
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pumpAndSettle();
+    expect(find.text(_short), findsNothing);
+  });
+
+  testWidgets('desktop: Esc after keyboard open returns focus to the icon', (
+    tester,
+  ) async {
+    useWindow(tester, const Size(1300, 800));
+    await tester.pumpWidget(host(_icon(_short)));
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    final icon = FocusManager.instance.primaryFocus;
+    expect(icon, isNotNull);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pumpAndSettle();
+    expect(find.text(_short), findsOneWidget);
+    expect(FocusManager.instance.primaryFocus, isNot(icon));
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pumpAndSettle();
+    expect(find.text(_short), findsNothing);
+    expect(FocusManager.instance.primaryFocus, icon);
   });
 }

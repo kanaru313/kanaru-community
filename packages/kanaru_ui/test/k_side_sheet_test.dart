@@ -215,6 +215,16 @@ void main() {
       expect(tester.getSize(find.byKey(_contentKey)).width, 400);
     });
 
+    testWidgets('mobile bottom sheet scrim is 32 %', (tester) async {
+      useWindow(tester, const Size(400, 800));
+      await tester.pumpWidget(host(_opener(adaptive: true)));
+      await _open(tester);
+      final adaptive = tester.widget<ModalBarrier>(
+        find.byType(ModalBarrier).last,
+      );
+      expect(adaptive.color!.a, closeTo(0.32, 0.01));
+    });
+
     testWidgets('swipe down closes the bottom sheet', (tester) async {
       useWindow(tester, const Size(400, 800));
       await tester.pumpWidget(host(_opener(adaptive: true)));
