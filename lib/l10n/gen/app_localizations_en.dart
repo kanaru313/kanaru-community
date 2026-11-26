@@ -8112,4 +8112,158 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get aiSetVarInput =>
       'Where you type next: tapping the chip only fills the prompt into the box, with the cursor here';
+
+  @override
+  String get aiSetPromptsTitle => 'Prompt templates';
+
+  @override
+  String get aiSetPromptsHint =>
+      'Shown as chips on the input, in this order. Tap a row to edit.';
+
+  @override
+  String get aiSetPromptDrag => 'Drag to reorder';
+
+  @override
+  String aiSetPromptSwitch(String label) {
+    return 'Show “$label” on the input';
+  }
+
+  @override
+  String aiSetPromptTap(String label) {
+    return '$label, open to edit';
+  }
+
+  @override
+  String get aiSetPromptBad => 'Broken variable';
+
+  @override
+  String aiSetPromptBadLine(String variable) {
+    return 'Variable $variable no longer exists · tap to edit';
+  }
+
+  @override
+  String get aiSetPromptsEmpty =>
+      'No prompts yet: the chat input has no prompt chips. Add a prompt, or restore the built-in ones.';
+
+  @override
+  String get aiSetPromptAdd => 'Add prompt';
+
+  @override
+  String get aiSetPromptRestore => 'Restore default prompts';
+
+  @override
+  String get aiSetPromptRestoreDesc =>
+      'Only adds back built-in prompts you deleted; edited and your own prompts stay';
+
+  @override
+  String aiSetPromptRestored(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Added back $count built-in prompts',
+      one: 'Added back $count built-in prompt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get aiSetPromptRestoredNone => 'No built-in prompt was deleted';
+
+  @override
+  String get aiSetHistTitle => 'Chat history';
+
+  @override
+  String get aiSetHistLoading => 'Reading chat history…';
+
+  @override
+  String get aiSetHistErrorTitle => 'Could not read chat history';
+
+  @override
+  String get aiSetHistErrorDesc =>
+      'The count and size are not available. Delete all still works.';
+
+  @override
+  String get aiSetHistRetry => 'Retry';
+
+  @override
+  String aiSetHistCount(int count, String size) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count conversations · $size MB',
+      one: '$count conversation · $size MB',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get aiSetHistNone => 'No conversations yet';
+
+  @override
+  String get aiSetHistWhere => 'Stored on this device';
+
+  @override
+  String get aiSetHistClearTitle => 'Delete all conversations';
+
+  @override
+  String get aiSetHistClearDesc =>
+      'Prompt templates and settings stay. Cannot be undone';
+
+  @override
+  String get aiSetHistClearButton => 'Delete';
+
+  @override
+  String get aiSetHistDialogTitle => 'Delete all conversations?';
+
+  @override
+  String aiSetHistDialogWhat(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count AI conversations',
+      one: '$count AI conversation',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get aiSetHistDialogWhatAll => 'Every AI conversation';
+
+  @override
+  String aiSetHistDialogRemoved(String what) {
+    return '$what will be deleted from this device.';
+  }
+
+  @override
+  String get aiSetHistDialogStop => 'The answer in progress will stop.';
+
+  @override
+  String get aiSetHistDialogLogs =>
+      'The run logs of the AI services are deleted too. Prompt templates and settings stay.';
+
+  @override
+  String get aiSetHistDialogUndo => 'Cannot be undone.';
+
+  @override
+  String get aiSetHistDialogConfirm => 'Delete all';
+
+  @override
+  String get aiSetHistCleared => 'All conversations deleted';
+
+  @override
+  String get aiSetConfirmTitle => 'Confirmation box';
+
+  @override
+  String get aiSetConfirmRow => 'Ask before turning on Automatic';
+
+  @override
+  String get aiSetConfirmDesc =>
+      'You turned this box off in the chat: choosing Automatic turns it on at once, without asking. Turn it back on to be asked every time.';
+
+  @override
+  String get aiSetConfirmOn => 'Turn on';
+
+  @override
+  String get aiSetConfirmToast =>
+      'Choosing Automatic in the chat will ask again';
 }

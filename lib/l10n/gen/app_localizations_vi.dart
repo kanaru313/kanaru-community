@@ -7577,4 +7577,154 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get aiSetVarInput =>
       'Chỗ bạn gõ tiếp: bấm chip chỉ điền prompt vào ô, con trỏ ở đây';
+
+  @override
+  String get aiSetPromptsTitle => 'Prompt mẫu';
+
+  @override
+  String get aiSetPromptsHint =>
+      'Hiện thành chip trên ô nhập, theo thứ tự này. Bấm một dòng để sửa.';
+
+  @override
+  String get aiSetPromptDrag => 'Kéo để sắp xếp';
+
+  @override
+  String aiSetPromptSwitch(String label) {
+    return 'Hiện “$label” trên ô nhập';
+  }
+
+  @override
+  String aiSetPromptTap(String label) {
+    return '$label, bấm để sửa';
+  }
+
+  @override
+  String get aiSetPromptBad => 'Biến lỗi';
+
+  @override
+  String aiSetPromptBadLine(String variable) {
+    return 'Biến $variable không còn tồn tại · bấm để sửa';
+  }
+
+  @override
+  String get aiSetPromptsEmpty =>
+      'Chưa có prompt nào: ô nhập chat không có chip prompt. Thêm prompt, hoặc khôi phục các prompt có sẵn.';
+
+  @override
+  String get aiSetPromptAdd => 'Thêm prompt';
+
+  @override
+  String get aiSetPromptRestore => 'Khôi phục prompt mặc định';
+
+  @override
+  String get aiSetPromptRestoreDesc =>
+      'Chỉ thêm lại prompt có sẵn đã xoá; prompt đã sửa và của bạn giữ nguyên';
+
+  @override
+  String aiSetPromptRestored(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Đã thêm lại $count prompt có sẵn',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get aiSetPromptRestoredNone => 'Không có prompt có sẵn nào bị xoá';
+
+  @override
+  String get aiSetHistTitle => 'Lịch sử trò chuyện';
+
+  @override
+  String get aiSetHistLoading => 'Đang đọc lịch sử trò chuyện…';
+
+  @override
+  String get aiSetHistErrorTitle => 'Không đọc được lịch sử trò chuyện';
+
+  @override
+  String get aiSetHistErrorDesc =>
+      'Số cuộc và dung lượng chưa có. Xoá tất cả vẫn dùng được.';
+
+  @override
+  String get aiSetHistRetry => 'Thử lại';
+
+  @override
+  String aiSetHistCount(int count, String size) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count cuộc trò chuyện · $size MB',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get aiSetHistNone => 'Chưa có cuộc trò chuyện nào';
+
+  @override
+  String get aiSetHistWhere => 'Lưu trên máy này';
+
+  @override
+  String get aiSetHistClearTitle => 'Xoá tất cả cuộc trò chuyện';
+
+  @override
+  String get aiSetHistClearDesc =>
+      'Prompt mẫu và cài đặt giữ nguyên. Không hoàn tác được';
+
+  @override
+  String get aiSetHistClearButton => 'Xoá';
+
+  @override
+  String get aiSetHistDialogTitle => 'Xoá tất cả cuộc trò chuyện?';
+
+  @override
+  String aiSetHistDialogWhat(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count cuộc trò chuyện AI',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get aiSetHistDialogWhatAll => 'Mọi cuộc trò chuyện AI';
+
+  @override
+  String aiSetHistDialogRemoved(String what) {
+    return '$what bị xoá khỏi máy.';
+  }
+
+  @override
+  String get aiSetHistDialogStop => 'Câu trả lời đang chạy sẽ dừng.';
+
+  @override
+  String get aiSetHistDialogLogs =>
+      'Nhật ký chạy của các dịch vụ AI cũng bị xoá. Prompt mẫu và cài đặt giữ nguyên.';
+
+  @override
+  String get aiSetHistDialogUndo => 'Không hoàn tác được.';
+
+  @override
+  String get aiSetHistDialogConfirm => 'Xoá tất cả';
+
+  @override
+  String get aiSetHistCleared => 'Đã xoá mọi cuộc trò chuyện';
+
+  @override
+  String get aiSetConfirmTitle => 'Hộp xác nhận';
+
+  @override
+  String get aiSetConfirmRow => 'Hỏi trước khi bật Tự động';
+
+  @override
+  String get aiSetConfirmDesc =>
+      'Bạn đã tắt hộp này trong chat: chọn Tự động thì bật ngay, không hỏi. Bật lại để được hỏi mỗi lần.';
+
+  @override
+  String get aiSetConfirmOn => 'Bật lại';
+
+  @override
+  String get aiSetConfirmToast => 'Chọn Tự động trong chat sẽ hỏi lại';
 }

@@ -1,8 +1,11 @@
 import 'dart:ui' show Size;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/ai/data/conversation_rows.dart' show AiChatStats;
 import 'package:kanaru/src/ai/domain/output/chat_readiness.dart';
+import 'package:kanaru/src/ai/state/ai_chat_stats_provider.dart';
 import 'package:kanaru/src/ai/state/chat_providers.dart';
 import 'package:kanaru/src/plugins/domain/package/chat_spec.dart';
 import 'package:kanaru/src/screens/settings/settings_routes.dart';
@@ -44,6 +47,10 @@ Future<SettingsHarness> openAiSettings(
   Size size = const Size(400, 4000),
   String location = SettingsPaths.ai,
   ThemeData? theme,
+
+  /// What the history block reads (default: 3 conversations, 1.8 MB).
+  Future<AiChatStats> Function()? stats,
+  List<Override> overrides = const [],
 }) {
   final fixture = StoreFixture();
   addTearDown(fixture.close);
@@ -63,6 +70,12 @@ Future<SettingsHarness> openAiSettings(
       aiRemovedPluginNameProvider.overrideWith(
         (ref, id) async => removedNames[id],
       ),
+      aiChatStatsProvider.overrideWith(
+        (ref) =>
+            (stats ??
+            () async => const AiChatStats(conversations: 3, bytes: 1887436))(),
+      ),
+      ...overrides,
     ],
   );
 }

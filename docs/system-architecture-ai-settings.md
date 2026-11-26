@@ -19,7 +19,7 @@ describes what has landed.
 
 ## Page sections (`screens/settings/ui/ai/`)
 
-Order: Dịch vụ AI, Quyền, Hướng dẫn chung, Công cụ. Texts come from the `aiset`
+Order: Dịch vụ AI, Quyền, Hướng dẫn chung, Công cụ, Prompt mẫu, Lịch sử trò chuyện, Hộp xác nhận. Texts come from the `aiset`
 l10n part (key prefix `aiSet`).
 
 | Section | File | Reads / writes |
@@ -28,6 +28,9 @@ l10n part (key prefix `aiSet`).
 | Quyền | `ai_permission_section.dart` | `aiDefaultPermissionProvider` through `LyricsChoiceRow<AiPermission>`; choosing Tự động goes through `confirmAutoMode` as the picker's `confirm:`. |
 | Hướng dẫn chung | `ai_instructions_section.dart` | `aiInstructionsProvider` through `KTextFieldRow(maxLength: 2000)`. The setting counts code points: text over the limit (a multi-code-point character) is cut to it. |
 | Công cụ | `ai_tools_section.dart` | one `KSwitchRow` per `AiToolGroup` (`aiToolGroupProvider(group)`: one key each), "Thống kê nghe" locked while the history is off (`historyEnabledProvider`), `aiVarBypassProvider` (no dialog). |
+| Prompt mẫu | `ai_prompts_section.dart` | `aiPromptsProvider` through `ReorderableToggleList<int>` (value = index in the stored list); edits go through `promptTemplateOpsProvider` (`reorder`, `toggle`, `restoreDefaults`). Unreadable items and builtins without text stay in the list but are not shown, so a shown move is converted to list indices. A body with an unknown `{{variable}}` (`analyzeTemplate`) gets a "Biến lỗi" tag and the problem line replaces the body. Row tap and "Thêm prompt" show a "Sắp có" toast until the editor ships. "Khôi phục prompt mặc định" toasts how many builtins it added back. |
+| Lịch sử trò chuyện | `ai_history_section.dart` | `aiChatStatsProvider` (reading / failed with Thử lại / "N cuộc trò chuyện · X MB"); "Xoá" is off while reading and at 0, on when reading failed. It asks, then calls `ChatSessionController.deleteAll` (stops the turn, clears the run logs of the chat plugins). The box adds "Câu trả lời đang chạy sẽ dừng." only while the turn is `streaming` or `runningTools`. |
+| Hộp xác nhận | `ai_confirm_section.dart` | Added by the page only while `aiAutoAskProvider` is false; "Bật lại" writes true (the block goes away) and toasts. |
 
 Service line (`ChatReadiness`): ready = default model, plus " · dùng gần nhất"
 for the plugin in `ai.last_plugin`; needs a key / a model / other fields = a
@@ -57,5 +60,4 @@ and this file fills them.
 
 ## Not here yet
 
-Prompt list, history block, "Hộp xác nhận" block (same page, next phase) and
-the prompt editor (separate PR).
+The prompt editor (tap a row, "Thêm prompt"): a later part (D2).

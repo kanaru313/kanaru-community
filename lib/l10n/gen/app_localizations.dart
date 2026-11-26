@@ -12118,6 +12118,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Where you type next: tapping the chip only fills the prompt into the box, with the cursor here'**
   String get aiSetVarInput;
+
+  /// No description provided for @aiSetPromptsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompt templates'**
+  String get aiSetPromptsTitle;
+
+  /// No description provided for @aiSetPromptsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown as chips on the input, in this order. Tap a row to edit.'**
+  String get aiSetPromptsHint;
+
+  /// No description provided for @aiSetPromptDrag.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reorder'**
+  String get aiSetPromptDrag;
+
+  /// No description provided for @aiSetPromptSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Show “{label}” on the input'**
+  String aiSetPromptSwitch(String label);
+
+  /// No description provided for @aiSetPromptTap.
+  ///
+  /// In en, this message translates to:
+  /// **'{label}, open to edit'**
+  String aiSetPromptTap(String label);
+
+  /// No description provided for @aiSetPromptBad.
+  ///
+  /// In en, this message translates to:
+  /// **'Broken variable'**
+  String get aiSetPromptBad;
+
+  /// No description provided for @aiSetPromptBadLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Variable {variable} no longer exists · tap to edit'**
+  String aiSetPromptBadLine(String variable);
+
+  /// No description provided for @aiSetPromptsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No prompts yet: the chat input has no prompt chips. Add a prompt, or restore the built-in ones.'**
+  String get aiSetPromptsEmpty;
+
+  /// No description provided for @aiSetPromptAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add prompt'**
+  String get aiSetPromptAdd;
+
+  /// No description provided for @aiSetPromptRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore default prompts'**
+  String get aiSetPromptRestore;
+
+  /// No description provided for @aiSetPromptRestoreDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Only adds back built-in prompts you deleted; edited and your own prompts stay'**
+  String get aiSetPromptRestoreDesc;
+
+  /// No description provided for @aiSetPromptRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Added back {count} built-in prompt} other{Added back {count} built-in prompts}}'**
+  String aiSetPromptRestored(int count);
+
+  /// No description provided for @aiSetPromptRestoredNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No built-in prompt was deleted'**
+  String get aiSetPromptRestoredNone;
+
+  /// No description provided for @aiSetHistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat history'**
+  String get aiSetHistTitle;
+
+  /// No description provided for @aiSetHistLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading chat history…'**
+  String get aiSetHistLoading;
+
+  /// No description provided for @aiSetHistErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read chat history'**
+  String get aiSetHistErrorTitle;
+
+  /// No description provided for @aiSetHistErrorDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The count and size are not available. Delete all still works.'**
+  String get aiSetHistErrorDesc;
+
+  /// No description provided for @aiSetHistRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get aiSetHistRetry;
+
+  /// No description provided for @aiSetHistCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} conversation · {size} MB} other{{count} conversations · {size} MB}}'**
+  String aiSetHistCount(int count, String size);
+
+  /// No description provided for @aiSetHistNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No conversations yet'**
+  String get aiSetHistNone;
+
+  /// No description provided for @aiSetHistWhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored on this device'**
+  String get aiSetHistWhere;
+
+  /// No description provided for @aiSetHistClearTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all conversations'**
+  String get aiSetHistClearTitle;
+
+  /// No description provided for @aiSetHistClearDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompt templates and settings stay. Cannot be undone'**
+  String get aiSetHistClearDesc;
+
+  /// No description provided for @aiSetHistClearButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get aiSetHistClearButton;
+
+  /// No description provided for @aiSetHistDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all conversations?'**
+  String get aiSetHistDialogTitle;
+
+  /// No description provided for @aiSetHistDialogWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} AI conversation} other{{count} AI conversations}}'**
+  String aiSetHistDialogWhat(int count);
+
+  /// No description provided for @aiSetHistDialogWhatAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Every AI conversation'**
+  String get aiSetHistDialogWhatAll;
+
+  /// No description provided for @aiSetHistDialogRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'{what} will be deleted from this device.'**
+  String aiSetHistDialogRemoved(String what);
+
+  /// No description provided for @aiSetHistDialogStop.
+  ///
+  /// In en, this message translates to:
+  /// **'The answer in progress will stop.'**
+  String get aiSetHistDialogStop;
+
+  /// No description provided for @aiSetHistDialogLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'The run logs of the AI services are deleted too. Prompt templates and settings stay.'**
+  String get aiSetHistDialogLogs;
+
+  /// No description provided for @aiSetHistDialogUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot be undone.'**
+  String get aiSetHistDialogUndo;
+
+  /// No description provided for @aiSetHistDialogConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all'**
+  String get aiSetHistDialogConfirm;
+
+  /// No description provided for @aiSetHistCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'All conversations deleted'**
+  String get aiSetHistCleared;
+
+  /// No description provided for @aiSetConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmation box'**
+  String get aiSetConfirmTitle;
+
+  /// No description provided for @aiSetConfirmRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask before turning on Automatic'**
+  String get aiSetConfirmRow;
+
+  /// No description provided for @aiSetConfirmDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'You turned this box off in the chat: choosing Automatic turns it on at once, without asking. Turn it back on to be asked every time.'**
+  String get aiSetConfirmDesc;
+
+  /// No description provided for @aiSetConfirmOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get aiSetConfirmOn;
+
+  /// No description provided for @aiSetConfirmToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Choosing Automatic in the chat will ask again'**
+  String get aiSetConfirmToast;
 }
 
 class _AppLocalizationsDelegate

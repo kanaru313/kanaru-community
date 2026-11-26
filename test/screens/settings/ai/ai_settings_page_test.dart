@@ -24,11 +24,13 @@ void main() {
         'Permission',
         'General instructions',
         'Tools',
+        'Prompt templates',
+        'Chat history',
       ])
         tester.getTopLeft(find.text(t)).dy,
     ];
     expect(tops, orderedEquals([...tops]..sort()));
-    expect(tops.toSet(), hasLength(4));
+    expect(tops.toSet(), hasLength(6));
     expect(find.text('AI chat'), findsOneWidget);
   });
 
