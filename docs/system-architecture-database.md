@@ -199,7 +199,7 @@ Scheduling is the caller's: the library module runs the GC in the background, de
 - `tracks.status` values are `present`, `missing`, `hidden`, `remote`. A new value is an API change.
 - Pro views of online tracks expect `remote`. Library-style views use the visibility helper (`present` only).
 - Albums are derived, with no table. History is `play_log`.
-- Pro tables live in `kanaru-pro` (AI chat, per-track translation config, smart playlists). They are versioned in `extension_schema`, and any foreign key into `tracks` is `RESTRICT`.
+- Pro tables live in `kanaru-pro` (per-track translation config, smart playlists). They are versioned in `extension_schema`, and any foreign key into `tracks` is `RESTRICT`.
 - Extensions never add indexes or triggers to public tables.
 - `play_stats_ctl` is private to `database/` and is not exported.
 - `kanaru-pro` runs the same foreign-key check against `trackOwnedChildTables` in its CI.
@@ -827,7 +827,7 @@ Decision: the key is not `tracks.song_key`. `song_key` has no album and no durat
 
 ### Pro: Spec only, added by kanaru-pro before first release
 
-AI chat, per-song translation note and service, and smart playlists. Their spec lives in `kanaru-pro`. They are versioned in `extension_schema`, and any foreign key into `tracks` is `RESTRICT`. See [Pro contract](#pro-contract).
+Per-song translation note and service, and smart playlists. Their spec lives in `kanaru-pro`. They are versioned in `extension_schema`, and any foreign key into `tracks` is `RESTRICT`. See [Pro contract](#pro-contract).
 
 ## Helpers
 

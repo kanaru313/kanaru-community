@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/plugins/domain/package/package_problem.dart';
 import 'package:kanaru/src/plugins/domain/package/plugin_kind.dart';
 
 import 'chat_test_support.dart';
@@ -36,6 +37,7 @@ void main() {
     final problem = problemOf(
       chatManifest((j) => (j['metadata']! as Map)['hosts'] = ['*.example.com']),
     );
+    expect(problem, isA<WildcardHostNotAllowed>());
     expect(problem.detail, '*.example.com');
   });
 

@@ -206,4 +206,73 @@ void main() {
       'chat.keyField',
     );
   });
+
+  test('chat that is not an object refused', () {
+    for (final value in <Object?>['x', <Object?>[]]) {
+      expectInvalid(chatManifest((j) => j['chat'] = value), 'chat');
+    }
+  });
+
+  test('models that is not a list refused', () {
+    expectInvalid(
+      chatManifest((j) => chatBlock(j)['models'] = {'id': 'a'}),
+      'chat.models',
+    );
+  });
+
+  test('a model item that is not an object refused', () {
+    expectInvalid(
+      chatManifest((j) => chatBlock(j)['models'] = <Object?>['gemini']),
+      'chat.models',
+    );
+  });
+
+  test('exactly 50 models accepted', () {
+    final chat = parseOk(
+      chatManifest(
+        (j) => chatBlock(j)['models'] = [
+          for (var i = 0; i < chatMaxModels; i++) {'id': 'm$i'},
+        ],
+      ),
+    ).chat!;
+    expect(chat.models, hasLength(50));
+  });
+
+  test('a non-integer context refused', () {
+    expectInvalid(
+      chatManifest((j) => models(j).add({'id': 'a', 'context': 1024.5})),
+      'chat.models.context',
+    );
+    expectInvalid(
+      chatManifest((j) => chatBlock(j)['custom'] = {'context': 2048.5}),
+      'chat.custom.context',
+    );
+  });
+
+  test('idleTimeoutSec bounds 1 and 90 accepted', () {
+    for (final seconds in [1, 90]) {
+      final chat = parseOk(
+        chatManifest((j) => chatBlock(j)['idleTimeoutSec'] = seconds),
+      ).chat!;
+      expect(chat.idleTimeoutSec, seconds);
+    }
+  });
+
+  test('custom tools and vision must be booleans', () {
+    expectInvalid(
+      chatManifest((j) => chatBlock(j)['custom'] = {'tools': 'yes'}),
+      'chat.custom.tools',
+    );
+    expectInvalid(
+      chatManifest((j) => chatBlock(j)['custom'] = {'vision': 0}),
+      'chat.custom.vision',
+    );
+  });
+
+  test('an empty keyField refused', () {
+    expectInvalid(
+      chatManifest((j) => chatBlock(j)['keyField'] = ''),
+      'chat.keyField',
+    );
+  });
 }

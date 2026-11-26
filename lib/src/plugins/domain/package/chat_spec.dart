@@ -7,7 +7,6 @@ const chatIdleTimeoutCapSec = 90;
 const chatDefaultIdleTimeoutSec = 90;
 
 final _modelId = RegExp(r'^[A-Za-z0-9._:/@-]{1,120}$');
-final _keyFieldName = RegExp(r'^[A-Za-z0-9_.-]{1,64}$');
 
 /// What a chat model can do. Shared by the per-model overlay and the
 /// fallback `custom` capabilities.
@@ -95,7 +94,7 @@ ChatSpec readChatSpec(Object? value) {
   }
   final keyField = block['keyField'];
   if (keyField != null &&
-      (keyField is! String || !_keyFieldName.hasMatch(keyField))) {
+      (keyField is! String || keyField.isEmpty)) {
     invalid('chat.keyField');
   }
   return ChatSpec(
