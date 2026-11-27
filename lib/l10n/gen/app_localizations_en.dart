@@ -8266,4 +8266,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get aiSetConfirmToast =>
       'Choosing Automatic in the chat will ask again';
+
+  @override
+  String get aiSetPluginUse => 'Use in AI chat';
+
+  @override
+  String get aiSetPluginUseDesc =>
+      'Pick it in the chat input; new chats use the service picked last.';
+
+  @override
+  String get aiSetPluginUseAt => 'Change in Settings › AI chat';
+
+  @override
+  String get aiSetRemoveKeepChats =>
+      'Chats that used this plugin (readable; pick another plugin to continue)';
 }

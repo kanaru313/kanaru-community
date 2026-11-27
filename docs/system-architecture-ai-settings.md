@@ -58,6 +58,17 @@ other key; `variableDescription(l10n, variable)` the description of an
 literal `{{x}}` (no `use-escaping`), so bodies take the tokens as placeholders
 and this file fills them.
 
+## AI chat on the plugin pages (`screens/plugins`)
+
+- Plugin page (`plugin_head_card.dart`): an `ai-chat` plugin gets the row
+  "Dùng trong Trò chuyện AI" (desc + "Đổi ở Cài đặt › Trò chuyện AI", ↗) that
+  opens `aiSettingsLocation`; the service itself is chosen in the chat input.
+- Remove dialog: an `ai-chat` plugin lists "Các cuộc trò chuyện đã dùng plugin
+  này" under "Vẫn giữ" (conversations stay readable).
+- Store rows (`StoreRowFrame`): an installed `ai-chat` row whose
+  `chatPluginsProvider` readiness is `ChatNeedsKey` shows "Cần API key" after
+  the kind and author chips. Same answer as the chat composer.
+
 ## Not here yet
 
 The prompt editor (tap a row, "Thêm prompt"): a later part (D2).

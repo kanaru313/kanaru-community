@@ -4,6 +4,7 @@ import 'package:kanaru/src/plugins/state/config_form_provider.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../support/kanaru_ui_finders.dart';
 import 'support/config_harness.dart';
 import 'support/pump_form.dart';
 
@@ -158,6 +159,24 @@ void main() {
         expect(find.text('Poetic'), findsOneWidget);
         expect(find.text('No decoration'), findsNothing);
       });
+
+      testWidgets(
+        'config text picker rows are text rows with a start check mark',
+        (tester) async {
+          final handle = tester.ensureSemantics();
+          final h = ConfigHarness([_style]);
+          await pumpConfigForm(tester, h, size: size);
+          await tester.tap(find.text('Style *'));
+          await tester.pumpAndSettle();
+          // The chosen option reads as selected, the other does not.
+          expect(bySemanticsSelected('Plain'), findsOneWidget);
+          expect(bySemanticsSelected('Poetic'), findsNothing);
+          // One mark per text row, none of them an icon row: ring + disc.
+          expect(byCheckState(KCheckState.on), findsOneWidget);
+          expect(byCheckState(KCheckState.off), findsOneWidget);
+          handle.dispose();
+        },
+      );
 
       testWidgets('choosing what is already chosen saves nothing', (
         tester,

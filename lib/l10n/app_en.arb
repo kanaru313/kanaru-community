@@ -6052,5 +6052,9 @@
   "aiSetConfirmRow": "Ask before turning on Automatic",
   "aiSetConfirmDesc": "You turned this box off in the chat: choosing Automatic turns it on at once, without asking. Turn it back on to be asked every time.",
   "aiSetConfirmOn": "Turn on",
-  "aiSetConfirmToast": "Choosing Automatic in the chat will ask again"
+  "aiSetConfirmToast": "Choosing Automatic in the chat will ask again",
+  "aiSetPluginUse": "Use in AI chat",
+  "aiSetPluginUseDesc": "Pick it in the chat input; new chats use the service picked last.",
+  "aiSetPluginUseAt": "Change in Settings › AI chat",
+  "aiSetRemoveKeepChats": "Chats that used this plugin (readable; pick another plugin to continue)"
 }

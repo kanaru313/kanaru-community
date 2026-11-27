@@ -12346,6 +12346,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choosing Automatic in the chat will ask again'**
   String get aiSetConfirmToast;
+
+  /// No description provided for @aiSetPluginUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Use in AI chat'**
+  String get aiSetPluginUse;
+
+  /// No description provided for @aiSetPluginUseDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick it in the chat input; new chats use the service picked last.'**
+  String get aiSetPluginUseDesc;
+
+  /// No description provided for @aiSetPluginUseAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Change in Settings › AI chat'**
+  String get aiSetPluginUseAt;
+
+  /// No description provided for @aiSetRemoveKeepChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats that used this plugin (readable; pick another plugin to continue)'**
+  String get aiSetRemoveKeepChats;
 }
 
 class _AppLocalizationsDelegate

@@ -82,6 +82,32 @@ void main() {
         }
       });
 
+      testWidgets('ai-chat removal lists conversations under Kept', (
+        tester,
+      ) async {
+        final ops = FakeInstallOps()
+          ..preview = const RemovePreview(
+            installId: 'id-demo',
+            name: 'Demo',
+            author: 'someone',
+            version: 3,
+            kind: PluginKind.aiChat,
+          );
+        await pumpFlowHost(
+          tester,
+          ops: ops,
+          size: size,
+          onTap: (c) => removePluginFlow(c, ops, 'id-demo'),
+        );
+        expect(find.text('Kept'), findsOneWidget);
+        expect(
+          find.text(
+            'Chats that used this plugin (readable; pick another plugin to continue)',
+          ),
+          findsOneWidget,
+        );
+      });
+
       testWidgets('a lyrics plugin lists the saved lyrics it leaves', (
         tester,
       ) async {

@@ -7727,4 +7727,18 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get aiSetConfirmToast => 'Chọn Tự động trong chat sẽ hỏi lại';
+
+  @override
+  String get aiSetPluginUse => 'Dùng trong Trò chuyện AI';
+
+  @override
+  String get aiSetPluginUseDesc =>
+      'Chọn ở ô nhập của chat; cuộc mới dùng dịch vụ chọn gần nhất.';
+
+  @override
+  String get aiSetPluginUseAt => 'Đổi ở Cài đặt › Trò chuyện AI';
+
+  @override
+  String get aiSetRemoveKeepChats =>
+      'Các cuộc trò chuyện đã dùng plugin này (đọc được, chọn plugin khác để tiếp tục)';
 }

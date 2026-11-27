@@ -5912,5 +5912,9 @@
   "aiSetConfirmRow": "Hỏi trước khi bật Tự động",
   "aiSetConfirmDesc": "Bạn đã tắt hộp này trong chat: chọn Tự động thì bật ngay, không hỏi. Bật lại để được hỏi mỗi lần.",
   "aiSetConfirmOn": "Bật lại",
-  "aiSetConfirmToast": "Chọn Tự động trong chat sẽ hỏi lại"
+  "aiSetConfirmToast": "Chọn Tự động trong chat sẽ hỏi lại",
+  "aiSetPluginUse": "Dùng trong Trò chuyện AI",
+  "aiSetPluginUseDesc": "Chọn ở ô nhập của chat; cuộc mới dùng dịch vụ chọn gần nhất.",
+  "aiSetPluginUseAt": "Đổi ở Cài đặt › Trò chuyện AI",
+  "aiSetRemoveKeepChats": "Các cuộc trò chuyện đã dùng plugin này (đọc được, chọn plugin khác để tiếp tục)"
 }

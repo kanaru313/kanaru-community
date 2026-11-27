@@ -4,6 +4,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
+import '../../../ai/ui/ai_settings_link.dart';
 import '../../../plugins/domain/package/plugin_kind.dart';
 import '../../../lyrics/state/online/lyrics_sources_provider.dart';
 import '../../../lyrics/state/translation/translation_commands.dart';
@@ -17,7 +18,8 @@ import '../common/plugin_icon.dart';
 /// divider the row that says how the kind is used. The lyrics row shows the
 /// plugin's place in the lyrics sources and opens Settings › Lời bài; the
 /// translate row says whether the plugin is the default translation service
-/// and sets it.
+/// and sets it; the AI chat row says where the service is chosen and opens
+/// Settings › AI chat.
 class PluginHeadCard extends ConsumerWidget {
   const PluginHeadCard({super.key, required this.data, required this.nameKey});
 
@@ -46,7 +48,8 @@ class PluginHeadCard extends ConsumerWidget {
       PluginKind.lyrics => _LyricsUseRow(installId: row.installId),
       PluginKind.translate ||
       PluginKind.aiTranslate => _TranslateUseRow(installId: row.installId),
-      PluginKind.streaming || PluginKind.aiChat || null => null,
+      PluginKind.aiChat => const _AiChatUseRow(),
+      PluginKind.streaming || null => null,
     };
     return SettingsBlock(
       children: [
@@ -171,6 +174,28 @@ class _TranslateUseRow extends ConsumerWidget {
                   ref.read(translationCommandsProvider).setService(installId),
               child: Text(l10n.pluginsPageUseTranslateSet),
             ),
+    );
+  }
+}
+
+/// "Dùng trong Trò chuyện AI": the service is picked in the chat composer; the
+/// row only points to Settings › AI chat, like the lyrics row.
+class _AiChatUseRow extends StatelessWidget {
+  const _AiChatUseRow();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    return SetupRowFrame(
+      leading: const Icon(KIcons.ai),
+      title: Text(l10n.aiSetPluginUse),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [Text(l10n.aiSetPluginUseDesc), Text(l10n.aiSetPluginUseAt)],
+      ),
+      trailing: Icon(KIcons.openInNew, color: scheme.onSurfaceVariant),
+      onTap: () => context.push(aiSettingsLocation),
     );
   }
 }
