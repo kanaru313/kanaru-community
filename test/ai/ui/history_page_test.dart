@@ -312,6 +312,15 @@ void main() {
       expect(setup.view.historyOpen, isFalse);
     });
 
+    testWidgets('the shortcut hint of New conversation is desktop only', (
+      tester,
+    ) async {
+      await _pump(tester, conversations: const []);
+      expect(find.text('Ctrl+Shift+O'), findsNothing);
+      await _pump(tester, conversations: const [], size: const Size(1400, 900));
+      expect(find.text('Ctrl+Shift+O'), findsOneWidget);
+    });
+
     testWidgets('Esc steps back to the open conversation', (tester) async {
       final setup = await _pump(
         tester,
