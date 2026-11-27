@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:logging/logging.dart';
 import 'package:material_ui/material_ui.dart';
@@ -9,13 +10,14 @@ import '../../../../ai/domain/settings/prompt_template.dart';
 import '../../../../ai/domain/variables/template_analysis.dart';
 import '../../../../ai/state/ai_settings_providers.dart';
 import '../../../../ai/state/prompt_template_ops.dart';
+import '../../settings_routes.dart';
 import 'ai_catalog_labels.dart';
 
 final _log = Logger('settings.ai_prompts');
 
 /// "Prompt mẫu": the prompts shown as chips on the chat input, in the order
-/// the user sets. Reorder and switches apply at once. Tapping a row and
-/// "Thêm prompt" say "Sắp có" until the editor ships.
+/// the user sets. Reorder and switches apply at once; tapping a row opens its
+/// editor, "Thêm prompt" opens an empty one.
 class AiPromptsSection extends ConsumerWidget {
   const AiPromptsSection({super.key});
 
@@ -24,7 +26,6 @@ class AiPromptsSection extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final title = l10n.aiSetPromptsTitle;
     final rows = _rows(l10n, ref.watch(aiPromptsProvider));
-    final soon = l10n.appComingSoon;
     return SetupSection(
       title: Text(title),
       hint: l10n.aiSetPromptsHint,
@@ -39,7 +40,12 @@ class AiPromptsSection extends ConsumerWidget {
             keepOneOn: false,
             items: [
               for (final r in rows)
-                _item(context, l10n, r, () => _soon(context, soon)),
+                _item(
+                  context,
+                  l10n,
+                  r,
+                  () => context.push(SettingsPaths.aiPrompt(r.index)),
+                ),
             ],
             onReorder: (from, to) => _reorder(ref, rows, from, to),
             onToggle: (index, enabled) => _run(
@@ -52,7 +58,7 @@ class AiPromptsSection extends ConsumerWidget {
         SetupAddRow(
           icon: KIcons.add,
           label: Text(l10n.aiSetPromptAdd),
-          onTap: () => _soon(context, soon),
+          onTap: () => context.push(SettingsPaths.aiPromptNew),
         ),
         SetupRowFrame(
           leading: const Icon(KIcons.reset),
@@ -63,9 +69,6 @@ class AiPromptsSection extends ConsumerWidget {
       ],
     );
   }
-
-  void _soon(BuildContext context, String message) =>
-      showAppSnackBar(context, message);
 
   /// The templates this app version can show. A stored item it cannot read,
   /// or a builtin it has no text for, stays in the list but out of sight.

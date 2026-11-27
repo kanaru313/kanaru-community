@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 
@@ -6,7 +7,9 @@ import '../../ai/ui/ai_settings_link.dart';
 import '../../lyrics/ui/lyrics_settings_link.dart';
 import '../plugins/plugin_routes.dart';
 import 'ui/about/about_settings_page.dart';
+import 'state/ai_prompt_editor_guard.dart';
 import 'ui/ai/ai_settings_page.dart';
+import 'ui/ai/prompt_editor_page.dart';
 import 'ui/appearance/appearance_settings_page.dart';
 import 'ui/appearance/fonts/fonts_settings_page.dart';
 import 'ui/appearance/seek_bar_style_page.dart';
@@ -29,6 +32,10 @@ abstract final class SettingsPaths {
   static const playback = '/settings/playback';
   static const lyrics = lyricsSettingsLocation;
   static const ai = aiSettingsLocation;
+  static const aiPromptNew = '$aiSettingsLocation/prompt/new';
+
+  /// The prompt editor of the template at [index] of the stored list.
+  static String aiPrompt(int index) => '$aiSettingsLocation/prompt/$index';
   static const about = '/settings/about';
 }
 
@@ -72,6 +79,25 @@ GoRoute buildSettingsRoute() => GoRoute(
     GoRoute(
       path: 'ai',
       pageBuilder: (_, s) => _page(s, const AiSettingsPage()),
+      routes: [
+        GoRoute(
+          path: 'prompt/new',
+          pageBuilder: (_, s) => _page(s, const AiPromptEditorPage()),
+          onExit: _askBeforeLeavingPrompt,
+        ),
+        GoRoute(
+          path: 'prompt/:index',
+          pageBuilder: (_, s) => _page(
+            s,
+            AiPromptEditorPage(
+              key: ValueKey(s.pathParameters['index']),
+              // A link that is no number opens no prompt (the page leaves).
+              index: int.tryParse(s.pathParameters['index'] ?? '') ?? -1,
+            ),
+          ),
+          onExit: _askBeforeLeavingPrompt,
+        ),
+      ],
     ),
     GoRoute(
       path: 'about',
@@ -80,6 +106,17 @@ GoRoute buildSettingsRoute() => GoRoute(
     buildPluginsRoute(),
   ],
 );
+
+/// Leaving the prompt editor by any route change (a sidebar item, the top bar,
+/// a link) asks "Bỏ thay đổi?" when the editor holds unsaved edits; the open
+/// editor page answers.
+Future<bool> _askBeforeLeavingPrompt(BuildContext context, GoRouterState _) {
+  final guard = ProviderScope.containerOf(
+    context,
+    listen: false,
+  ).read(promptEditorGuardProvider);
+  return Future.value(guard.mayLeave());
+}
 
 /// Sub-pages share the transition of the library detail pages.
 Page<void> _page(GoRouterState state, Widget child) =>

@@ -7210,5 +7210,142 @@
   "aiSetPluginUse": "Dùng trong Trò chuyện AI",
   "aiSetPluginUseDesc": "Chọn ở ô nhập của chat; cuộc mới dùng dịch vụ chọn gần nhất.",
   "aiSetPluginUseAt": "Đổi ở Cài đặt › Trò chuyện AI",
-  "aiSetRemoveKeepChats": "Các cuộc trò chuyện đã dùng plugin này (đọc được, chọn plugin khác để tiếp tục)"
+  "aiSetRemoveKeepChats": "Các cuộc trò chuyện đã dùng plugin này (đọc được, chọn plugin khác để tiếp tục)",
+  "aiSetEdTitleEdit": "Sửa prompt",
+  "aiSetEdTitleNew": "Prompt mới",
+  "aiSetEdLabel": "Nhãn",
+  "aiSetEdLabelPlaceholder": "vd. Giải nghĩa lời",
+  "aiSetEdLabelHelp": "Chữ trên chip ở ô nhập chat",
+  "aiSetEdBodyTitle": "Prompt",
+  "aiSetEdBodyHint": "Biến do Kanaru điền lúc gửi; thiếu dữ liệu thì không gửi gì, chữ ở nguyên trong ô. {input} là chỗ bạn gõ tiếp: bấm chip có {input} chỉ điền prompt vào ô nhập, con trỏ đặt ở đó. Không có biến tự tạo.",
+  "@aiSetEdBodyHint": {
+    "placeholders": {
+      "input": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetEdBodyPlaceholder": "vd. Giải nghĩa lời bài {nowPlaying}: {lyrics}",
+  "@aiSetEdBodyPlaceholder": {
+    "placeholders": {
+      "nowPlaying": {
+        "type": "String"
+      },
+      "lyrics": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetEdBodyHelp": "Gửi như tin nhắn của bạn khi bấm chip trên ô nhập chat.",
+  "aiSetEdVars": "Chèn biến",
+  "aiSetEdUnknown": "Biến {names} không có. Dùng được: {allowed}",
+  "@aiSetEdUnknown": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      },
+      "allowed": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetEdGroupOff": "{names} cần công cụ {groups}, đang tắt. Vẫn lưu được; bấm chip sẽ chưa gửi được tới khi bật lại công cụ, hoặc bật “{setting}”.",
+  "@aiSetEdGroupOff": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      },
+      "groups": {
+        "type": "String"
+      },
+      "setting": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetEdGroupOffBypass": "{names}: công cụ {groups} đang tắt, nhưng biến vẫn gửi vì “{setting}” đang bật.",
+  "@aiSetEdGroupOffBypass": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      },
+      "groups": {
+        "type": "String"
+      },
+      "setting": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetEdPreviewTitle": "Xem trước",
+  "aiSetEdPreviewHint": "Điền bằng dữ liệu ví dụ (bài Lạc trôi), không phải bài đang phát. Khi bấm chip, Kanaru điền dữ liệu thật lúc gửi.",
+  "aiSetEdPreviewEmpty": "Gõ prompt ở trên để xem trước.",
+  "aiSetEdPreviewUnknown": "Biến không có",
+  "aiSetEdPreviewOff": "{variable} · công cụ “{group}” đang tắt",
+  "@aiSetEdPreviewOff": {
+    "placeholders": {
+      "variable": {
+        "type": "String"
+      },
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetEdSampleNowPlaying": "Lạc trôi · Sơn Tùng M-TP",
+  "aiSetEdSampleTitle": "Lạc trôi",
+  "aiSetEdSampleArtist": "Sơn Tùng M-TP",
+  "aiSetEdSampleAlbum": "m-tp M-TP",
+  "aiSetEdSampleLyrics": "‹lời bài Lạc trôi · 42 dòng›",
+  "aiSetEdSampleQueue": "‹hàng đợi · 12 bài›",
+  "aiSetEdSampleInput": "‹chữ bạn gõ›",
+  "aiSetEdDeleteRow": "Xoá prompt",
+  "aiSetEdDeleteBuiltinDesc": "Prompt có sẵn: “{restore}” thêm lại được bản gốc",
+  "@aiSetEdDeleteBuiltinDesc": {
+    "placeholders": {
+      "restore": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetEdDeleteTitle": "Xoá prompt “{label}”?",
+  "@aiSetEdDeleteTitle": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetEdDeleteBodyBuiltin": "Đây là prompt có sẵn: “{restore}” thêm lại được bản gốc, phần bạn đã sửa thì mất.",
+  "@aiSetEdDeleteBodyBuiltin": {
+    "placeholders": {
+      "restore": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetEdDeleteBodyCustom": "Chip của prompt này biến khỏi ô nhập chat. Không hoàn tác được.",
+  "aiSetEdDeleteConfirm": "Xoá",
+  "aiSetEdDeleted": "Đã xoá “{label}”",
+  "@aiSetEdDeleted": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetEdSaved": "Đã lưu “{label}”",
+  "@aiSetEdSaved": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetEdCancel": "Huỷ",
+  "aiSetEdSave": "Lưu",
+  "aiSetEdDiscardTitle": "Bỏ thay đổi?",
+  "aiSetEdDiscardBody": "Thay đổi của prompt này chưa được lưu.",
+  "aiSetEdDiscardKeep": "Tiếp tục sửa",
+  "aiSetEdDiscardConfirm": "Bỏ"
 }

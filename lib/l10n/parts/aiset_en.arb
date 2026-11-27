@@ -256,5 +256,142 @@
   "aiSetPluginUse": "Use in AI chat",
   "aiSetPluginUseDesc": "Pick it in the chat input; new chats use the service picked last.",
   "aiSetPluginUseAt": "Change in Settings › AI chat",
-  "aiSetRemoveKeepChats": "Chats that used this plugin (readable; pick another plugin to continue)"
+  "aiSetRemoveKeepChats": "Chats that used this plugin (readable; pick another plugin to continue)",
+  "aiSetEdTitleEdit": "Edit prompt",
+  "aiSetEdTitleNew": "New prompt",
+  "aiSetEdLabel": "Label",
+  "aiSetEdLabelPlaceholder": "e.g. Explain the lyrics",
+  "aiSetEdLabelHelp": "Text on the chip in the chat input",
+  "aiSetEdBodyTitle": "Prompt",
+  "aiSetEdBodyHint": "Kanaru fills in variables when sending; with no data it sends nothing and the text stays in the box. {input} is where you type next: tapping a chip with {input} only fills the prompt into the box, with the cursor there. There are no custom variables.",
+  "@aiSetEdBodyHint": {
+    "placeholders": {
+      "input": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetEdBodyPlaceholder": "e.g. Explain the lyrics of {nowPlaying}: {lyrics}",
+  "@aiSetEdBodyPlaceholder": {
+    "placeholders": {
+      "nowPlaying": {
+        "type": "String"
+      },
+      "lyrics": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetEdBodyHelp": "Sent as your own message when you tap the chip in the chat input.",
+  "aiSetEdVars": "Insert variable",
+  "aiSetEdUnknown": "Variable {names} does not exist. You can use: {allowed}",
+  "@aiSetEdUnknown": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      },
+      "allowed": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetEdGroupOff": "{names} needs the {groups} tool, which is off. You can still save; tapping the chip will not send it until the tool is back on, or turn on “{setting}”.",
+  "@aiSetEdGroupOff": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      },
+      "groups": {
+        "type": "String"
+      },
+      "setting": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetEdGroupOffBypass": "{names}: the {groups} tool is off, but the variable is still sent because “{setting}” is on.",
+  "@aiSetEdGroupOffBypass": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      },
+      "groups": {
+        "type": "String"
+      },
+      "setting": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetEdPreviewTitle": "Preview",
+  "aiSetEdPreviewHint": "Filled with sample data (the song Lạc trôi), not the playing song. When you tap the chip, Kanaru fills in the real data when sending.",
+  "aiSetEdPreviewEmpty": "Type the prompt above to preview it.",
+  "aiSetEdPreviewUnknown": "No such variable",
+  "aiSetEdPreviewOff": "{variable} · the “{group}” tool is off",
+  "@aiSetEdPreviewOff": {
+    "placeholders": {
+      "variable": {
+        "type": "String"
+      },
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetEdSampleNowPlaying": "Lạc trôi · Sơn Tùng M-TP",
+  "aiSetEdSampleTitle": "Lạc trôi",
+  "aiSetEdSampleArtist": "Sơn Tùng M-TP",
+  "aiSetEdSampleAlbum": "m-tp M-TP",
+  "aiSetEdSampleLyrics": "‹lyrics of Lạc trôi · 42 lines›",
+  "aiSetEdSampleQueue": "‹queue · 12 songs›",
+  "aiSetEdSampleInput": "‹what you type›",
+  "aiSetEdDeleteRow": "Delete prompt",
+  "aiSetEdDeleteBuiltinDesc": "Built-in prompt: “{restore}” adds the original back",
+  "@aiSetEdDeleteBuiltinDesc": {
+    "placeholders": {
+      "restore": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetEdDeleteTitle": "Delete the prompt “{label}”?",
+  "@aiSetEdDeleteTitle": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetEdDeleteBodyBuiltin": "This is a built-in prompt: “{restore}” adds the original back, but your edits are lost.",
+  "@aiSetEdDeleteBodyBuiltin": {
+    "placeholders": {
+      "restore": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetEdDeleteBodyCustom": "The chip of this prompt disappears from the chat input. This cannot be undone.",
+  "aiSetEdDeleteConfirm": "Delete",
+  "aiSetEdDeleted": "Deleted “{label}”",
+  "@aiSetEdDeleted": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetEdSaved": "Saved “{label}”",
+  "@aiSetEdSaved": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetEdCancel": "Cancel",
+  "aiSetEdSave": "Save",
+  "aiSetEdDiscardTitle": "Discard changes?",
+  "aiSetEdDiscardBody": "The changes to this prompt are not saved.",
+  "aiSetEdDiscardKeep": "Keep editing",
+  "aiSetEdDiscardConfirm": "Discard"
 }
