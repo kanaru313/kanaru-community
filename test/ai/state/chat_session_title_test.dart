@@ -1,3 +1,8 @@
+import 'package:kanaru/src/plugins/domain/install/install_id.dart';
+import 'package:kanaru/src/plugins/state/plugin_store_providers.dart';
+
+import '../../plugins/domain/chat_test_support.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/l10n/gen/app_localizations.dart';
@@ -36,6 +41,28 @@ void main() {
       _question,
     );
     expect(titles.last, _question);
+  });
+
+  test('a plugin switch before the first message still lets it title the '
+      'conversation', () async {
+    await t.r.install(
+      manifest: chatManifest((m) {
+        (m['metadata']! as Map<String, Object?>)['author'] = 'other';
+      }),
+      extra: {'src/chat.js': 'function execute(req) { return req; }'},
+    );
+    final otherId = fileInstallId('Chat', 'other');
+    await t.h.config.setValue(otherId, 'apiKeys', 'k');
+    await t.h.config.setValue(otherId, 'model', 'gemini-2.5-flash');
+    t.container.invalidate(installedPluginsProvider);
+    await t.container.read(installedPluginsProvider.future);
+    t.engine.rounds.add(ScriptedRound.reply('Four'));
+    final id = await t.session.newConversation();
+    expect(await t.session.switchPlugin(otherId), isTrue);
+
+    await t.sendAndWait(_question);
+
+    expect((await t.store.conversation(id))!.title, _question);
   });
 
   testWidgets('the header title changes from the empty name to the first '
