@@ -55,7 +55,13 @@ List<ChatItem> chatItemsOf(List<AiMessage> messages) {
         items.add(ChatUserItem(m));
       case AiMessageRole.assistant:
         final live = m.state == AiMessageState.streaming;
-        final failed = m.state == AiMessageState.error;
+        // A failed round, or one cut short with a reason (a timeout, a plugin
+        // update, the app closing): both end with a card. A plain stop does
+        // not (its "Đã dừng" is part of the answer).
+        final failed =
+            m.state == AiMessageState.error ||
+            (m.state == AiMessageState.stopped &&
+                m.parts.any((p) => p is ErrorPart));
         final hasText = messageText(m).trim().isNotEmpty;
         // A round that only called tools has no text to draw.
         if (live || m.state == AiMessageState.stopped || hasText) {
@@ -89,6 +95,11 @@ String? _nextModel(List<AiMessage> messages, int from) {
 
 bool _isToolCard(AiMessage m) {
   if (m.state == AiMessageState.running) return true;
+  // A call that failed stays a tool card (its error text is the result); the
+  // call that hit the item limit is the limit card.
+  if (m.state == AiMessageState.error) {
+    return !m.parts.any((p) => p is ErrorPart);
+  }
   if (m.state != AiMessageState.done) return false;
   return !m.parts.any((p) => p is ConfirmPart || p is DonePart);
 }

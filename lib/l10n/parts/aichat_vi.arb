@@ -701,5 +701,583 @@
   "aiChatPromptTasteSummaryBody": "Tóm tắt thói quen nghe nhạc của mình tháng này",
   "@aiChatPromptTasteSummaryBody": {
     "description": "Text of the built-in prompt."
+  },
+  "aiChatCardAllow": "Cho phép",
+  "@aiChatCardAllow": {
+    "description": "Button of a confirmation card."
+  },
+  "aiChatCardDeny": "Từ chối",
+  "@aiChatCardDeny": {
+    "description": "Button of a confirmation card."
+  },
+  "aiChatCardView": "Xem",
+  "@aiChatCardView": {
+    "description": "Button of a done card: opens the playlist."
+  },
+  "aiChatCardOpenQueue": "Mở hàng đợi",
+  "@aiChatCardOpenQueue": {
+    "description": "Button of a done card."
+  },
+  "aiChatCardReplayQueue": "Phát lại hàng đợi cũ",
+  "@aiChatCardReplayQueue": {
+    "description": "Button of a done card whose call replaced the queue."
+  },
+  "aiChatCardRetryIn": "Thử lại sau {seconds} giây",
+  "@aiChatCardRetryIn": {
+    "description": "Locked retry button, under a minute left.",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardRetryInMinutes": "Thử lại sau {minutes} phút",
+  "@aiChatCardRetryInMinutes": {
+    "description": "Locked retry button, whole minutes left.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardRetryInMinutesSeconds": "Thử lại sau {minutes} phút {seconds} giây",
+  "@aiChatCardRetryInMinutesSeconds": {
+    "description": "Locked retry button, minutes and seconds left.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardRetryAt": "Thử lại lúc {time}",
+  "@aiChatCardRetryAt": {
+    "description": "Locked retry button, an hour or more left; {time} is the clock time.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatCardCanRetry": "Có thể thử lại",
+  "@aiChatCardCanRetry": {
+    "description": "Said once to screen readers when the retry countdown ends."
+  },
+  "aiChatCardAddedFold": "{count} bài đã thêm",
+  "@aiChatCardAddedFold": {
+    "description": "Fold row of the songs a done card added.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardRemovedFold": "{count} bài đã bỏ",
+  "@aiChatCardRemovedFold": {
+    "description": "Fold row of the songs a done card removed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardOldQueueFold": "Hàng đợi cũ · {count} bài",
+  "@aiChatCardOldQueueFold": {
+    "description": "Fold row of the queue a play call replaced.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardMoreTracks": "+{count} bài",
+  "@aiChatCardMoreTracks": {
+    "description": "Button that shows the rest of a short song list.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardTrackList": "{count} bài",
+  "@aiChatCardTrackList": {
+    "description": "Accessible name of a song list in a card.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardTrackGone": "Không còn trong thư viện",
+  "@aiChatCardTrackGone": {
+    "description": "Second line of a song row whose song is gone."
+  },
+  "aiChatActCreatePlaylist": "tạo playlist “{name}” · {count} bài",
+  "@aiChatActCreatePlaylist": {
+    "description": "What a create_playlist call does.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatActAddToPlaylist": "thêm {count} bài vào playlist",
+  "@aiChatActAddToPlaylist": {
+    "description": "What an add_to_playlist call does, playlist name unknown.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatActAddToPlaylistNamed": "thêm {count} bài vào playlist “{name}”",
+  "@aiChatActAddToPlaylistNamed": {
+    "description": "What an add_to_playlist call does.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatActRemoveFromPlaylist": "bỏ {count} bài khỏi playlist",
+  "@aiChatActRemoveFromPlaylist": {
+    "description": "What a remove_from_playlist call does, playlist name unknown.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatActRemoveFromPlaylistNamed": "bỏ {count} bài khỏi playlist “{name}”",
+  "@aiChatActRemoveFromPlaylistNamed": {
+    "description": "What a remove_from_playlist call does.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatActPlay": "phát {count} bài",
+  "@aiChatActPlay": {
+    "description": "What a play_tracks call does.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatActQueue": "thêm {count} bài vào hàng đợi",
+  "@aiChatActQueue": {
+    "description": "What a queue_tracks call does.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatActRemoveFromQueue": "bỏ {count} bài khỏi hàng đợi",
+  "@aiChatActRemoveFromQueue": {
+    "description": "What a remove_from_queue call does.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatGroupPlay": "Điều khiển phát",
+  "@aiChatGroupPlay": {
+    "description": "Tool group shown in a done card."
+  },
+  "aiChatGroupQueueEdit": "Sửa hàng đợi",
+  "@aiChatGroupQueueEdit": {
+    "description": "Tool group shown in a done card."
+  },
+  "aiChatGroupPlaylistCreate": "Tạo playlist",
+  "@aiChatGroupPlaylistCreate": {
+    "description": "Tool group shown in a done card."
+  },
+  "aiChatGroupPlaylistEdit": "Sửa playlist",
+  "@aiChatGroupPlaylistEdit": {
+    "description": "Tool group shown in a done card."
+  },
+  "aiChatCardNeedsAllow": "{tool} · cần bạn cho phép",
+  "@aiChatCardNeedsAllow": {
+    "description": "Second line of a confirmation card.",
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatCardAllowedByUser": "Bạn đã cho phép",
+  "@aiChatCardAllowedByUser": {
+    "description": "Start of the second line of a done card after a confirmation."
+  },
+  "aiChatCardAutomatic": "Tự động",
+  "@aiChatCardAutomatic": {
+    "description": "Start of the second line of a done card made in Auto mode."
+  },
+  "aiChatCardDoneTitle": "Đã làm: {action}",
+  "@aiChatCardDoneTitle": {
+    "description": "Title of a done card.",
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatCardOldQueueReplaced": "hàng đợi cũ đã được thay",
+  "@aiChatCardOldQueueReplaced": {
+    "description": "Part of a done card's second line after play_tracks."
+  },
+  "aiChatCardGoneFromQueue": "{count} bài đã không còn trong hàng đợi",
+  "@aiChatCardGoneFromQueue": {
+    "description": "Part of a done card's second line after a removal.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardGoneFromPlaylist": "{count} bài đã không còn trong playlist",
+  "@aiChatCardGoneFromPlaylist": {
+    "description": "Part of a done card's second line after a removal.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardNotInLibrary": "{count} bài không có trong thư viện",
+  "@aiChatCardNotInLibrary": {
+    "description": "Part of a done card's second line when ids were not songs.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardDenied": "Đã từ chối",
+  "@aiChatCardDenied": {
+    "description": "Title of a card the user declined."
+  },
+  "aiChatCardDeniedByNewMessage": "Đã từ chối (bạn đã gửi tin khác)",
+  "@aiChatCardDeniedByNewMessage": {
+    "description": "Title of a card left open when the user wrote again."
+  },
+  "aiChatCardDeniedNotAllowed": "Đã từ chối: không còn được phép",
+  "@aiChatCardDeniedNotAllowed": {
+    "description": "Title of a card Kanaru refused to run after the user allowed it."
+  },
+  "aiChatCardExpired": "Đã hết hạn",
+  "@aiChatCardExpired": {
+    "description": "Title of a confirmation card that waited too long."
+  },
+  "aiChatCardSkippedStopped": "Không chạy: bạn đã dừng",
+  "@aiChatCardSkippedStopped": {
+    "description": "Title of a call that did not run after Stop."
+  },
+  "aiChatCardSkipped": "Không chạy",
+  "@aiChatCardSkipped": {
+    "description": "Title of a call that did not run."
+  },
+  "aiChatCardNothingChanged": "{action} · không có gì thay đổi",
+  "@aiChatCardNothingChanged": {
+    "description": "Second line of a card whose call did not run.",
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatCardExpiredWhy": "Thẻ chờ quá 24 giờ. Muốn làm thì nhắn lại cho AI.",
+  "@aiChatCardExpiredWhy": {
+    "description": "Reason line of an expired card."
+  },
+  "aiChatCardWhyReadOnly": "Bạn đã chuyển cuộc này sang Chỉ đọc trước khi việc này chạy.",
+  "@aiChatCardWhyReadOnly": {
+    "description": "Reason line of a card refused after the user allowed it."
+  },
+  "aiChatCardWhyGroupOff": "Bạn đã tắt nhóm công cụ này trước khi việc này chạy.",
+  "@aiChatCardWhyGroupOff": {
+    "description": "Reason line of a card refused after the user allowed it."
+  },
+  "aiChatCardWhyPluginChanged": "Plugin của cuộc này đã đổi trước khi việc này chạy.",
+  "@aiChatCardWhyPluginChanged": {
+    "description": "Reason line of a card refused after the user allowed it."
+  },
+  "aiChatCardWhyModelChanged": "Model của cuộc này đã đổi trước khi việc này chạy.",
+  "@aiChatCardWhyModelChanged": {
+    "description": "Reason line of a card refused after the user allowed it."
+  },
+  "aiChatCardWhyChangedAfterAllow": "Việc này đã thay đổi sau khi bạn cho phép, nên Kanaru không chạy.",
+  "@aiChatCardWhyChangedAfterAllow": {
+    "description": "Reason line of a card refused after the user allowed it."
+  },
+  "aiChatCardWhyNotAllowed": "Việc này không còn được phép chạy.",
+  "@aiChatCardWhyNotAllowed": {
+    "description": "Reason line of a card refused after the user allowed it."
+  },
+  "aiChatCardWhyTooLarge": "Cuộc này quá dài để gửi.",
+  "@aiChatCardWhyTooLarge": {
+    "description": "Reason line of a call skipped because the chat grew too large."
+  },
+  "aiChatCardWhyLimit": "AI đã đạt giới hạn thay đổi cho tin này.",
+  "@aiChatCardWhyLimit": {
+    "description": "Reason line of a call skipped because of the item limit."
+  },
+  "aiChatCardUnknownTitle": "Không rõ kết quả: {action}",
+  "@aiChatCardUnknownTitle": {
+    "description": "Title of a card whose write was cut off.",
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatCardUnknownClosed": "Kanaru bị đóng khi việc này đang chạy nên không biết đã xong chưa.",
+  "@aiChatCardUnknownClosed": {
+    "description": "First sentence of the unknown-result card."
+  },
+  "aiChatCardUnknownTimedOut": "Việc này chạy quá lâu nên không biết đã xong chưa.",
+  "@aiChatCardUnknownTimedOut": {
+    "description": "First sentence of the unknown-result card."
+  },
+  "aiChatCardLookQueue": "Xem Hàng đợi trước khi nhờ AI làm lại.",
+  "@aiChatCardLookQueue": {
+    "description": "Last sentence of the unknown-result card for a queue change."
+  },
+  "aiChatCardLookPlaylist": "Xem playlist trước khi nhờ AI làm lại.",
+  "@aiChatCardLookPlaylist": {
+    "description": "Last sentence of the unknown-result card for a playlist change."
+  },
+  "aiChatCardLimitTitle": "AI đã đạt giới hạn thay đổi cho tin này",
+  "@aiChatCardLimitTitle": {
+    "description": "Title of the item-cap card."
+  },
+  "aiChatCardLimitBody": "Mỗi tin chỉ được bỏ tối đa {removed} bài và thêm tối đa {added} bài. Gửi tin mới nếu muốn làm tiếp.",
+  "@aiChatCardLimitBody": {
+    "description": "Body of the item-cap card.",
+    "placeholders": {
+      "removed": {
+        "type": "int"
+      },
+      "added": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardLimitBodyAction": "Mỗi tin chỉ được bỏ tối đa {removed} bài và thêm tối đa {added} bài. Việc “{action}” không chạy. Gửi tin mới nếu muốn làm tiếp.",
+  "@aiChatCardLimitBodyAction": {
+    "description": "Body of the item-cap card naming the call that did not run.",
+    "placeholders": {
+      "removed": {
+        "type": "int"
+      },
+      "added": {
+        "type": "int"
+      },
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrPluginFallback": "Plugin",
+  "@aiChatErrPluginFallback": {
+    "description": "Name used when the chat's plugin is not installed any more."
+  },
+  "aiChatErrNetworkTitle": "Không kết nối được tới {host}",
+  "@aiChatErrNetworkTitle": {
+    "description": "Title of the network error card.",
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrNetworkTitleNoHost": "Không kết nối được tới máy chủ",
+  "@aiChatErrNetworkTitleNoHost": {
+    "description": "Title of the network error card when the host is not known."
+  },
+  "aiChatErrNetworkBody": "Kiểm tra mạng rồi thử lại. Tin của bạn vẫn ở đây.",
+  "aiChatErrRateTitle": "{plugin} đang giới hạn số yêu cầu",
+  "@aiChatErrRateTitle": {
+    "description": "Title of the rate-limit card.",
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrRateBody": "Plugin báo lỗi 429 (quá nhiều yêu cầu). Hết đếm ngược thì bấm Thử lại; Kanaru không tự gửi lại.",
+  "aiChatErrRateBodyNoClock": "Plugin báo lỗi 429 (quá nhiều yêu cầu). Đợi một lúc rồi bấm Thử lại; Kanaru không tự gửi lại.",
+  "aiChatErrBusyTitle": "Lượt trước chưa dừng hẳn",
+  "aiChatErrBusyBody": "Kanaru đang kết thúc lượt trả lời trước. Thử lại sau giây lát.",
+  "aiChatErrBusyStuckTitle": "Lượt trước vẫn chưa dừng",
+  "aiChatErrBusyStuckBody": "Đã thử 3 lần mà lượt trước vẫn chưa kết thúc. Khởi động lại Kanaru rồi thử lại.",
+  "aiChatErrKeyTitle": "{plugin} không nhận API key",
+  "@aiChatErrKeyTitle": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrKeyBody": "API key sai hoặc đã bị thu hồi. Sửa trong cài đặt của plugin rồi thử lại.",
+  "aiChatErrQuotaTitle": "Tài khoản {plugin} đã hết hạn mức",
+  "@aiChatErrQuotaTitle": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrQuotaBody": "Nạp thêm hoặc đổi gói ở trang của nhà cung cấp, rồi thử lại.",
+  "aiChatErrConfigTitle": "Cài đặt của {plugin} chưa đủ",
+  "@aiChatErrConfigTitle": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrConfigBody": "Plugin báo còn thiếu cài đặt. Mở cài đặt của plugin để điền rồi thử lại.",
+  "aiChatErrModelGoneTitle": "Model không còn: {model}",
+  "@aiChatErrModelGoneTitle": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrModelGoneTitleNoModel": "Model không còn",
+  "aiChatErrModelGoneBody": "{plugin} không còn model này. Chọn model khác rồi thử lại.",
+  "@aiChatErrModelGoneBody": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrContextTitle": "Cuộc trò chuyện quá dài với model này",
+  "aiChatErrContextBody": "{model} không nhận thêm được. Mở cuộc mới để tiếp tục; cuộc này vẫn đọc được.",
+  "@aiChatErrContextBody": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrTooLargeTitle": "Cuộc này quá dài để gửi",
+  "aiChatErrTooLargeBody": "Kanaru đã rút gọn các lượt cũ mà vẫn quá giới hạn gửi. Mở cuộc mới, hoặc gửi một tin ngắn hơn.",
+  "aiChatErrBlockedTitle": "Model không trả lời yêu cầu này",
+  "aiChatErrBlockedBody": "{model} từ chối (lý do của nhà cung cấp). Diễn đạt lại, hoặc đổi model ở ô nhập.",
+  "@aiChatErrBlockedBody": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrEmptyTitle": "Model không trả lời",
+  "aiChatErrEmptyBody": "{model} trả về câu trả lời trống. Thử lại, hoặc đổi model ở ô nhập.",
+  "@aiChatErrEmptyBody": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrGenericTitle": "{plugin} gặp lỗi",
+  "@aiChatErrGenericTitle": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrGenericBody": "Dịch vụ báo lỗi (mã: {code}). Thử lại sau ít phút.",
+  "@aiChatErrGenericBody": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrHostTitle": "Plugin không được phép gọi {host}",
+  "@aiChatErrHostTitle": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrHostTitleNoHost": "Plugin không được phép gọi địa chỉ này",
+  "aiChatErrHostBody": "Địa chỉ này không có trong danh sách plugin đã khai khi cài, nên Kanaru chặn.",
+  "aiChatErrUpdatedTitle": "Plugin vừa được cập nhật",
+  "aiChatErrUpdatedBody": "{plugin} cập nhật trong lúc trả lời nên lượt này dừng. Phần đã nhận vẫn ở trên.",
+  "@aiChatErrUpdatedBody": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrRemovedTitle": "Plugin đã gỡ",
+  "aiChatErrRemovedBody": "{plugin} bị gỡ trong lúc trả lời. Chọn plugin khác để tiếp tục.",
+  "@aiChatErrRemovedBody": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrBrokenTitle": "Plugin hỏng, cần cài lại",
+  "aiChatErrBrokenBody": "Không đọc được gói của {plugin}. Mở trang plugin để cài lại.",
+  "@aiChatErrBrokenBody": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrTimeoutTitle": "Hết thời gian chờ",
+  "aiChatErrTimeoutBody": "{plugin} không gửi thêm gì nên lượt này dừng. Phần đã nhận vẫn ở trên.",
+  "@aiChatErrTimeoutBody": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrCrashTitle": "Plugin gặp lỗi",
+  "aiChatErrCrashBody": "{plugin} dừng giữa chừng vì lỗi bên trong plugin. Thử lại; nếu lặp lại, xem nhật ký của plugin.",
+  "@aiChatErrCrashBody": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrCutOffTitle": "Lượt trả lời bị ngắt khi đóng Kanaru",
+  "aiChatErrCutOffBody": "Phần đã nhận vẫn ở trên. Kanaru không tự gửi lại khi mở; bấm Thử lại để AI làm tiếp.",
+  "aiChatActionOpenPlugin": "Mở plugin",
+  "@aiChatActionOpenPlugin": {
+    "description": "Button of the broken-plugin error card."
+  },
+  "aiChatActionChangeModel": "Đổi model",
+  "@aiChatActionChangeModel": {
+    "description": "Button of the model-not-found error card: opens the model picker."
   }
 }

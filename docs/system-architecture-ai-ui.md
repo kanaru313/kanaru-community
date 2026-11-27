@@ -148,8 +148,8 @@ Files in `lib/src/ai/ui/`: `message_list`, `message_bubble` (user bubble),
   `library/ui` (the DAG allows `ai -> library`), so no `ChatHost` method is
   needed; `ChatTrackActions` is the test seam.
 - **Tool card:** folded by default; "Đang chạy: ..." and a spinner while running.
-  Confirm / done / error cards are not built here: `chatCardBuilderProvider`
-  is the slot they plug into.
+  Every other tool row and every failed round is a card (see Cards):
+  `chatCardBuilderProvider` is the slot, its default is `buildChatCard`.
 - **Time:** footer time expands on tap / hover to "HH:mm · dd/MM/yyyy"; the
   copy button puts the text on the clipboard. A plugin switch shows the divider
   "Từ đây dùng <plugin> · <model>".
@@ -226,6 +226,64 @@ messages they are one small scrolling row above the composer.
   they change `fakeChatBindingProvider`), readiness (`fakeChatReadinessProvider`),
   the composer's settings and prompt data; `test/ai/ui/composer/composer_harness`
   pumps the composer alone.
+
+## Cards (`ai/ui/cards/`, `state/chat_view/card_view.dart`)
+
+All cards are `KActionCard` (kit): round icon, title, second line, optional
+reason, body slot, at most two buttons on their own row (one button at the end,
+two share the row). `buildChatCard` (`chat_cards.dart`) picks the card of a
+stored row:
+
+| Row | Card |
+|---|---|
+| tool, `pending` / `allowed` | `ConfirmCard`: action, "<tool> · cần bạn cho phép", up to 6 songs (else 5 and "+N bài"), [Từ chối] [Cho phép]. An allowed card waits with no buttons |
+| tool, `done` with a `ConfirmPart` / `DonePart` | `DoneCard` ("Đã làm: ..."): folded list of exactly what the API returned (added, removed, or "Hàng đợi cũ · N" for `play_tracks`); second line "Bạn đã cho phép / Tự động · <group> · ..." with what is already gone or not in the library |
+| tool, `skipped` | `SkippedCard` (finished tone, no button): declined, declined by a new message, declined: no longer allowed (+ reason per `ExecRefusal`), expired, "Không chạy: bạn đã dừng", skipped by the item limit or size. `skipReasonOf` reads the stored `ConfirmPart` first, then the result text (Auto mode keeps no confirm part) |
+| tool, `unknown` | `UnknownResultCard` ("Không rõ kết quả: ...", caution icon, no button): closed app or write timeout, then "Xem Hàng đợi / playlist trước khi nhờ AI làm lại." |
+| tool `error` or assistant row with `limit_reached` | `LimitCard` (caution, no button, never retries) naming the call that did not run |
+| assistant `error`, or `stopped` with an `ErrorPart` | `ErrorCard`: one per `ChatCardKind` (`errorCardSpec`, pure) |
+
+- **Live or history:** `chatCardLiveProvider` / `chatTurnEdgesProvider` read the
+  loaded window (always a suffix of the conversation): a card is of the latest
+  turn when no user message follows it. Confirm and replay need the latest
+  turn; an `ErrorCard` also needs to be the newest row (a retried round makes
+  the earlier card read-only). `readOnly` removes buttons, the countdown clock
+  and the alert role. [Xem] and [Mở hàng đợi] stay on old done cards;
+  [Phát lại hàng đợi cũ] (`replayQueue(messageId)`) is latest-turn only.
+- **One answer:** `ConfirmCard` keeps an in-flight flag (double tap, Allow then
+  Deny: one controller call; a non-accepted answer re-arms the card);
+  `ErrorCard` does the same for [Thử lại] (re-armed unless `DriverStarted`).
+- **Confirm preview:** the stored card holds ids only, so
+  `chatConfirmPreviewProvider` asks the tool's `describe` again on the library
+  as it is now (summary = playlist name, songs); a refusal or an error leaves
+  the card with what the call says. Rows come from `TrackRowsPreview` (cover 40,
+  title, artist; text from the stored snapshot, cover from `trackInfoProvider`).
+- **Error card source of truth:** the stored `ErrorPart` gives the kind through
+  `cardOfStoredError`; for the newest row `chatLiveOutcomeProvider` (the
+  session's `lastView`) wins, because it knows the host, the busy and timeout
+  cards that the store keeps as plain `server`. Buttons follow the approved table
+  (mockup 08), not `StoredErrorCard.action`: quota [Thử lại], too_large and
+  context_length [Cuộc trò chuyện mới] (`chatViewProvider.startNewConversation`),
+  model_not_found [Đổi model] (`modelPickerRequestProvider.request()`), blocked
+  [Thử lại], blocked host no button, removed [Chọn plugin] (`showPluginPicker`),
+  key / config [Mở cài đặt plugin], broken [Mở plugin] (`ChatHost.openSettings`
+  with `aiPluginPageLocation`). Names: plugin from `chatPluginsProvider` (else
+  "Plugin"), host from `chatCardHostProvider` (first declared host), model from
+  the message.
+- **Countdown:** a rate-limit card with an end time (`ErrorPart.retryAt` or the
+  live view's) passes `KActionCardCountdown` (clock `chatCardClockProvider`,
+  tests inject a fake): N giây / M phút S giây / "Thử lại lúc HH:MM" from an hour;
+  at zero the button turns on, nothing is sent by itself.
+- **[Xem]** on playlist cards goes through `chatPlaylistLocationProvider`
+  (`playlistId` of the result to the playlist page, else the playlists list)
+  and `ChatHost.openSettings(location)`.
+- **Cut off when the app closed:** the running write is `unknown`
+  (`UnknownResultCard`), the streamed text stays with "Đã dừng", then the
+  assistant row (`stopped` + `cutOffByClose`) shows the "Lượt trả lời bị ngắt khi
+  đóng Kanaru" card with [Thử lại].
+- **Tests:** `test/ai/ui/cards/` (`card_harness.dart` pumps one card through
+  `buildChatCard` in Vietnamese over `FakeChatSession`, which now fakes `allow`,
+  `deny`, `retry`, `replayQueue` and `setView`).
 
 ## Play context label
 

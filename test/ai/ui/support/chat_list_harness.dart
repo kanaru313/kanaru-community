@@ -70,6 +70,7 @@ Future<ListSetup> pumpChatList(
   bool disableAnimations = false,
   Map<int, TrackInfo> library = const {},
   bool failMessages = false,
+  Locale? locale,
   List<Override> extra = const [],
 }) async {
   tester.view.devicePixelRatio = 1;
@@ -94,6 +95,7 @@ Future<ListSetup> pumpChatList(
     UncontrolledProviderScope(
       container: container,
       child: MaterialApp(
+        locale: locale,
         theme: buildKanaruTheme(brightness: Brightness.light),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,

@@ -701,5 +701,583 @@
   "aiChatPromptTasteSummaryBody": "Summarise my listening habits this month",
   "@aiChatPromptTasteSummaryBody": {
     "description": "Text of the built-in prompt."
+  },
+  "aiChatCardAllow": "Allow",
+  "@aiChatCardAllow": {
+    "description": "Button of a confirmation card."
+  },
+  "aiChatCardDeny": "Decline",
+  "@aiChatCardDeny": {
+    "description": "Button of a confirmation card."
+  },
+  "aiChatCardView": "View",
+  "@aiChatCardView": {
+    "description": "Button of a done card: opens the playlist."
+  },
+  "aiChatCardOpenQueue": "Open queue",
+  "@aiChatCardOpenQueue": {
+    "description": "Button of a done card."
+  },
+  "aiChatCardReplayQueue": "Play the old queue again",
+  "@aiChatCardReplayQueue": {
+    "description": "Button of a done card whose call replaced the queue."
+  },
+  "aiChatCardRetryIn": "Try again in {seconds, plural, =1{1 second} other{{seconds} seconds}}",
+  "@aiChatCardRetryIn": {
+    "description": "Locked retry button, under a minute left.",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardRetryInMinutes": "Try again in {minutes, plural, =1{1 minute} other{{minutes} minutes}}",
+  "@aiChatCardRetryInMinutes": {
+    "description": "Locked retry button, whole minutes left.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardRetryInMinutesSeconds": "Try again in {minutes} min {seconds} s",
+  "@aiChatCardRetryInMinutesSeconds": {
+    "description": "Locked retry button, minutes and seconds left.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardRetryAt": "Try again at {time}",
+  "@aiChatCardRetryAt": {
+    "description": "Locked retry button, an hour or more left; {time} is the clock time.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatCardCanRetry": "You can try again now",
+  "@aiChatCardCanRetry": {
+    "description": "Said once to screen readers when the retry countdown ends."
+  },
+  "aiChatCardAddedFold": "{count, plural, =1{1 song} other{{count} songs}} added",
+  "@aiChatCardAddedFold": {
+    "description": "Fold row of the songs a done card added.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardRemovedFold": "{count, plural, =1{1 song} other{{count} songs}} removed",
+  "@aiChatCardRemovedFold": {
+    "description": "Fold row of the songs a done card removed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardOldQueueFold": "Old queue · {count, plural, =1{1 song} other{{count} songs}}",
+  "@aiChatCardOldQueueFold": {
+    "description": "Fold row of the queue a play call replaced.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardMoreTracks": "+{count, plural, =1{1 song} other{{count} songs}}",
+  "@aiChatCardMoreTracks": {
+    "description": "Button that shows the rest of a short song list.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardTrackList": "{count, plural, =1{1 song} other{{count} songs}}",
+  "@aiChatCardTrackList": {
+    "description": "Accessible name of a song list in a card.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardTrackGone": "No longer in the library",
+  "@aiChatCardTrackGone": {
+    "description": "Second line of a song row whose song is gone."
+  },
+  "aiChatActCreatePlaylist": "create playlist “{name}” · {count, plural, =1{1 song} other{{count} songs}}",
+  "@aiChatActCreatePlaylist": {
+    "description": "What a create_playlist call does.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatActAddToPlaylist": "add {count, plural, =1{1 song} other{{count} songs}} to a playlist",
+  "@aiChatActAddToPlaylist": {
+    "description": "What an add_to_playlist call does, playlist name unknown.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatActAddToPlaylistNamed": "add {count, plural, =1{1 song} other{{count} songs}} to playlist “{name}”",
+  "@aiChatActAddToPlaylistNamed": {
+    "description": "What an add_to_playlist call does.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatActRemoveFromPlaylist": "remove {count, plural, =1{1 song} other{{count} songs}} from a playlist",
+  "@aiChatActRemoveFromPlaylist": {
+    "description": "What a remove_from_playlist call does, playlist name unknown.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatActRemoveFromPlaylistNamed": "remove {count, plural, =1{1 song} other{{count} songs}} from playlist “{name}”",
+  "@aiChatActRemoveFromPlaylistNamed": {
+    "description": "What a remove_from_playlist call does.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatActPlay": "play {count, plural, =1{1 song} other{{count} songs}}",
+  "@aiChatActPlay": {
+    "description": "What a play_tracks call does.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatActQueue": "add {count, plural, =1{1 song} other{{count} songs}} to the queue",
+  "@aiChatActQueue": {
+    "description": "What a queue_tracks call does.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatActRemoveFromQueue": "remove {count, plural, =1{1 song} other{{count} songs}} from the queue",
+  "@aiChatActRemoveFromQueue": {
+    "description": "What a remove_from_queue call does.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatGroupPlay": "Playback control",
+  "@aiChatGroupPlay": {
+    "description": "Tool group shown in a done card."
+  },
+  "aiChatGroupQueueEdit": "Queue edits",
+  "@aiChatGroupQueueEdit": {
+    "description": "Tool group shown in a done card."
+  },
+  "aiChatGroupPlaylistCreate": "Playlist creation",
+  "@aiChatGroupPlaylistCreate": {
+    "description": "Tool group shown in a done card."
+  },
+  "aiChatGroupPlaylistEdit": "Playlist edits",
+  "@aiChatGroupPlaylistEdit": {
+    "description": "Tool group shown in a done card."
+  },
+  "aiChatCardNeedsAllow": "{tool} · needs your OK",
+  "@aiChatCardNeedsAllow": {
+    "description": "Second line of a confirmation card.",
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatCardAllowedByUser": "You allowed it",
+  "@aiChatCardAllowedByUser": {
+    "description": "Start of the second line of a done card after a confirmation."
+  },
+  "aiChatCardAutomatic": "Automatic",
+  "@aiChatCardAutomatic": {
+    "description": "Start of the second line of a done card made in Auto mode."
+  },
+  "aiChatCardDoneTitle": "Done: {action}",
+  "@aiChatCardDoneTitle": {
+    "description": "Title of a done card.",
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatCardOldQueueReplaced": "the old queue was replaced",
+  "@aiChatCardOldQueueReplaced": {
+    "description": "Part of a done card's second line after play_tracks."
+  },
+  "aiChatCardGoneFromQueue": "{count, plural, =1{1 song} other{{count} songs}} already gone from the queue",
+  "@aiChatCardGoneFromQueue": {
+    "description": "Part of a done card's second line after a removal.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardGoneFromPlaylist": "{count, plural, =1{1 song} other{{count} songs}} already gone from the playlist",
+  "@aiChatCardGoneFromPlaylist": {
+    "description": "Part of a done card's second line after a removal.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardNotInLibrary": "{count, plural, =1{1 song} other{{count} songs}} not in the library",
+  "@aiChatCardNotInLibrary": {
+    "description": "Part of a done card's second line when ids were not songs.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardDenied": "Declined",
+  "@aiChatCardDenied": {
+    "description": "Title of a card the user declined."
+  },
+  "aiChatCardDeniedByNewMessage": "Declined (you sent another message)",
+  "@aiChatCardDeniedByNewMessage": {
+    "description": "Title of a card left open when the user wrote again."
+  },
+  "aiChatCardDeniedNotAllowed": "Declined: no longer allowed",
+  "@aiChatCardDeniedNotAllowed": {
+    "description": "Title of a card Kanaru refused to run after the user allowed it."
+  },
+  "aiChatCardExpired": "Expired",
+  "@aiChatCardExpired": {
+    "description": "Title of a confirmation card that waited too long."
+  },
+  "aiChatCardSkippedStopped": "Not run: you stopped it",
+  "@aiChatCardSkippedStopped": {
+    "description": "Title of a call that did not run after Stop."
+  },
+  "aiChatCardSkipped": "Not run",
+  "@aiChatCardSkipped": {
+    "description": "Title of a call that did not run."
+  },
+  "aiChatCardNothingChanged": "{action} · nothing changed",
+  "@aiChatCardNothingChanged": {
+    "description": "Second line of a card whose call did not run.",
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatCardExpiredWhy": "The card waited over 24 hours. Ask the AI again if you still want it.",
+  "@aiChatCardExpiredWhy": {
+    "description": "Reason line of an expired card."
+  },
+  "aiChatCardWhyReadOnly": "You switched this chat to Read-only before this ran.",
+  "@aiChatCardWhyReadOnly": {
+    "description": "Reason line of a card refused after the user allowed it."
+  },
+  "aiChatCardWhyGroupOff": "You turned this tool group off before this ran.",
+  "@aiChatCardWhyGroupOff": {
+    "description": "Reason line of a card refused after the user allowed it."
+  },
+  "aiChatCardWhyPluginChanged": "This chat's plugin changed before this ran.",
+  "@aiChatCardWhyPluginChanged": {
+    "description": "Reason line of a card refused after the user allowed it."
+  },
+  "aiChatCardWhyModelChanged": "This chat's model changed before this ran.",
+  "@aiChatCardWhyModelChanged": {
+    "description": "Reason line of a card refused after the user allowed it."
+  },
+  "aiChatCardWhyChangedAfterAllow": "This changed after you allowed it, so Kanaru did not run it.",
+  "@aiChatCardWhyChangedAfterAllow": {
+    "description": "Reason line of a card refused after the user allowed it."
+  },
+  "aiChatCardWhyNotAllowed": "This is no longer allowed to run.",
+  "@aiChatCardWhyNotAllowed": {
+    "description": "Reason line of a card refused after the user allowed it."
+  },
+  "aiChatCardWhyTooLarge": "This chat grew too long to send.",
+  "@aiChatCardWhyTooLarge": {
+    "description": "Reason line of a call skipped because the chat grew too large."
+  },
+  "aiChatCardWhyLimit": "The AI reached its change limit for this message.",
+  "@aiChatCardWhyLimit": {
+    "description": "Reason line of a call skipped because of the item limit."
+  },
+  "aiChatCardUnknownTitle": "Result unknown: {action}",
+  "@aiChatCardUnknownTitle": {
+    "description": "Title of a card whose write was cut off.",
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatCardUnknownClosed": "Kanaru was closed while this was running, so it is not known whether it finished.",
+  "@aiChatCardUnknownClosed": {
+    "description": "First sentence of the unknown-result card."
+  },
+  "aiChatCardUnknownTimedOut": "This took too long, so it is not known whether it finished.",
+  "@aiChatCardUnknownTimedOut": {
+    "description": "First sentence of the unknown-result card."
+  },
+  "aiChatCardLookQueue": "Check the queue before asking the AI to do it again.",
+  "@aiChatCardLookQueue": {
+    "description": "Last sentence of the unknown-result card for a queue change."
+  },
+  "aiChatCardLookPlaylist": "Check the playlist before asking the AI to do it again.",
+  "@aiChatCardLookPlaylist": {
+    "description": "Last sentence of the unknown-result card for a playlist change."
+  },
+  "aiChatCardLimitTitle": "The AI reached its change limit for this message",
+  "@aiChatCardLimitTitle": {
+    "description": "Title of the item-cap card."
+  },
+  "aiChatCardLimitBody": "One message may remove at most {removed, plural, =1{1 song} other{{removed} songs}} and add at most {added, plural, =1{1 song} other{{added} songs}}. Send a new message to continue.",
+  "@aiChatCardLimitBody": {
+    "description": "Body of the item-cap card.",
+    "placeholders": {
+      "removed": {
+        "type": "int"
+      },
+      "added": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardLimitBodyAction": "One message may remove at most {removed, plural, =1{1 song} other{{removed} songs}} and add at most {added, plural, =1{1 song} other{{added} songs}}. “{action}” did not run. Send a new message to continue.",
+  "@aiChatCardLimitBodyAction": {
+    "description": "Body of the item-cap card naming the call that did not run.",
+    "placeholders": {
+      "removed": {
+        "type": "int"
+      },
+      "added": {
+        "type": "int"
+      },
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrPluginFallback": "Plugin",
+  "@aiChatErrPluginFallback": {
+    "description": "Name used when the chat's plugin is not installed any more."
+  },
+  "aiChatErrNetworkTitle": "Could not reach {host}",
+  "@aiChatErrNetworkTitle": {
+    "description": "Title of the network error card.",
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrNetworkTitleNoHost": "Could not reach the server",
+  "@aiChatErrNetworkTitleNoHost": {
+    "description": "Title of the network error card when the host is not known."
+  },
+  "aiChatErrNetworkBody": "Check your connection and try again. Your message is still here.",
+  "aiChatErrRateTitle": "{plugin} is limiting requests",
+  "@aiChatErrRateTitle": {
+    "description": "Title of the rate-limit card.",
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrRateBody": "The plugin reported error 429 (too many requests). When the countdown ends, tap Try again; Kanaru never resends on its own.",
+  "aiChatErrRateBodyNoClock": "The plugin reported error 429 (too many requests). Wait a moment, then tap Try again; Kanaru never resends on its own.",
+  "aiChatErrBusyTitle": "The previous turn has not stopped yet",
+  "aiChatErrBusyBody": "Kanaru is still finishing the previous answer. Try again in a moment.",
+  "aiChatErrBusyStuckTitle": "The previous turn still has not stopped",
+  "aiChatErrBusyStuckBody": "Tried 3 times and the previous turn has not ended. Restart Kanaru and try again.",
+  "aiChatErrKeyTitle": "{plugin} did not accept the API key",
+  "@aiChatErrKeyTitle": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrKeyBody": "The API key is wrong or was revoked. Fix it in the plugin's settings, then try again.",
+  "aiChatErrQuotaTitle": "The {plugin} account is out of quota",
+  "@aiChatErrQuotaTitle": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrQuotaBody": "Top up or change your plan on the provider's site, then try again.",
+  "aiChatErrConfigTitle": "The settings of {plugin} are incomplete",
+  "@aiChatErrConfigTitle": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrConfigBody": "The plugin says a setting is missing. Open its settings, fill it in and try again.",
+  "aiChatErrModelGoneTitle": "Model no longer available: {model}",
+  "@aiChatErrModelGoneTitle": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrModelGoneTitleNoModel": "Model no longer available",
+  "aiChatErrModelGoneBody": "{plugin} no longer has this model. Pick another model, then try again.",
+  "@aiChatErrModelGoneBody": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrContextTitle": "This conversation is too long for this model",
+  "aiChatErrContextBody": "{model} cannot take more. Start a new conversation to go on; this one stays readable.",
+  "@aiChatErrContextBody": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrTooLargeTitle": "This conversation is too long to send",
+  "aiChatErrTooLargeBody": "Kanaru shortened the older turns and it is still over the send limit. Start a new conversation, or send a shorter message.",
+  "aiChatErrBlockedTitle": "The model will not answer this request",
+  "aiChatErrBlockedBody": "{model} refused (the provider's reason). Rephrase it, or change the model in the input box.",
+  "@aiChatErrBlockedBody": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrEmptyTitle": "The model gave no answer",
+  "aiChatErrEmptyBody": "{model} returned an empty answer. Try again, or change the model in the input box.",
+  "@aiChatErrEmptyBody": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrGenericTitle": "{plugin} ran into an error",
+  "@aiChatErrGenericTitle": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrGenericBody": "The service reported an error (code: {code}). Try again in a few minutes.",
+  "@aiChatErrGenericBody": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrHostTitle": "The plugin is not allowed to call {host}",
+  "@aiChatErrHostTitle": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrHostTitleNoHost": "The plugin is not allowed to call this address",
+  "aiChatErrHostBody": "This address is not in the list the plugin declared at install, so Kanaru blocks it.",
+  "aiChatErrUpdatedTitle": "The plugin was just updated",
+  "aiChatErrUpdatedBody": "{plugin} was updated during the answer, so this turn stopped. What was received stays above.",
+  "@aiChatErrUpdatedBody": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrRemovedTitle": "Plugin removed",
+  "aiChatErrRemovedBody": "{plugin} was removed during the answer. Pick another plugin to go on.",
+  "@aiChatErrRemovedBody": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrBrokenTitle": "The plugin is broken and needs reinstalling",
+  "aiChatErrBrokenBody": "The package of {plugin} cannot be read. Open the plugin page to reinstall it.",
+  "@aiChatErrBrokenBody": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrTimeoutTitle": "Timed out",
+  "aiChatErrTimeoutBody": "{plugin} sent nothing more, so this turn stopped. What was received stays above.",
+  "@aiChatErrTimeoutBody": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrCrashTitle": "The plugin ran into an error",
+  "aiChatErrCrashBody": "{plugin} stopped midway because of an error inside the plugin. Try again; if it repeats, check the plugin's log.",
+  "@aiChatErrCrashBody": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrCutOffTitle": "The answer was cut off when Kanaru closed",
+  "aiChatErrCutOffBody": "What was received stays above. Kanaru does not resend when it opens; tap Try again to let the AI go on.",
+  "aiChatActionOpenPlugin": "Open plugin",
+  "@aiChatActionOpenPlugin": {
+    "description": "Button of the broken-plugin error card."
+  },
+  "aiChatActionChangeModel": "Change model",
+  "@aiChatActionChangeModel": {
+    "description": "Button of the model-not-found error card: opens the model picker."
   }
 }

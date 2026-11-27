@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:kanaru/src/ai/domain/conversation/ai_conversation.dart';
 import 'package:kanaru/src/ai/domain/conversation/ai_message.dart';
 import 'package:kanaru/src/ai/domain/conversation/parts.dart';
+import 'package:kanaru/src/ai/domain/loop/driver_results.dart';
 import 'package:kanaru/src/ai/domain/loop/loop_state.dart';
+import 'package:kanaru/src/ai/domain/output/chat_outcome.dart';
 import 'package:kanaru/src/ai/domain/output/chat_readiness.dart';
 import 'package:kanaru/src/ai/domain/permission.dart';
 import 'package:kanaru/src/ai/state/chat_conversation_providers.dart';
@@ -55,6 +59,48 @@ class FakeChatSession extends ChatSessionController {
     conversationId: state.conversationId,
     turnState: turn,
   );
+
+  /// Shows [view] as the card of the round that just failed.
+  void setView(ChatOutcomeView? view) => state = ChatSessionState(
+    conversationId: state.conversationId,
+    turnState: state.turnState,
+    lastView: view,
+  );
+
+  /// What `allow` and `deny` answer, and when (a completer holds the answer
+  /// back; null answers at once).
+  CardAnswer cardAnswer = CardAnswer.accepted;
+  Completer<void>? cardAnswerGate;
+
+  /// What `retry` answers.
+  DriverStart retryResult = DriverStarted(Future.value());
+
+  /// What `replayQueue` answers.
+  ReplayResult replayResult = ReplayResult.played;
+
+  Future<CardAnswer> _answer(String call) async {
+    calls.add(call);
+    await cardAnswerGate?.future;
+    return cardAnswer;
+  }
+
+  @override
+  Future<CardAnswer> allow(String callId) => _answer('allow $callId');
+
+  @override
+  Future<CardAnswer> deny(String callId) => _answer('deny $callId');
+
+  @override
+  Future<DriverStart> retry() async {
+    calls.add('retry');
+    return retryResult;
+  }
+
+  @override
+  Future<ReplayResult> replayQueue(int messageId) async {
+    calls.add('replay $messageId');
+    return replayResult;
+  }
 
   /// Conversations that already hold a message.
   final used = <int>{};
