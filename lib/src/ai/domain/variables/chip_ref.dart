@@ -16,6 +16,9 @@ class ChipRef {
 
   final ChipKind kind;
   final String? ref;
+
+  /// Text the chip shows. For a songs chip whose ids were cut it holds the
+  /// real selection size as a number: read it only through [songsChipTotal].
   final String? label;
   final List<TrackRefSnapshot> tracks;
 
@@ -34,6 +37,11 @@ AiToolGroup chipGroup(ChipKind kind) => switch (kind) {
   ChipKind.language => AiToolGroup.trackInfo,
   ChipKind.playlist => AiToolGroup.playlists,
 };
+
+/// The real size of a cut songs selection: its [label] carries it as a number
+/// (set by [chipRefOf] only when the selection was cut at `askAiMaxSongs`).
+/// Null for a selection that was sent whole.
+int? songsChipTotal(String? label) => int.tryParse(label ?? '');
 
 TrackRefSnapshot _snap(AskAiTrack t) => TrackRefSnapshot(
   trackId: t.id,
