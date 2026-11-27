@@ -5,11 +5,14 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../plugins/domain/package/plugin_kind.dart';
+import '../../../plugins/domain/package/seekbar_assets.dart'
+    show referencedAssets;
 import '../../../plugins/state/plugin_page_provider.dart';
 import '../../../plugins/state/store_ops.dart';
 import '../../../plugins/state/store_view_models.dart';
 import '../../settings/ui/soon_row.dart';
 import '../common/plugin_labels.dart';
+import '../common/seekbar_facts.dart';
 import 'details_info_row.dart';
 
 /// "Chi tiết": label over a selectable value for where it came from, who it
@@ -26,15 +29,18 @@ class DetailsBlock extends ConsumerWidget {
     final repos = ref.watch(repoViewsProvider).value ?? const <RepoView>[];
     final manifest = data.manifest;
     final description = manifest?.description ?? '';
+    final seekbar = data.kind == PluginKind.seekbar;
     return SetupSection(
       title: Text(l10n.pluginsPageDetails),
       children: [
         DetailsInfoRow(label: l10n.pluginsPageFrom, lines: _from(l10n, repos)),
-        DetailsInfoRow(
-          label: l10n.pluginsPkgSendTo,
-          lines: _sendTo(l10n),
-          mono: true,
-        ),
+        // A seek bar plugin has no code and sends nothing: no address row.
+        if (!seekbar)
+          DetailsInfoRow(
+            label: l10n.pluginsPkgSendTo,
+            lines: _sendTo(l10n),
+            mono: true,
+          ),
         DetailsInfoRow(
           label: l10n.pluginsPageInstalledAt,
           lines: [_installedAt(l10n)],
@@ -44,16 +50,36 @@ class DetailsBlock extends ConsumerWidget {
             label: l10n.pluginsPageDescription,
             lines: [DetailLine(description)],
           ),
+        if (seekbar && manifest != null)
+          DetailsInfoRow(
+            label: l10n.pluginsSkFactLicense,
+            lines: [DetailLine(manifest.license)],
+          ),
         DetailsInfoRow(label: l10n.pluginsPageType, lines: [_type(l10n)]),
-        const Divider(height: 1),
-        SoonRow(icon: KIcons.stats, title: Text(l10n.pluginsPkgFacts)),
-        SoonRow(icon: KIcons.ai, title: Text(l10n.pluginsPkgAskAi)),
-        SoonRow(
-          icon: KIcons.openInNew,
-          title: Text(l10n.pluginsPageSourceCode),
-        ),
+        if (seekbar && manifest?.seekbar != null)
+          DetailsInfoRow(
+            label: l10n.pluginsSkFactPackage,
+            lines: [
+              DetailLine(
+                l10n.pluginsSkPackageNoCode(
+                  seekbarFilesText(l10n, referencedAssets(manifest!.seekbar!)),
+                ),
+              ),
+            ],
+          ),
+        if (!seekbar) ..._soonRows(l10n),
       ],
     );
+  }
+
+  /// The rows of features that are not built yet, after a divider.
+  List<Widget> _soonRows(AppLocalizations l10n) {
+    return [
+      const Divider(height: 1),
+      SoonRow(icon: KIcons.stats, title: Text(l10n.pluginsPkgFacts)),
+      SoonRow(icon: KIcons.ai, title: Text(l10n.pluginsPkgAskAi)),
+      SoonRow(icon: KIcons.openInNew, title: Text(l10n.pluginsPageSourceCode)),
+    ];
   }
 
   List<DetailLine> _from(AppLocalizations l10n, List<RepoView> repos) {
@@ -126,6 +152,16 @@ class DetailsBlock extends ConsumerWidget {
   DetailLine _type(AppLocalizations l10n) {
     final kind = kindPluginLabel(l10n, data.kind) ?? '';
     final api = data.row.apiVersion;
+    final spec = data.manifest?.seekbar;
+    if (data.kind == PluginKind.seekbar && spec != null) {
+      return DetailLine(
+        l10n.pluginsPageTypeValueSeekbar(
+          kind,
+          seekbarBaseTitle(l10n, spec),
+          api,
+        ),
+      );
+    }
     return DetailLine(
       data.kind == PluginKind.aiTranslate
           ? l10n.pluginsPageTypeValueAi(kind, api)

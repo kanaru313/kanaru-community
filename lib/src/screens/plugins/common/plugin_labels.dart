@@ -3,6 +3,7 @@ import '../../../library/domain/browse/language_names.dart';
 import '../../../plugins/domain/install/repo_results.dart';
 import '../../../plugins/domain/net/address_rules.dart';
 import '../../../plugins/domain/package/plugin_kind.dart';
+import '../../../plugins/state/store_filter.dart';
 
 /// The kinds the store filters by, in list order. Translation and AI
 /// translation are one entry ("Dịch"): the store does not tell them apart.
@@ -10,11 +11,18 @@ enum StoreKindGroup {
   lyrics({PluginKind.lyrics}),
   translate({PluginKind.translate, PluginKind.aiTranslate}),
   streaming({PluginKind.streaming}),
-  aiChat({PluginKind.aiChat});
+  aiChat({PluginKind.aiChat}),
+
+  /// Last in every list; a cosmetic kind (see [isCosmetic]).
+  seekbar({PluginKind.seekbar});
 
   const StoreKindGroup(this.kinds);
 
   final Set<PluginKind> kinds;
+
+  /// Whether the kind only restyles the app: the store hides its
+  /// uninstalled plugins until asked.
+  bool get isCosmetic => cosmeticPluginKinds.containsAll(kinds);
 
   static StoreKindGroup? of(PluginKind? kind) {
     for (final group in values) {
@@ -30,6 +38,7 @@ String kindGroupLabel(AppLocalizations l10n, StoreKindGroup group) =>
       StoreKindGroup.translate => l10n.pluginsKindTranslate,
       StoreKindGroup.streaming => l10n.pluginsKindStreaming,
       StoreKindGroup.aiChat => l10n.pluginsKindAiChat,
+      StoreKindGroup.seekbar => l10n.pluginsKindSeekbar,
     };
 
 /// One line saying what the kind is (the tooltip of its filter chip).
@@ -39,6 +48,7 @@ String kindGroupHelp(AppLocalizations l10n, StoreKindGroup group) =>
       StoreKindGroup.translate => l10n.pluginsKindHelpTranslate,
       StoreKindGroup.streaming => l10n.pluginsKindHelpStreaming,
       StoreKindGroup.aiChat => l10n.pluginsKindHelpAiChat,
+      StoreKindGroup.seekbar => l10n.pluginsKindHelpSeekbar,
     };
 
 /// The kind as a "Plugin …" noun phrase (install subtitle, plugin page).
@@ -49,6 +59,7 @@ String? kindPluginLabel(AppLocalizations l10n, PluginKind? kind) {
     StoreKindGroup.translate => l10n.pluginsKindNounTranslate,
     StoreKindGroup.streaming => l10n.pluginsKindNounStreaming,
     StoreKindGroup.aiChat => l10n.pluginsKindNounAiChat,
+    StoreKindGroup.seekbar => l10n.pluginsKindNounSeekbar,
     null => null,
   };
 }

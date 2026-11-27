@@ -18,7 +18,9 @@ class NewerAppDialog extends StatelessWidget {
     return AlertDialog(
       title: Text(l10n.pluginsProblemNewerTitle),
       content: Text(
-        version == null
+        problem.feature == lottieFeature
+            ? l10n.pluginsProblemNewerBodyLottie(problem.subject)
+            : version == null
             ? l10n.pluginsProblemNewerBody(problem.subject)
             : l10n.pluginsProblemNewerBodyVersion(
                 problem.subject,

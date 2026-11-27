@@ -127,12 +127,17 @@ List<StoreItem> buildStoreItems(
 /// name, author, repository name and hosts; every word must be found.
 bool storeItemMatches(StoreItem item, StoreFilter filter) {
   final entry = item.entry;
-  if (filter.kinds.isNotEmpty && !filter.kinds.contains(entry.kind)) {
+  final installed =
+      item.state == StoreItemState.installed ||
+      item.state == StoreItemState.updateAvailable;
+  if (!storeKindVisible(
+    kind: entry.kind,
+    installed: installed,
+    filter: filter,
+  )) {
     return false;
   }
   final search = parseStoreSearch(filter.query);
-  final tagKinds = search.kinds;
-  if (tagKinds.isNotEmpty && !tagKinds.contains(entry.kind)) return false;
   if (filter.states.isNotEmpty &&
       !filter.states.any((chip) => chip.matches(item.state))) {
     return false;

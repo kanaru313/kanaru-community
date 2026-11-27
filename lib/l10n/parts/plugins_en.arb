@@ -1225,5 +1225,182 @@
   "pluginsRemoveKeepPinned": "Pinned lyrics from this source (if any)",
   "pluginsRemoveKeepLrc": "The .lrc files written next to songs",
   "pluginsRemoveKeep": "Kept",
-  "pluginsPageConnectionRow": "Requests at once, spacing"
+  "pluginsPageConnectionRow": "Requests at once, spacing",
+  "pluginsKindSeekbar": "Seek bar",
+  "pluginsKindNounSeekbar": "Seek bar plugin",
+  "pluginsKindHelpSeekbar": "Changes how the seek bar is drawn in Now Playing and on the lyrics screen.",
+  "pluginsReasonSeekbarCode": "{detail}: a seek bar plugin cannot contain code",
+  "@pluginsReasonSeekbarCode": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonAssetMissing": "{detail}: the package does not contain this file",
+  "@pluginsReasonAssetMissing": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonAssetFormat": "{detail}: not a valid PNG or WebP image",
+  "@pluginsReasonAssetFormat": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonAssetAnimated": "{detail}: animated images are not supported, use a still image",
+  "@pluginsReasonAssetAnimated": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonAssetExtension": "{detail}: the file extension does not match the image",
+  "@pluginsReasonAssetExtension": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonAssetSize": "{detail}: the image is too large, at most 2048 px on each side",
+  "@pluginsReasonAssetSize": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonAssetFrames": "{detail}: the image width does not divide by its number of frames",
+  "@pluginsReasonAssetFrames": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonAssetOther": "{detail}: the image cannot be used",
+  "@pluginsReasonAssetOther": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonAssetNote": "Images of a seek bar plugin: PNG or WebP, not animated, at most 512 KB each and 2048 px on each side; the whole package at most 1 MB.",
+  "pluginsReasonLottie": "Needs a newer Kanaru to use the Lottie animation",
+  "pluginsProblemNewerBodyLottie": "{name} uses an animated Lottie thumb, which this version of Kanaru does not support yet. Update Kanaru, then install it again.",
+  "@pluginsProblemNewerBodyLottie": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgNoData": "Sends no data anywhere.",
+  "pluginsPkgProgressSeekbar": "{done} / {total} KB · checking plugin.json, file names, images",
+  "@pluginsPkgProgressSeekbar": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsPkgProgressUnknownSeekbar": "{done} KB · checking plugin.json, file names, images",
+  "@pluginsPkgProgressUnknownSeekbar": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsPkgCheckingSeekbar": "Checking plugin.json, file names, images",
+  "pluginsPkgFactsHint": "Kanaru works these out from the package; the AI cannot change them.",
+  "pluginsPkgFactsHintTooltip": "About the static facts",
+  "pluginsSkFactPackage": "Package",
+  "pluginsSkFactCode": "Code",
+  "pluginsSkFactBase": "Base",
+  "pluginsSkFactLicense": "License",
+  "pluginsSkFilesWithImages": "plugin.json + {images}",
+  "@pluginsSkFilesWithImages": {
+    "placeholders": {
+      "images": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsSkImagesPng": "{count, plural, one{1 PNG image} other{{count} PNG images}}",
+  "@pluginsSkImagesPng": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsSkImagesWebp": "{count, plural, one{1 WebP image} other{{count} WebP images}}",
+  "@pluginsSkImagesWebp": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsSkImagesLottie": "1 Lottie animation",
+  "pluginsSkPackageSize": "{files} · {size}",
+  "@pluginsSkPackageSize": {
+    "placeholders": {
+      "files": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsSkPackageNoCode": "{files} · no code",
+  "@pluginsSkPackageNoCode": {
+    "placeholders": {
+      "files": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsSkCodeNone": "None: Kanaru draws it from the declaration, inside the seek bar band",
+  "pluginsSkBaseStar": "{base} · can be the ★ style",
+  "@pluginsSkBaseStar": {
+    "placeholders": {
+      "base": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsSkUseTitle": "Used in Settings › Seek bar",
+  "pluginsSkUseChosen": "In use",
+  "pluginsSkUseFallback": "★ while a song has no waveform",
+  "pluginsSkUseBoth": "In use · ★ while a song has no waveform",
+  "pluginsSkUseNone": "Not in use",
+  "pluginsPageTypeValueSeekbar": "{kind} · {base} base · plugin API {api}",
+  "@pluginsPageTypeValueSeekbar": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "base": {
+        "type": "String"
+      },
+      "api": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsRemovePackage": "The plugin’s package (declaration and images)"
 }

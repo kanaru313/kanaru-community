@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart' show BuildContext;
+import 'package:flutter/widgets.dart' show BuildContext, Text;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/platform/domain/document_picker.dart';
 import 'package:kanaru/src/foundation/result.dart';
@@ -7,7 +7,9 @@ import 'package:kanaru/src/plugins/domain/install/install_result.dart';
 import 'package:kanaru/src/plugins/domain/install/prepare_result.dart';
 import 'package:kanaru/src/plugins/domain/install/script_checker.dart';
 import 'package:kanaru/src/plugins/domain/install/update_diff.dart';
+import 'package:kanaru/src/plugins/domain/package/image_header.dart';
 import 'package:kanaru/src/plugins/domain/package/package_problem.dart';
+import 'package:kanaru/src/plugins/domain/package/plugin_kind.dart';
 import 'package:kanaru/src/screens/plugins/install/package_controller.dart';
 import 'package:kanaru/src/screens/plugins/install/package_flow.dart';
 
@@ -317,6 +319,132 @@ void main() {
         await tester.pumpAndSettle();
         expect(ops.prepared, hasLength(1));
         expect(find.text('Package doesn’t match the list'), findsNothing);
+      });
+
+      testWidgets(
+        'a seek bar image that is too large names it and the limits',
+        (tester) async {
+          final ops = FakeInstallOps();
+          await _open(
+            tester,
+            ops,
+            () => const Err(
+              PackageUnreadable(
+                InvalidAsset('assets/cat.png', ImageProblem.size),
+              ),
+            ),
+            wide: wide,
+          );
+          expect(find.text('Can’t install'), findsOneWidget);
+          expect(
+            find.text(
+              'assets/cat.png: the image is too large, at most 2048 px on each side',
+            ),
+            findsOneWidget,
+          );
+          expect(
+            find.textContaining('PNG or WebP, not animated, at most 512 KB'),
+            findsOneWidget,
+          );
+        },
+      );
+
+      testWidgets('every image refusal has its own line', (tester) async {
+        final ops = FakeInstallOps();
+        final seen = <String>{};
+        for (final reason in [
+          ImageProblem.format,
+          ImageProblem.animated,
+          ImageProblem.extension,
+          'frames',
+        ]) {
+          await _open(
+            tester,
+            ops,
+            () => Err(PackageUnreadable(InvalidAsset('assets/a.png', reason))),
+            wide: wide,
+          );
+          final line = tester
+              .widgetList<Text>(find.textContaining('assets/a.png: '))
+              .single
+              .data!;
+          expect(seen.add(line), isTrue, reason: '$reason repeats a line');
+          await tester.tap(find.text('Close'));
+          await tester.pumpAndSettle();
+        }
+      });
+
+      testWidgets('a missing image names the file', (tester) async {
+        final ops = FakeInstallOps();
+        await _open(
+          tester,
+          ops,
+          () => const Err(PackageUnreadable(MissingAsset('assets/t.png'))),
+          wide: wide,
+        );
+        expect(
+          find.text('assets/t.png: the package does not contain this file'),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('a seek bar package with code says it cannot have any', (
+        tester,
+      ) async {
+        final ops = FakeInstallOps();
+        await _open(
+          tester,
+          ops,
+          () => const Err(PackageUnreadable(UnsafeEntry('src/main.js'))),
+          wide: wide,
+        );
+        expect(
+          find.text('src/main.js: a seek bar plugin cannot contain code'),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('a path that is unsafe keeps the unsafe-name line', (
+        tester,
+      ) async {
+        final ops = FakeInstallOps();
+        await _open(
+          tester,
+          ops,
+          () => const Err(PackageUnreadable(UnsafeEntry('../x'))),
+          wide: wide,
+        );
+        expect(find.textContaining('unsafe entry name'), findsOneWidget);
+      });
+
+      testWidgets('a Lottie thumb opens the newer-Kanaru dialog', (
+        tester,
+      ) async {
+        final ops = FakeInstallOps();
+        ops.onPrepare = () async => const Err(
+          PackageUnreadable(UnsupportedFeature('seekbar.thumb.lottie')),
+        );
+        await pumpFlowHost(
+          tester,
+          ops: ops,
+          size: wide ? wideWindow : narrowWindow,
+          onTap: (c) => installFromRepository(
+            c,
+            ops,
+            installId: 'id-demo',
+            name: 'Vinyl',
+            kind: PluginKind.seekbar,
+          ),
+        );
+        expect(find.text('Needs a newer Kanaru'), findsOneWidget);
+        expect(
+          find.text(
+            'Vinyl uses an animated Lottie thumb, which this version of Kanaru '
+            'does not support yet. Update Kanaru, then install it again.',
+          ),
+          findsOneWidget,
+        );
+        expect(find.text('Reasons'), findsNothing);
       });
     });
   }

@@ -6,6 +6,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
+import '../../../plugins/domain/package/plugin_kind.dart';
 import '../../../plugins/state/alerts_provider.dart';
 import '../../../plugins/state/install_ops.dart';
 import '../../../plugins/state/plugin_page_provider.dart';
@@ -226,8 +227,12 @@ class _PluginPageState extends ConsumerState<PluginPage>
             ),
         ],
       ),
-      const ConnectionBlock(),
-      DataBlock(installId: widget.installId, kind: data.kind),
+      // A seek bar plugin runs nothing: no connection limits, no stored data
+      // and no log.
+      if (data.kind != PluginKind.seekbar) ...[
+        const ConnectionBlock(),
+        DataBlock(installId: widget.installId, kind: data.kind),
+      ],
     ];
   }
 

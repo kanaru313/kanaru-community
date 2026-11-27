@@ -7,6 +7,10 @@ import 'problem_reasons.dart';
 
 export 'problem_reasons.dart';
 
+/// The format feature a package uses that this app cannot draw yet: an
+/// animated Lottie thumb.
+const lottieFeature = 'seekbar.thumb.lottie';
+
 /// Which dialog explains a package that cannot be installed.
 enum InstallProblemKind {
   /// "Không cài được" with a box of reasons.
@@ -30,6 +34,7 @@ class InstallProblem {
     this.reasons = const [],
     this.held,
     this.apiVersion,
+    this.feature,
     this.repoLabel,
   });
 
@@ -41,6 +46,9 @@ class InstallProblem {
 
   /// The `apiVersion` of a package that needs a newer app, when known.
   final int? apiVersion;
+
+  /// The `UnsupportedFeature` name of a package that needs a newer app.
+  final String? feature;
 
   /// The repository a mismatching package came from.
   final String? repoLabel;
@@ -56,6 +64,11 @@ InstallProblem problemOfPackage(
     kind: InstallProblemKind.newerApp,
     subject: subject,
     apiVersion: int.tryParse(detail),
+  ),
+  UnsupportedFeature(:final detail) => InstallProblem(
+    kind: InstallProblemKind.newerApp,
+    subject: subject,
+    feature: detail,
   ),
   UnsupportedKind() => InstallProblem(
     kind: InstallProblemKind.newerApp,

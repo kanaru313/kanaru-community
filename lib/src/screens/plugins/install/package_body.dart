@@ -3,12 +3,14 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../plugins/domain/install/held_package.dart';
+import '../../../plugins/domain/package/plugin_kind.dart';
 import '../../../plugins/domain/package/plugin_manifest.dart';
 import '../../settings/ui/soon_row.dart';
 import '../common/hosts_block.dart';
 import 'package_controller.dart';
 import 'package_band.dart';
 import 'install_progress.dart';
+import 'seekbar_facts_block.dart';
 import 'source_card.dart';
 
 /// The scrolling body of the install / update screen, by phase.
@@ -44,7 +46,7 @@ class PackageBody extends StatelessWidget {
             message: l10n.pluginsFreeStreamingLimit,
           ),
         if (c.phase == PackagePhase.loading)
-          InstallProgress(progress: c.progress),
+          InstallProgress(progress: c.progress, kind: c.subject.kind),
         if (c.phase == PackagePhase.failed)
           PackageErrorBand(
             prepareFailure: c.prepareFailure,
@@ -67,6 +69,7 @@ class PackageBody extends StatelessWidget {
       for (final host in manifest.hosts)
         if (!newHosts.contains(host)) host,
     ];
+    final seekbar = manifest.kind == PluginKind.seekbar;
     return [
       if (!update && manifest.description.isNotEmpty)
         Text(
@@ -80,11 +83,16 @@ class PackageBody extends StatelessWidget {
         consent: update
             ? (newHosts.isEmpty ? HostsConsent.none : HostsConsent.update)
             : HostsConsent.install,
+        // A seek bar package has no code and no addresses: say so.
+        emptyLine: seekbar ? l10n.pluginsPkgNoData : null,
       ),
-      _SoonRows(
-        facts: update ? l10n.pluginsPkgFactsUpdate : l10n.pluginsPkgFacts,
-        ask: update ? l10n.pluginsPkgAskAiUpdate : l10n.pluginsPkgAskAi,
-      ),
+      if (seekbar)
+        SeekbarFactsBlock(package: held.package)
+      else
+        _SoonRows(
+          facts: update ? l10n.pluginsPkgFactsUpdate : l10n.pluginsPkgFacts,
+          ask: update ? l10n.pluginsPkgAskAiUpdate : l10n.pluginsPkgAskAi,
+        ),
     ];
   }
 

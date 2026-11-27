@@ -1,8 +1,11 @@
+import 'package:flutter/widgets.dart' show Locale;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/l10n/gen/app_localizations.dart';
 import 'package:kanaru/src/plugins/domain/package/plugin_kind.dart';
 import 'package:kanaru/src/plugins/state/install_ops.dart';
 import 'package:kanaru/src/plugins/state/plugin_run_info_provider.dart';
 import 'package:kanaru/src/screens/plugins/remove/remove_flow.dart';
+import 'package:material_ui/material_ui.dart' show FilledButton;
 
 import '../support/install_fixtures.dart';
 import '../support/run_fixtures.dart';
@@ -152,6 +155,37 @@ void main() {
         expect(find.textContaining('Saved lyrics of'), findsNothing);
       });
 
+      testWidgets(
+        'a seek bar plugin lists its package only and keeps nothing',
+        (tester) async {
+          final ops = FakeInstallOps()
+            ..preview = const RemovePreview(
+              installId: 'id-demo',
+              name: 'Neon',
+              author: 'someone',
+              version: 2,
+              kind: PluginKind.seekbar,
+            );
+          await pumpFlowHost(
+            tester,
+            ops: ops,
+            size: size,
+            onTap: (c) => removePluginFlow(c, ops, 'id-demo'),
+          );
+          expect(find.text('Remove Neon?'), findsOneWidget);
+          expect(find.text('Will be removed'), findsOneWidget);
+          expect(
+            find.text('The plugin’s package (declaration and images)'),
+            findsOneWidget,
+          );
+          expect(find.text('The plugin’s code'), findsNothing);
+          expect(find.text('The plugin’s settings'), findsNothing);
+          expect(find.textContaining('Own storage'), findsNothing);
+          expect(find.text('The plugin’s log'), findsNothing);
+          expect(find.text('Kept'), findsNothing);
+        },
+      );
+
       testWidgets('Cancel removes nothing', (tester) async {
         final ops = FakeInstallOps();
         var before = 0;
@@ -245,4 +279,43 @@ void main() {
       });
     });
   }
+  testWidgets('Vietnamese says Gỡ for removing a plugin, Xoá for its data', (
+    tester,
+  ) async {
+    final ops = FakeInstallOps();
+    await pumpFlowHost(
+      tester,
+      ops: ops,
+      locale: const Locale('vi'),
+      onTap: (c) => removePluginFlow(c, ops, 'id-demo'),
+    );
+    expect(find.text('Gỡ Demo?'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Gỡ'), findsOneWidget);
+    // The box lists files that are deleted: still "xoá".
+    expect(find.text('Sẽ bị xoá'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'Gỡ'));
+    await tester.pumpAndSettle();
+    expect(ops.removed, ['id-demo']);
+    expect(find.text('Đã gỡ Demo'), findsOneWidget);
+  });
+
+  testWidgets('Vietnamese failure and tooltip say gỡ', (tester) async {
+    final ops = FakeInstallOps()..removeResult = RemoveResult.failed;
+    await pumpFlowHost(
+      tester,
+      ops: ops,
+      locale: const Locale('vi'),
+      onTap: (c) => removePluginFlow(c, ops, 'id-demo'),
+    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Gỡ'));
+    await tester.pumpAndSettle();
+    expect(find.text('Không gỡ được Demo'), findsOneWidget);
+    final vi = await AppLocalizations.delegate.load(const Locale('vi'));
+    expect(vi.pluginsRemoveTooltip('Demo'), 'Gỡ Demo');
+    expect(vi.pluginsReasonKindChange, contains('Hãy gỡ plugin'));
+    expect(vi.pluginsPageNoUpdatesFile, contains('Hãy gỡ rồi cài file mới'));
+    expect(vi.pluginsPageNoUpdatesLink, contains('Hãy gỡ rồi cài bản mới'));
+    expect(vi.pluginsPageBrokenBodyFile, contains('hãy gỡ rồi cài file mới'));
+    expect(vi.pluginsReasonOtherOrigin('x'), contains('hãy gỡ plugin đã cài'));
+  });
 }

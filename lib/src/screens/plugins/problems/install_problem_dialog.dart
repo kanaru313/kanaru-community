@@ -35,6 +35,7 @@ class InstallProblemDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final note = hasHostReason(problem);
+    final imageNote = hasImageReason(problem);
     return AlertDialog(
       title: Text(l10n.pluginsProblemTitle),
       content: SingleChildScrollView(
@@ -55,6 +56,11 @@ class InstallProblemDialog extends StatelessWidget {
             if (note)
               Text(
                 l10n.pluginsProblemHostsNote,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            if (imageNote)
+              Text(
+                l10n.pluginsReasonAssetNote,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
           ],

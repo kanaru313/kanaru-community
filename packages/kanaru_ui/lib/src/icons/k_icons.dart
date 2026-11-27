@@ -212,6 +212,7 @@ abstract final class KIcons {
   static const IconData font = FluentIcons.text_font_24_regular;
   static const IconData textSize = FluentIcons.text_font_size_24_regular;
   static const IconData seekBar = FluentIcons.data_bar_vertical_24_regular;
+  static const IconData pluginStore = FluentIcons.building_shop_24_regular;
   static const IconData windowFrame = FluentIcons.window_24_regular;
   static const IconData gapless = FluentIcons.arrow_right_24_regular;
   static const IconData fadeIn = FluentIcons.speaker_2_24_regular;

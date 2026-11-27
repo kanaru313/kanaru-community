@@ -8,8 +8,8 @@ import '../../../plugins/state/install_ops.dart';
 import '../../../plugins/state/plugin_run_info_provider.dart';
 import 'remove_plugin_dialog.dart';
 
-/// Asks, removes plugin [installId], and says how it went ("Đã xoá {tên}" /
-/// "Không xoá được {tên}"). Always asked; the dialog shows the size of the
+/// Asks, removes plugin [installId], and says how it went ("Đã gỡ {tên}" /
+/// "Không gỡ được {tên}"). Always asked; the dialog shows the size of the
 /// plugin's own storage and, for a lyrics plugin, the lyrics saved from it.
 /// [onBeforeRemove] runs after the user confirmed and before the delete
 /// starts: the plugin page uses it to go blank while its files go. True when

@@ -216,4 +216,114 @@ void main() {
         .set(const StoreFilter(query: '#translate'));
     expect(_names((await _view(c)).installed), ['Zeta file']);
   });
+
+  group('seek bar plugins in the default store', () {
+    StoreFixture fixture() => StoreFixture(
+      items: [
+        itemOf('l', StoreItemState.notInstalled, name: 'Lyr'),
+        itemOf(
+          'sa',
+          StoreItemState.installed,
+          name: 'Have style',
+          kind: PluginKind.seekbar,
+        ),
+        itemOf(
+          'sb',
+          StoreItemState.notInstalled,
+          name: 'New style',
+          kind: PluginKind.seekbar,
+        ),
+        itemOf(
+          'sc',
+          StoreItemState.needsNewerApp,
+          name: 'Lottie style',
+          kind: PluginKind.seekbar,
+        ),
+      ],
+      live: [liveRow('id-sa', name: 'Have style', kind: 'seekbar')],
+      repos: const [RepoView(id: 1, name: 'Kho', url: 'u', pluginCount: 4)],
+    );
+
+    test('hides the uninstalled ones, lists the installed one', () async {
+      final c = _container(fixture());
+      final view = await _view(c);
+      expect(_names(view.installed), ['Have style']);
+      expect(_names(view.notInstalled), ['Lyr']);
+      expect(
+        view.needsNewerAppCount,
+        0,
+        reason: 'a hidden entry is not counted',
+      );
+      expect(c.read(storeFilterProvider).isEmpty, isTrue);
+    });
+
+    test('the Thanh tua chip lists them all', () async {
+      final c = _container(fixture());
+      c
+          .read(storeFilterProvider.notifier)
+          .set(
+            const StoreFilter(
+              kinds: {...defaultStoreKinds, PluginKind.seekbar},
+            ),
+          );
+      final view = await _view(c);
+      expect(_names(view.installed), ['Have style']);
+      expect(_names(view.notInstalled), ['Lyr', 'New style']);
+      expect(view.needsNewerAppCount, 1, reason: 'the Lottie entry');
+    });
+
+    test('#seekbar and #seek list only them, chips untouched', () async {
+      final c = _container(fixture());
+      for (final query in ['#seekbar ', '#seek', '#SEEK ']) {
+        c.read(storeFilterProvider.notifier).set(StoreFilter(query: query));
+        final view = await _view(c);
+        expect(_names(view.installed), ['Have style'], reason: query);
+        expect(_names(view.notInstalled), ['New style'], reason: query);
+        expect(view.needsNewerAppCount, 1, reason: query);
+      }
+    });
+
+    test(
+      'an installed style stays listed while deselected functional kinds hide',
+      () async {
+        final c = _container(fixture());
+        c
+            .read(storeFilterProvider.notifier)
+            .set(const StoreFilter(kinds: {PluginKind.translate}));
+        expect(
+          (await _view(c)).noMatch,
+          isFalse,
+          reason: 'the installed style',
+        );
+        c.read(storeFilterProvider.notifier).set(const StoreFilter(kinds: {}));
+        final view = await _view(c);
+        expect(_names(view.installed), ['Have style']);
+        expect(view.notInstalled, isEmpty);
+      },
+    );
+
+    test('clear returns to the default, not to nothing selected', () async {
+      final c = _container(fixture());
+      final notifier = c.read(storeFilterProvider.notifier);
+      notifier.set(const StoreFilter(query: '#seekbar', kinds: {}));
+      notifier.clear();
+      final filter = c.read(storeFilterProvider);
+      expect(filter.kinds, defaultStoreKinds);
+      expect(filter.isEmpty, isTrue);
+      expect(_names((await _view(c)).notInstalled), ['Lyr']);
+    });
+
+    test('a seek bar plugin from a file follows the same rule', () async {
+      final c = _container(
+        StoreFixture(
+          items: [itemOf('l', StoreItemState.notInstalled, name: 'Lyr')],
+          live: [
+            liveRow('f1', name: 'File style', kind: 'seekbar', origin: 'file'),
+          ],
+          repos: const [RepoView(id: 1, name: 'Kho', url: 'u', pluginCount: 1)],
+        ),
+      );
+      expect(_names((await _view(c)).installed), ['File style']);
+    });
+  });
 }

@@ -84,4 +84,18 @@ void main() {
   test('storeSearchForKind opens the AI filter', () {
     expect(storeSearchForKind('aiChat'), '#ai ');
   });
+
+  test('#seekbar and #seek filter seek bar plugins', () {
+    for (final tag in ['#seekbar', '#seek', '#SEEK']) {
+      expect(parseStoreSearch(tag).kinds, {PluginKind.seekbar}, reason: tag);
+    }
+    expect(parseStoreSearch('#seek neon').words, ['neon']);
+  });
+
+  test('the seekbar route opens the search with its tag', () {
+    expect(storeSearchForKind('seekbar'), '#seekbar ');
+    expect(parseStoreSearch(storeSearchForKind('seekbar')).tags, {
+      StoreTagKind.seekbar,
+    });
+  });
 }
