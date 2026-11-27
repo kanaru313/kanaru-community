@@ -110,7 +110,9 @@ void main() {
         return button != null && button.icon == KIcons.compose;
       }
 
-      for (var i = 0; i < 8 && !onButton(); i++) {
+      // On the phone page the header comes after the autofocused list in
+      // traversal (search, rows and their menus first), so allow a long walk.
+      for (var i = 0; i < 40 && !onButton(); i++) {
         await tester.sendKeyEvent(LogicalKeyboardKey.tab);
         await tester.pump();
       }
