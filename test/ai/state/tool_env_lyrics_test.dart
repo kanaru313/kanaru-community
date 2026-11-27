@@ -30,6 +30,15 @@ void main() {
     h.play(id);
     final port = h.container.read(lyricsPortProvider);
     final r = await port.read(id.value);
-    expect(r, isA<LyricsAbsent>());
+    // The stored lookup settled with "nothing", it did not time out waiting
+    // ("still being read").
+    expect(
+      r,
+      isA<LyricsAbsent>().having(
+        (a) => a.reason,
+        'reason',
+        'no lyrics available for this song',
+      ),
+    );
   });
 }
