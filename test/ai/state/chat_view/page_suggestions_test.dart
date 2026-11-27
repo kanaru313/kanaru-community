@@ -5,7 +5,9 @@ import 'package:kanaru/src/ai/domain/conversation/parts.dart';
 import 'package:kanaru/src/ai/state/chat_view/page_suggestions.dart';
 import 'package:kanaru/src/library/domain/ask_ai_target.dart';
 import 'package:kanaru/src/library/domain/browse/browse_items.dart';
+import 'package:kanaru/src/library/domain/playlists/playlist_models.dart';
 import 'package:kanaru/src/library/state/browse/detail_providers.dart';
+import 'package:kanaru/src/library/state/playlists/playlist_providers.dart';
 import 'package:kanaru/src/library/ui/library_locations.dart';
 import 'package:kanaru/src/media/domain/library_keys.dart';
 import 'package:kanaru/src/playback/state/playback_providers.dart';
@@ -33,6 +35,25 @@ ProviderContainer _container({bool playing = true}) {
     overrides: [
       hasCurrentTrackProvider.overrideWithValue(playing),
       albumDetailProvider.overrideWith((ref, key) => Stream.value(_summary())),
+      playlistDetailProvider.overrideWith(
+        (ref, uid) => Stream.value(
+          PlaylistDetail(
+            summary: PlaylistSummary(
+              id: 7,
+              uid: uid,
+              name: 'Road',
+              description: '',
+              isFavorites: false,
+              trackCount: 0,
+              durationMs: 0,
+              createdAt: 1,
+              updatedAt: 1,
+              autoCoverKeys: const [],
+            ),
+            entries: const [],
+          ),
+        ),
+      ),
       genreNameProvider.overrideWith(
         (ref, key) => const AsyncData<String?>('Jazz'),
       ),
@@ -85,6 +106,22 @@ void main() {
   test('nothing playing and no page suggests nothing', () async {
     final container = _container(playing: false);
     expect(await _suggestions(container), isEmpty);
+  });
+
+  test('playlist page suggests its playlist chip', () async {
+    final container = _container(playing: false);
+    container
+        .read(chatPageLocationProvider.notifier)
+        .set(LibraryLocations.playlist('uid-1'));
+    final keep = container.listen(chatSuggestionsProvider(_l10n), (_, _) {});
+    addTearDown(keep.close);
+    final detail = container.listen(playlistDetailProvider('uid-1'), (_, _) {});
+    addTearDown(detail.close);
+    await container.read(playlistDetailProvider('uid-1').future);
+    final chip = container.read(chatSuggestionsProvider(_l10n)).single;
+    expect(chip.kind, ChipKind.playlist);
+    expect(chip.ref, 'uid-1');
+    expect(chip.label, 'Road');
   });
 
   test('genre and language pages suggest their chip', () async {
