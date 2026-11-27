@@ -105,7 +105,12 @@ class PromptEditor extends Notifier<PromptEditorState> {
   /// so it keeps following the app language.
   Future<bool> save() async {
     final s = state;
-    final analysis = ref.read(promptEditorAnalysisProvider(target));
+    // Not through promptEditorAnalysisProvider: that one watches this
+    // notifier, and a notifier may not read a provider that depends on it.
+    final analysis = analyzeTemplate(
+      s.body,
+      (group) => ref.read(aiToolGroupProvider(group)),
+    );
     if (!s.canSave(analysis)) return false;
     final index = target.index;
     if (index != null && !_stillThere(index)) return false;

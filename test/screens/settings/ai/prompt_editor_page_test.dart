@@ -8,6 +8,7 @@ import 'package:kanaru/src/screens/settings/state/ai_prompt_editor_guard.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart' show TextField;
 
+import '../../../support/icon_button_finders.dart';
 import '../support/settings_host.dart' show SettingsHarness;
 import 'ai_settings_host.dart';
 
@@ -53,7 +54,6 @@ void main() {
     tester,
   ) async {
     final handle = tester.ensureSemantics();
-    addTearDown(handle.dispose);
     await _open(tester, SettingsPaths.aiPromptNew);
     await tester.enterText(_labelField, 'Weather');
     await tester.enterText(_bodyField, 'Is it {{weather}} now?');
@@ -66,6 +66,8 @@ void main() {
     await tester.enterText(_bodyField, 'Is it {{title}} now?');
     await tester.pump();
     expect(_saveOn(tester), isTrue);
+    // Disposed inside the test: the end-of-test check runs before teardowns.
+    handle.dispose();
   });
 
   testWidgets('the preview shows the sample value', (tester) async {
@@ -92,7 +94,7 @@ void main() {
     testWidgets('discard asks from the header back arrow', (tester) async {
       await _open(tester, SettingsPaths.aiPrompt(0));
       await _makeDirty(tester);
-      await tester.tap(find.byTooltip('Back'));
+      await tester.tap(byIconButton('Back'));
       await tester.pumpAndSettle();
       expect(find.text('Discard changes?'), findsOneWidget);
 
@@ -104,7 +106,7 @@ void main() {
       expect(_controller(tester, _labelField).text, 'Changed label');
 
       // Discard: back on the AI page.
-      await tester.tap(find.byTooltip('Back'));
+      await tester.tap(byIconButton('Back'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Discard'));
       await tester.pumpAndSettle();
@@ -122,7 +124,7 @@ void main() {
 
     testWidgets('nothing edited leaves without asking', (tester) async {
       await _open(tester, SettingsPaths.aiPrompt(0));
-      await tester.tap(find.byTooltip('Back'));
+      await tester.tap(byIconButton('Back'));
       await tester.pumpAndSettle();
       expect(find.text('Discard changes?'), findsNothing);
       expect(find.text('Edit prompt'), findsNothing);
