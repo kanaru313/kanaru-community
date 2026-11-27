@@ -79,7 +79,17 @@ Future<_Setup> _pump(
         theme: buildKanaruTheme(brightness: Brightness.light),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const Scaffold(body: ChatHistoryPage()),
+        home: Scaffold(
+          body: Column(
+            children: [
+              ChatHistoryHeader(
+                style: null,
+                onClose: size.width >= 1200 ? () {} : null,
+              ),
+              const Expanded(child: ChatHistoryPage()),
+            ],
+          ),
+        ),
       ),
     ),
   );
@@ -305,25 +315,49 @@ void main() {
         conversations: [historyConversation(1, 'Current', at: _daysAgo(0))],
       );
       setup.session.used.add(1);
-      await tester.tap(find.text('New conversation'));
+      await tester.tap(byIconButton('New conversation'));
       await tester.pumpAndSettle();
       expect(setup.session.calls, contains('new'));
       expect(setup.container.read(chatSessionProvider).conversationId, 2);
       expect(setup.view.historyOpen, isFalse);
     });
 
-    testWidgets('New conversation shows no shortcut hint on the phone', (
+    testWidgets('New conversation is a header button, not a list row', (
       tester,
     ) async {
       await _pump(tester, conversations: const []);
-      expect(find.text('Ctrl+Shift+O'), findsNothing);
+      expect(find.byType(KListActionButton), findsNothing);
+      expect(byIconButton('New conversation'), findsOneWidget);
+      // The tooltip is not the spoken label.
+      expect(find.bySemanticsLabel('New conversation'), findsOneWidget);
     });
 
-    testWidgets('New conversation shows its shortcut hint on desktop', (
+    testWidgets('New conversation names its shortcut on desktop, before ✕', (
       tester,
     ) async {
       await _pump(tester, conversations: const [], size: const Size(1400, 900));
-      expect(find.text('Ctrl+Shift+O'), findsOneWidget);
+      final button = byIconButton('New conversation (Ctrl+Shift+O)');
+      expect(button, findsOneWidget);
+      expect(find.bySemanticsLabel('New conversation'), findsOneWidget);
+      final close = find.byWidgetPredicate(
+        (w) => w is KIconButton && w.icon == KIcons.close,
+      );
+      expect(close, findsOneWidget);
+      expect(tester.getCenter(button).dx, lessThan(tester.getCenter(close).dx));
+    });
+
+    testWidgets('the list opens with the search field, then the first group', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        conversations: [historyConversation(1, 'Current', at: _daysAgo(0))],
+      );
+      expect(find.byType(KListActionButton), findsNothing);
+      final search = tester.getRect(_searchField);
+      final heading = tester.getRect(find.text('Today'));
+      expect(heading.top, greaterThanOrEqualTo(search.bottom));
+      expect(heading.top - search.bottom, lessThan(48));
     });
 
     testWidgets('Esc steps back to the open conversation', (tester) async {
