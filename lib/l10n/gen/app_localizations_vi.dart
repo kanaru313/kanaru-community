@@ -7467,6 +7467,40 @@ class AppLocalizationsVi extends AppLocalizations {
   String get aiChatToolGetQueue => 'Hàng đợi';
 
   @override
+  String aiChatToolSummaryList(int shown, int total) {
+    final intl.NumberFormat shownNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String shownString = shownNumberFormat.format(shown);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$shownString / $totalString bài';
+  }
+
+  @override
+  String aiChatToolSummaryListMore(int shown, int total) {
+    final intl.NumberFormat shownNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String shownString = shownNumberFormat.format(shown);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$shownString / $totalString bài · AI có thể xem tiếp';
+  }
+
+  @override
+  String aiChatToolSummaryCount(int n) {
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String nString = nNumberFormat.format(n);
+
+    return '$nString bài';
+  }
+
+  @override
   String get aiChatToolSearchLibrary => 'Tìm trong thư viện';
 
   @override

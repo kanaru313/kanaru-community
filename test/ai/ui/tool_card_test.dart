@@ -56,7 +56,10 @@ void main() {
   ) async {
     await _pump(tester, _tool(state: AiMessageState.done));
     expect(find.text('Search the library'), findsOneWidget);
-    expect(find.text('2 / 1284'), findsOneWidget);
+    expect(
+      find.text('2 / 1,284 songs · the AI can look further'),
+      findsOneWidget,
+    );
     expect(find.text('Parameters'), findsNothing);
     expect(find.text('Result'), findsNothing);
 

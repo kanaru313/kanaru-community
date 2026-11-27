@@ -11951,6 +11951,24 @@ abstract class AppLocalizations {
   /// **'Queue'**
   String get aiChatToolGetQueue;
 
+  /// Header of a tool card whose result is a list: rows shown out of the total.
+  ///
+  /// In en, this message translates to:
+  /// **'{shown} / {total} songs'**
+  String aiChatToolSummaryList(int shown, int total);
+
+  /// Same, when more rows exist than were returned.
+  ///
+  /// In en, this message translates to:
+  /// **'{shown} / {total} songs · the AI can look further'**
+  String aiChatToolSummaryListMore(int shown, int total);
+
+  /// Header of a tool card whose list result has no total.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 song} other{{n} songs}}'**
+  String aiChatToolSummaryCount(int n);
+
   /// Name of the search_library tool on a tool card.
   ///
   /// In en, this message translates to:

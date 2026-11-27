@@ -5917,6 +5917,44 @@
   "@aiChatToolGetQueue": {
     "description": "Name of the get_queue tool on a tool card."
   },
+  "aiChatToolSummaryList": "{shown} / {total} bài",
+  "@aiChatToolSummaryList": {
+    "description": "Header of a tool card whose result is a list: rows shown out of the total.",
+    "placeholders": {
+      "shown": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "total": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "aiChatToolSummaryListMore": "{shown} / {total} bài · AI có thể xem tiếp",
+  "@aiChatToolSummaryListMore": {
+    "description": "Same, when more rows exist than were returned.",
+    "placeholders": {
+      "shown": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "total": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "aiChatToolSummaryCount": "{n} bài",
+  "@aiChatToolSummaryCount": {
+    "description": "Header of a tool card whose list result has no total.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
   "aiChatToolSearchLibrary": "Tìm trong thư viện",
   "@aiChatToolSearchLibrary": {
     "description": "Name of the search_library tool on a tool card."

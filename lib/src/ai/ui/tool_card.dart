@@ -33,7 +33,7 @@ class _ToolCardState extends State<ToolCard> {
     final resultText = result == null
         ? ''
         : result.content.whereType<TextPart>().map((p) => p.text).join();
-    final summary = running ? '' : toolSummary(resultText);
+    final summary = running ? '' : toolSummary(l10n, resultText);
     final instant = MediaQuery.disableAnimationsOf(context);
     final mobile = FormFactor.of(context) == FormFactor.mobile;
 

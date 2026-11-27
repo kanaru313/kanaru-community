@@ -53,8 +53,10 @@ List<String>? _itemsOf(String text) {
   return null;
 }
 
-/// One line for the card header: "50 / 1284" for a list, else the first line.
-String toolSummary(String resultText) {
+/// One line for the card header: "50 / 1,284 songs" for a list ("· the AI can
+/// look further" when the total is larger than the rows returned), else the
+/// first line.
+String toolSummary(AppLocalizations l10n, String resultText) {
   final text = resultText.trim();
   if (text.isEmpty) return '';
   final items = _itemsOf(text);
@@ -65,7 +67,10 @@ String toolSummary(String resultText) {
     } on FormatException {
       total = null;
     }
-    return total is int ? '${items.length} / $total' : '${items.length}';
+    if (total is! int) return l10n.aiChatToolSummaryCount(items.length);
+    return total > items.length
+        ? l10n.aiChatToolSummaryListMore(items.length, total)
+        : l10n.aiChatToolSummaryList(items.length, total);
   }
   final first = text.split('\n').first;
   return first.length > 80 ? '${first.substring(0, 79)}…' : first;

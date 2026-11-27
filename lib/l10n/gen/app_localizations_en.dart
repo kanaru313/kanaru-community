@@ -8002,6 +8002,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiChatToolGetQueue => 'Queue';
 
   @override
+  String aiChatToolSummaryList(int shown, int total) {
+    final intl.NumberFormat shownNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String shownString = shownNumberFormat.format(shown);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$shownString / $totalString songs';
+  }
+
+  @override
+  String aiChatToolSummaryListMore(int shown, int total) {
+    final intl.NumberFormat shownNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String shownString = shownNumberFormat.format(shown);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$shownString / $totalString songs · the AI can look further';
+  }
+
+  @override
+  String aiChatToolSummaryCount(int n) {
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String nString = nNumberFormat.format(n);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$nString songs',
+      one: '1 song',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get aiChatToolSearchLibrary => 'Search the library';
 
   @override
