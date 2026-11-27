@@ -5,11 +5,16 @@ import '../common/plugin_labels.dart';
 extension StoreFilterToggles on StoreFilter {
   bool hasKind(StoreKindGroup group) => kinds.any(group.kinds.contains);
 
+  /// A kind chip that is not as the store opens it (functional kinds on,
+  /// cosmetic kinds off).
+  bool _kindDiffers(StoreKindGroup group) => hasKind(group) == group.isCosmetic;
+
   bool hasState(StoreStateChip chip) => states.contains(chip);
 
-  /// How many values are chosen (a kind group counts once): the badge.
+  /// How many values differ from the default filter (a kind group counts
+  /// once): the badge.
   int get valueCount =>
-      StoreKindGroup.values.where(hasKind).length +
+      StoreKindGroup.values.where(_kindDiffers).length +
       StoreStateChip.values.where(hasState).length +
       languages.length +
       authors.length +

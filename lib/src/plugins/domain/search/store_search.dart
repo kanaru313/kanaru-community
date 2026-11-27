@@ -9,7 +9,8 @@ enum StoreTagKind {
     {PluginKind.translate, PluginKind.aiTranslate},
   ),
   streaming(['streaming', 'music', 'source'], {PluginKind.streaming}),
-  aiChat(['ai', 'chat'], {PluginKind.aiChat});
+  aiChat(['ai', 'chat'], {PluginKind.aiChat}),
+  seekbar(['seekbar', 'seek'], {PluginKind.seekbar});
 
   const StoreTagKind(this.aliases, this.kinds);
 

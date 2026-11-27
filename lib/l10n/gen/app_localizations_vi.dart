@@ -5962,7 +5962,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String pluginsRemoveTooltip(String name) {
-    return 'Xoá $name';
+    return 'Gỡ $name';
   }
 
   @override
@@ -6615,11 +6615,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pluginsReasonKindChange =>
-      'Gói này thuộc loại plugin khác với bản đã cài nên không được dùng. Hãy xoá plugin rồi cài bản mới.';
+      'Gói này thuộc loại plugin khác với bản đã cài nên không được dùng. Hãy gỡ plugin rồi cài bản mới.';
 
   @override
   String pluginsReasonOtherOrigin(String source) {
-    return 'Plugin này đã được cài từ $source. Gói từ nơi khác không thay được nó: hãy xoá plugin đã cài rồi cài lại.';
+    return 'Plugin này đã được cài từ $source. Gói từ nơi khác không thay được nó: hãy gỡ plugin đã cài rồi cài lại.';
   }
 
   @override
@@ -6747,7 +6747,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String pluginsRemoveTitle(String name) {
-    return 'Xoá $name?';
+    return 'Gỡ “$name”?';
   }
 
   @override
@@ -6765,16 +6765,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pluginsRemoveSettings => 'Cài đặt của plugin';
 
   @override
-  String get pluginsRemoveConfirm => 'Xoá';
+  String get pluginsRemoveConfirm => 'Gỡ';
 
   @override
   String pluginsRemoved(String name) {
-    return 'Đã xoá $name';
+    return 'Đã gỡ “$name”';
   }
 
   @override
   String pluginsRemoveFailed(String name) {
-    return 'Không xoá được $name';
+    return 'Không gỡ được $name';
   }
 
   @override
@@ -6847,7 +6847,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pluginsPageBrokenBodyFile =>
-      'Thư mục của plugin bị thiếu hoặc hỏng nên plugin không chạy. Plugin này cài từ file: hãy xoá rồi cài file mới.';
+      'Thư mục của plugin bị thiếu hoặc hỏng nên plugin không chạy. Plugin này cài từ file: hãy gỡ rồi cài file mới.';
 
   @override
   String get pluginsPageReinstall => 'Cài lại';
@@ -6885,11 +6885,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pluginsPageNoUpdatesFile =>
-      'Plugin này cài từ file nên không có cập nhật. Hãy xoá rồi cài file mới.';
+      'Plugin này cài từ file nên không có cập nhật. Hãy gỡ rồi cài file mới.';
 
   @override
   String get pluginsPageNoUpdatesLink =>
-      'Plugin này cài từ đường dẫn nên không có cập nhật. Hãy xoá rồi cài bản mới.';
+      'Plugin này cài từ đường dẫn nên không có cập nhật. Hãy gỡ rồi cài bản mới.';
 
   @override
   String pluginsPageWildcardLine(String label, String host) {
@@ -7312,6 +7312,163 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get pluginsPageConnectionRow => 'Yêu cầu cùng lúc, giãn cách';
+
+  @override
+  String get pluginsKindSeekbar => 'Thanh tua';
+
+  @override
+  String get pluginsKindNounSeekbar => 'Plugin thanh tua';
+
+  @override
+  String get pluginsKindHelpSeekbar =>
+      'Đổi cách vẽ thanh tua ở Now Playing và màn lời.';
+
+  @override
+  String pluginsReasonSeekbarCode(String detail) {
+    return '$detail: plugin thanh tua không được có mã';
+  }
+
+  @override
+  String pluginsReasonAssetMissing(String detail) {
+    return '$detail: gói không có tệp này';
+  }
+
+  @override
+  String pluginsReasonAssetFormat(String detail) {
+    return '$detail: không phải ảnh PNG hoặc WebP hợp lệ';
+  }
+
+  @override
+  String pluginsReasonAssetAnimated(String detail) {
+    return '$detail: không dùng ảnh động, hãy dùng ảnh tĩnh';
+  }
+
+  @override
+  String pluginsReasonAssetExtension(String detail) {
+    return '$detail: đuôi tệp không khớp với loại ảnh';
+  }
+
+  @override
+  String pluginsReasonAssetSize(String detail) {
+    return '$detail: ảnh quá lớn, mỗi cạnh tối đa 2048 px';
+  }
+
+  @override
+  String pluginsReasonAssetFrames(String detail) {
+    return '$detail: chiều rộng ảnh không chia đều cho số khung hình';
+  }
+
+  @override
+  String pluginsReasonAssetOther(String detail) {
+    return '$detail: không dùng được ảnh này';
+  }
+
+  @override
+  String get pluginsReasonAssetNote =>
+      'Ảnh của plugin thanh tua: PNG hoặc WebP, không động, mỗi ảnh tối đa 512 KB, mỗi cạnh tối đa 2048 px; cả gói tối đa 1 MB.';
+
+  @override
+  String get pluginsReasonLottie =>
+      'Cần bản Kanaru mới hơn để dùng hình động Lottie';
+
+  @override
+  String pluginsProblemNewerBodyLottie(String name) {
+    return '$name dùng con trỏ hoạt ảnh Lottie, bản Kanaru này chưa hỗ trợ. Hãy cập nhật Kanaru rồi cài lại.';
+  }
+
+  @override
+  String get pluginsPkgNoData => 'Không gửi dữ liệu đi đâu.';
+
+  @override
+  String pluginsPkgProgressSeekbar(int done, int total) {
+    return '$done / $total KB · kiểm plugin.json, tên tệp, ảnh';
+  }
+
+  @override
+  String pluginsPkgProgressUnknownSeekbar(int done) {
+    return '$done KB · kiểm plugin.json, tên tệp, ảnh';
+  }
+
+  @override
+  String get pluginsPkgCheckingSeekbar => 'Kiểm plugin.json, tên tệp, ảnh';
+
+  @override
+  String get pluginsPkgFactsHint => 'Kanaru tự tính từ gói; AI không sửa được.';
+
+  @override
+  String get pluginsPkgFactsHintTooltip => 'Giải thích về dữ kiện tĩnh';
+
+  @override
+  String get pluginsSkFactPackage => 'Gói';
+
+  @override
+  String get pluginsSkFactCode => 'Mã';
+
+  @override
+  String get pluginsSkFactBase => 'Nền';
+
+  @override
+  String get pluginsSkFactLicense => 'Giấy phép';
+
+  @override
+  String pluginsSkFilesWithImages(String images) {
+    return 'plugin.json + $images';
+  }
+
+  @override
+  String pluginsSkImagesPng(int count) {
+    return '$count ảnh PNG';
+  }
+
+  @override
+  String pluginsSkImagesWebp(int count) {
+    return '$count ảnh WebP';
+  }
+
+  @override
+  String get pluginsSkImagesLottie => '1 hoạt ảnh Lottie';
+
+  @override
+  String pluginsSkPackageSize(String files, String size) {
+    return '$files · $size';
+  }
+
+  @override
+  String pluginsSkPackageNoCode(String files) {
+    return '$files · không có mã';
+  }
+
+  @override
+  String get pluginsSkCodeNone =>
+      'Không có: Kanaru tự vẽ theo khai báo, trong dải thanh tua';
+
+  @override
+  String pluginsSkBaseStar(String base) {
+    return '$base · dùng được làm ★';
+  }
+
+  @override
+  String get pluginsSkUseTitle => 'Dùng ở Cài đặt › Thanh tua';
+
+  @override
+  String get pluginsSkUseChosen => 'Đang dùng';
+
+  @override
+  String get pluginsSkUseFallback => '★ khi bài chưa có dạng sóng';
+
+  @override
+  String get pluginsSkUseBoth => 'Đang dùng · ★ khi bài chưa có dạng sóng';
+
+  @override
+  String get pluginsSkUseNone => 'Chưa dùng';
+
+  @override
+  String pluginsPageTypeValueSeekbar(String kind, String base, int api) {
+    return '$kind · nền $base · API plugin $api';
+  }
+
+  @override
+  String get pluginsRemovePackage => 'Gói của plugin (khai báo và ảnh)';
 
   @override
   String get fontsBuiltInTitle => 'Có sẵn';

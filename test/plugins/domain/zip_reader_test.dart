@@ -307,4 +307,78 @@ void main() {
       );
     });
   });
+
+  group('assets', () {
+    test('headers are kept by file name and never inflated', () {
+      final contents = readZip(
+        validZip(
+          extra: {
+            'assets/t.png': 'png bytes',
+            'assets/a.json': '{}',
+            'assets/p.webp': 'webp bytes',
+          },
+        ),
+      );
+      expect(
+        contents.assetHeaders.keys,
+        unorderedEquals(['t.png', 'a.json', 'p.webp']),
+      );
+      final entry = contents.assetHeaders['t.png']!;
+      expect(entry.path, 'assets/t.png');
+      expect(entry.declaredSize, 9);
+      expect(entry.inflate(1024), utf8.encode('png bytes'));
+    });
+
+    test('a corrupt asset does not stop the zip from being read', () {
+      final zip = patchEntry(
+        validZip(extra: {'assets/t.png': 'png bytes'}),
+        'assets/t.png',
+        crc: 1,
+      );
+      final entry = readZip(zip).assetHeaders['t.png']!;
+      expect(() => entry.inflate(1024), throwsA(isA<PackageProblemError>()));
+    });
+
+    test('names outside the asset shape are ignored, not listed', () {
+      final contents = readZip(
+        validZip(
+          extra: {
+            'assets/sub/t.png': 'x',
+            'assets/t.gif': 'x',
+            'assets/.png': 'x',
+            'assets/${'a' * 65}.png': 'x',
+            'Assets/t.png': 'x',
+          },
+        ),
+      );
+      expect(contents.assetHeaders, isEmpty);
+    });
+
+    test('inflate refuses a declared size over its cap before reading', () {
+      final zip = patchEntry(
+        validZip(extra: {'assets/t.png': 'x'}),
+        'assets/t.png',
+        size: 2000,
+      );
+      final entry = readZip(zip).assetHeaders['t.png']!;
+      expect(entry.declaredSize, 2000);
+      try {
+        entry.inflate(1000);
+        fail('accepted');
+      } on PackageProblemError catch (e) {
+        expect(e.problem, isA<PackageTooLarge>());
+        expect(e.problem.detail, 'assets/t.png');
+      }
+    });
+
+    test('a path under the entry cap total is still refused as a whole', () {
+      // The declared sizes of every entry count toward the unpacked cap.
+      final zip = patchEntry(
+        validZip(extra: {'assets/t.png': 'x'}),
+        'assets/t.png',
+        size: 6 * 1024 * 1024,
+      );
+      expectProblem<PackageTooLarge>(zip);
+    });
+  });
 }

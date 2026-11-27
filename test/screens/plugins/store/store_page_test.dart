@@ -4,6 +4,7 @@ import 'package:kanaru/src/plugins/domain/package/plugin_kind.dart';
 import 'package:kanaru/src/plugins/state/alerts_provider.dart';
 import 'package:kanaru/src/plugins/state/store_filter.dart';
 import 'package:kanaru/src/plugins/state/store_view_models.dart';
+import 'package:kanaru/src/screens/plugins/plugin_paths.dart';
 import 'package:kanaru/src/screens/plugins/store/store_actions.dart';
 import 'package:kanaru/src/screens/plugins/store/store_filter_toggles.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -269,10 +270,39 @@ void main() {
         tester.widget<KFilterField>(find.byType(KFilterField)).controller.text,
         '#translate ',
       );
-      expect(h.container.read(storeFilterProvider).kinds, isEmpty);
+      expect(h.container.read(storeFilterProvider).kinds, defaultStoreKinds);
       final badge = tester.widget<KIconButton>(byIconButton('Filter'));
       expect(badge.badgeCount, 0);
       expect(badge.selected, isFalse);
+    });
+
+    testWidgets('?kind=seekbar lists the uninstalled seek bar plugins only', (
+      tester,
+    ) async {
+      final fixture = StoreFixture(
+        items: [
+          itemOf('l', StoreItemState.notInstalled, name: 'Lyr'),
+          itemOf(
+            's',
+            StoreItemState.notInstalled,
+            name: 'Neon',
+            kind: PluginKind.seekbar,
+          ),
+        ],
+        repos: const [RepoView(id: 1, name: 'Kho', url: 'u', pluginCount: 2)],
+      );
+      await pumpPlugins(
+        tester,
+        fixture,
+        location: PluginPaths.storeForKind('seekbar'),
+      );
+      expect(find.text('Neon'), findsOneWidget);
+      expect(find.text('Lyr'), findsNothing);
+      expect(
+        tester.widget<KFilterField>(find.byType(KFilterField)).controller.text,
+        '#seekbar ',
+      );
+      expect(tester.widget<KIconButton>(byIconButton('Filter')).badgeCount, 0);
     });
 
     testWidgets('another ?kind= on the open store updates the search', (
@@ -386,7 +416,7 @@ void main() {
         await tester.pump();
         expect(find.text('Lyric one'), findsNothing);
         expect(find.text('Stream one'), findsOneWidget);
-        expect(h.container.read(storeFilterProvider).kinds, isEmpty);
+        expect(h.container.read(storeFilterProvider).kinds, defaultStoreKinds);
         expect(h.container.read(storeFilterProvider).valueCount, 0);
 
         await tester.enterText(find.byType(KFilterField), '#lyric #music');

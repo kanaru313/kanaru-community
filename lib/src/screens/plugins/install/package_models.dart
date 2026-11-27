@@ -1,3 +1,5 @@
+import '../../../plugins/domain/package/plugin_kind.dart';
+
 /// Where the install / update screen is in its life.
 enum PackagePhase { loading, ready, working, failed }
 
@@ -7,11 +9,20 @@ enum PackageNotice { stale, expired }
 /// What the file or link the screen was opened for is called, for the
 /// problem dialogs.
 class PackageSubject {
-  const PackageSubject(this.name, {this.isFile = false, this.named = true});
+  const PackageSubject(
+    this.name, {
+    this.isFile = false,
+    this.named = true,
+    this.kind,
+  });
 
   final String name;
   final bool isFile;
 
   /// False when [name] is a file name or an address, not a plugin name.
   final bool named;
+
+  /// The kind the opener already knows (a repository entry); null for a file
+  /// or link. Only the progress line reads it, before the package is read.
+  final PluginKind? kind;
 }

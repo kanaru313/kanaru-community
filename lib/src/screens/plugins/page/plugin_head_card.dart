@@ -10,7 +10,9 @@ import '../../../lyrics/state/online/lyrics_sources_provider.dart';
 import '../../../lyrics/state/translation/translation_commands.dart';
 import '../../../lyrics/state/translation/translation_settings.dart';
 import '../../../lyrics/ui/lyrics_settings_link.dart';
+import '../../../playback/state/seek_plugin_use_provider.dart';
 import '../../../plugins/state/plugin_page_provider.dart';
+import '../../settings/settings_routes.dart';
 import '../../settings/ui/settings_scaffold.dart';
 import '../common/plugin_icon.dart';
 
@@ -49,6 +51,7 @@ class PluginHeadCard extends ConsumerWidget {
       PluginKind.translate ||
       PluginKind.aiTranslate => _TranslateUseRow(installId: row.installId),
       PluginKind.aiChat => const _AiChatUseRow(),
+      PluginKind.seekbar => _SeekbarUseRow(installId: row.installId),
       PluginKind.streaming || null => null,
     };
     return SettingsBlock(
@@ -196,6 +199,37 @@ class _AiChatUseRow extends StatelessWidget {
       ),
       trailing: Icon(KIcons.openInNew, color: scheme.onSurfaceVariant),
       onTap: () => context.push(aiSettingsLocation),
+    );
+  }
+}
+
+/// "Dùng ở Cài đặt › Thanh tua": says whether the style is the chosen one
+/// and / or holds the ★ and opens Settings › Seek bar, where it is chosen.
+/// No switch: the choice lives on that page only.
+class _SeekbarUseRow extends ConsumerWidget {
+  const _SeekbarUseRow({required this.installId});
+
+  final String installId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final use = ref.watch(seekPluginUseProvider(installId));
+    return SetupRowFrame(
+      leading: const Icon(KIcons.seekBar),
+      title: Text(l10n.pluginsSkUseTitle),
+      subtitle: Text(
+        use.chosen && use.fallback
+            ? l10n.pluginsSkUseBoth
+            : use.chosen
+            ? l10n.pluginsSkUseChosen
+            : use.fallback
+            ? l10n.pluginsSkUseFallback
+            : l10n.pluginsSkUseNone,
+      ),
+      trailing: Icon(KIcons.openInNew, color: scheme.onSurfaceVariant),
+      onTap: () => context.push(SettingsPaths.seekBar),
     );
   }
 }

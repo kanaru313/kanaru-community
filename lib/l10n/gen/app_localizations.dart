@@ -11619,6 +11619,240 @@ abstract class AppLocalizations {
   /// **'Requests at once, spacing'**
   String get pluginsPageConnectionRow;
 
+  /// No description provided for @pluginsKindSeekbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Seek bar'**
+  String get pluginsKindSeekbar;
+
+  /// No description provided for @pluginsKindNounSeekbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Seek bar plugin'**
+  String get pluginsKindNounSeekbar;
+
+  /// No description provided for @pluginsKindHelpSeekbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes how the seek bar is drawn in Now Playing and on the lyrics screen.'**
+  String get pluginsKindHelpSeekbar;
+
+  /// No description provided for @pluginsReasonSeekbarCode.
+  ///
+  /// In en, this message translates to:
+  /// **'{detail}: a seek bar plugin cannot contain code'**
+  String pluginsReasonSeekbarCode(String detail);
+
+  /// No description provided for @pluginsReasonAssetMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'{detail}: the package does not contain this file'**
+  String pluginsReasonAssetMissing(String detail);
+
+  /// No description provided for @pluginsReasonAssetFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'{detail}: not a valid PNG or WebP image'**
+  String pluginsReasonAssetFormat(String detail);
+
+  /// No description provided for @pluginsReasonAssetAnimated.
+  ///
+  /// In en, this message translates to:
+  /// **'{detail}: animated images are not supported, use a still image'**
+  String pluginsReasonAssetAnimated(String detail);
+
+  /// No description provided for @pluginsReasonAssetExtension.
+  ///
+  /// In en, this message translates to:
+  /// **'{detail}: the file extension does not match the image'**
+  String pluginsReasonAssetExtension(String detail);
+
+  /// No description provided for @pluginsReasonAssetSize.
+  ///
+  /// In en, this message translates to:
+  /// **'{detail}: the image is too large, at most 2048 px on each side'**
+  String pluginsReasonAssetSize(String detail);
+
+  /// No description provided for @pluginsReasonAssetFrames.
+  ///
+  /// In en, this message translates to:
+  /// **'{detail}: the image width does not divide by its number of frames'**
+  String pluginsReasonAssetFrames(String detail);
+
+  /// No description provided for @pluginsReasonAssetOther.
+  ///
+  /// In en, this message translates to:
+  /// **'{detail}: the image cannot be used'**
+  String pluginsReasonAssetOther(String detail);
+
+  /// No description provided for @pluginsReasonAssetNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Images of a seek bar plugin: PNG or WebP, not animated, at most 512 KB each and 2048 px on each side; the whole package at most 1 MB.'**
+  String get pluginsReasonAssetNote;
+
+  /// No description provided for @pluginsReasonLottie.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs a newer Kanaru to use the Lottie animation'**
+  String get pluginsReasonLottie;
+
+  /// No description provided for @pluginsProblemNewerBodyLottie.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} uses an animated Lottie thumb, which this version of Kanaru does not support yet. Update Kanaru, then install it again.'**
+  String pluginsProblemNewerBodyLottie(String name);
+
+  /// No description provided for @pluginsPkgNoData.
+  ///
+  /// In en, this message translates to:
+  /// **'Sends no data anywhere.'**
+  String get pluginsPkgNoData;
+
+  /// No description provided for @pluginsPkgProgressSeekbar.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} / {total} KB · checking plugin.json, file names, images'**
+  String pluginsPkgProgressSeekbar(int done, int total);
+
+  /// No description provided for @pluginsPkgProgressUnknownSeekbar.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} KB · checking plugin.json, file names, images'**
+  String pluginsPkgProgressUnknownSeekbar(int done);
+
+  /// No description provided for @pluginsPkgCheckingSeekbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking plugin.json, file names, images'**
+  String get pluginsPkgCheckingSeekbar;
+
+  /// No description provided for @pluginsPkgFactsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Kanaru works these out from the package; the AI cannot change them.'**
+  String get pluginsPkgFactsHint;
+
+  /// No description provided for @pluginsPkgFactsHintTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'About the static facts'**
+  String get pluginsPkgFactsHintTooltip;
+
+  /// No description provided for @pluginsSkFactPackage.
+  ///
+  /// In en, this message translates to:
+  /// **'Package'**
+  String get pluginsSkFactPackage;
+
+  /// No description provided for @pluginsSkFactCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get pluginsSkFactCode;
+
+  /// No description provided for @pluginsSkFactBase.
+  ///
+  /// In en, this message translates to:
+  /// **'Base'**
+  String get pluginsSkFactBase;
+
+  /// No description provided for @pluginsSkFactLicense.
+  ///
+  /// In en, this message translates to:
+  /// **'License'**
+  String get pluginsSkFactLicense;
+
+  /// No description provided for @pluginsSkFilesWithImages.
+  ///
+  /// In en, this message translates to:
+  /// **'plugin.json + {images}'**
+  String pluginsSkFilesWithImages(String images);
+
+  /// No description provided for @pluginsSkImagesPng.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 PNG image} other{{count} PNG images}}'**
+  String pluginsSkImagesPng(int count);
+
+  /// No description provided for @pluginsSkImagesWebp.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 WebP image} other{{count} WebP images}}'**
+  String pluginsSkImagesWebp(int count);
+
+  /// No description provided for @pluginsSkImagesLottie.
+  ///
+  /// In en, this message translates to:
+  /// **'1 Lottie animation'**
+  String get pluginsSkImagesLottie;
+
+  /// No description provided for @pluginsSkPackageSize.
+  ///
+  /// In en, this message translates to:
+  /// **'{files} · {size}'**
+  String pluginsSkPackageSize(String files, String size);
+
+  /// No description provided for @pluginsSkPackageNoCode.
+  ///
+  /// In en, this message translates to:
+  /// **'{files} · no code'**
+  String pluginsSkPackageNoCode(String files);
+
+  /// No description provided for @pluginsSkCodeNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None: Kanaru draws it from the declaration, inside the seek bar band'**
+  String get pluginsSkCodeNone;
+
+  /// No description provided for @pluginsSkBaseStar.
+  ///
+  /// In en, this message translates to:
+  /// **'{base} · can be the ★ style'**
+  String pluginsSkBaseStar(String base);
+
+  /// No description provided for @pluginsSkUseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Used in Settings › Seek bar'**
+  String get pluginsSkUseTitle;
+
+  /// No description provided for @pluginsSkUseChosen.
+  ///
+  /// In en, this message translates to:
+  /// **'In use'**
+  String get pluginsSkUseChosen;
+
+  /// No description provided for @pluginsSkUseFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'★ while a song has no waveform'**
+  String get pluginsSkUseFallback;
+
+  /// No description provided for @pluginsSkUseBoth.
+  ///
+  /// In en, this message translates to:
+  /// **'In use · ★ while a song has no waveform'**
+  String get pluginsSkUseBoth;
+
+  /// No description provided for @pluginsSkUseNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Not in use'**
+  String get pluginsSkUseNone;
+
+  /// No description provided for @pluginsPageTypeValueSeekbar.
+  ///
+  /// In en, this message translates to:
+  /// **'{kind} · {base} base · plugin API {api}'**
+  String pluginsPageTypeValueSeekbar(String kind, String base, int api);
+
+  /// No description provided for @pluginsRemovePackage.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin’s package (declaration and images)'**
+  String get pluginsRemovePackage;
+
   /// Title of the block of fonts shipped with the app.
   ///
   /// In en, this message translates to:

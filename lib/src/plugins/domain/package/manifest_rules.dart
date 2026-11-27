@@ -40,6 +40,23 @@ List<String> readHosts(Object? value, {required PluginKind kind}) {
   return List.unmodifiable(hosts);
 }
 
+/// `metadata.hosts` of a seekbar plugin: absent or empty, nothing else.
+List<String> readNoHosts(JsonObject metadata) {
+  if (!metadata.containsKey('hosts')) return const [];
+  final value = metadata['hosts'];
+  if (value is! List || value.isNotEmpty) invalid('metadata.hosts');
+  return const [];
+}
+
+/// `config` of a seekbar plugin: absent or empty, nothing else.
+void requireNoConfig(Object? value) {
+  final empty =
+      value == null ||
+      (value is Map && value.isEmpty) ||
+      (value is List && value.isEmpty);
+  if (!empty) invalid('config');
+}
+
 /// The `script` object: every key (`[A-Za-z0-9_.-]+`) maps to a file name
 /// (`[A-Za-z0-9_.-]+.js`); at most 50 entries; the keys [kind] requires must
 /// be there. Whether the files exist is checked against the unpacked package.

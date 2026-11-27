@@ -14,6 +14,7 @@ class PluginPackage {
     required this.scripts,
     required this.sha256,
     required this.size,
+    this.assets = const {},
     this.icon,
   });
 
@@ -31,6 +32,11 @@ class PluginPackage {
   /// map names; other files are kept because a script may `load()` them.
   final Map<String, String> scripts;
 
+  /// The `assets/` files of a seekbar package by file name (`t.png`): only
+  /// those the `seekbar` block names, header-checked, unmodifiable. Empty for
+  /// every other kind.
+  final Map<String, Uint8List> assets;
+
   /// A valid `icon.png` (PNG, at most 256 x 256, 64 KiB); null when there was
   /// none or it was dropped.
   final Uint8List? icon;
@@ -40,4 +46,11 @@ class PluginPackage {
 
   /// Size of the zip file in bytes.
   final int size;
+
+  /// Unpacked size of the files an install keeps: `plugin.json`, the icon and
+  /// the assets (the same files `PluginFiles.packageBytes` adds up on disk).
+  int get keptBytes =>
+      manifestBytes.length +
+      (icon?.length ?? 0) +
+      assets.values.fold(0, (sum, bytes) => sum + bytes.length);
 }

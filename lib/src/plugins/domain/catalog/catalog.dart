@@ -4,6 +4,15 @@ import '../package/plugin_kind.dart';
 
 export '../package/plugin_kind.dart';
 
+/// Format features of a package this app can handle, as a catalog entry's
+/// `features` names them. An entry naming another one is listed as needing a
+/// newer app.
+const supportedPluginFeatures = <String>{};
+
+/// Most feature names one entry may list, and the longest name.
+const maxEntryFeatures = 8;
+const maxFeatureNameLength = 40;
+
 /// Most entries a catalog may list.
 const maxCatalogEntries = 500;
 
@@ -39,6 +48,7 @@ class CatalogEntry {
     this.languages = const [],
     this.sha256,
     this.size,
+    this.features = const [],
   });
 
   /// `^[a-z0-9_-]{1,64}$`, unique within the catalog.
@@ -74,9 +84,16 @@ class CatalogEntry {
   /// Size of the zip in bytes (1 to [maxPackageBytes]), when given.
   final int? size;
 
+  /// Format features the package needs (`seekbar.lottie`); see
+  /// [supportedPluginFeatures].
+  final List<String> features;
+
   /// The store lists the entry under "Cần Kanaru mới hơn" and offers no
   /// install: the app does not know its type or its API version.
-  bool get needsNewerApp => kind == null || apiVersion > supportedApiVersion;
+  bool get needsNewerApp =>
+      kind == null ||
+      apiVersion > supportedApiVersion ||
+      features.any((f) => !supportedPluginFeatures.contains(f));
 }
 
 /// A parsed catalog: its display [name] and [author], the usable [entries]

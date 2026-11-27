@@ -1,5 +1,5 @@
 /// Locations of the plugin pages under Settings. The store takes an optional
-/// `kind` query (`lyrics`, `translate` or `streaming`) that opens it with
+/// `kind` query (`lyrics`, `translate`, `streaming`, `aiChat` or `seekbar`) that opens it with
 /// Lọc › Loại set to that kind.
 abstract final class PluginPaths {
   static const store = '/settings/plugins';

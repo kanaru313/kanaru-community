@@ -2,7 +2,9 @@ import '../../../../l10n/gen/app_localizations.dart';
 import '../../../plugins/domain/install/held_package.dart';
 import '../../../plugins/domain/install/update_diff.dart';
 import '../../../plugins/domain/package/host_rules.dart';
+import '../../../plugins/domain/package/image_header.dart' show ImageProblem;
 import '../../../plugins/domain/package/package_problem.dart';
+import '../../../plugins/domain/package/seekbar_features.dart';
 import 'install_problem.dart';
 
 /// The line of the "Lý do" box for [reason].
@@ -52,6 +54,10 @@ String packageProblemText(AppLocalizations l10n, PackageProblem problem) {
           : l10n.pluginsReasonInvalidManifest(detail),
     UnknownConfigFormat() => l10n.pluginsReasonUnknownFormat(detail),
     NeedsNewerApp() => l10n.pluginsReasonNeedsNewerApp,
+    UnsupportedFeature() =>
+      detail == lottieFeature
+          ? l10n.pluginsReasonLottie
+          : l10n.pluginsReasonNeedsNewerApp,
     UnsupportedKind() => l10n.pluginsReasonUnsupportedKind,
     InvalidHost() => l10n.pluginsReasonBadHost(detail),
     InvalidWildcardHost() => l10n.pluginsReasonBadWildcard(detail),
@@ -63,13 +69,31 @@ String packageProblemText(AppLocalizations l10n, PackageProblem problem) {
     ),
     NotAZip() => l10n.pluginsReasonNotZip,
     PackageTooLarge() => l10n.pluginsReasonTooLarge,
+    CodeNotAllowed() => l10n.pluginsReasonSeekbarCode(detail),
     UnsafeEntry() => l10n.pluginsReasonUnsafeEntry(detail),
     TooManyEntries() => l10n.pluginsReasonTooManyEntries,
     MissingManifest() => l10n.pluginsReasonMissingManifest,
     MissingScript() => l10n.pluginsReasonMissingScript(detail),
     ScriptNotUtf8() => l10n.pluginsReasonScriptNotUtf8(detail),
+    MissingAsset() => l10n.pluginsReasonAssetMissing(detail),
+    InvalidAsset(:final reason) => switch (reason) {
+      ImageProblem.format => l10n.pluginsReasonAssetFormat(detail),
+      ImageProblem.animated => l10n.pluginsReasonAssetAnimated(detail),
+      ImageProblem.extension => l10n.pluginsReasonAssetExtension(detail),
+      ImageProblem.size => l10n.pluginsReasonAssetSize(detail),
+      'frames' => l10n.pluginsReasonAssetFrames(detail),
+      _ => l10n.pluginsReasonAssetOther(detail),
+    },
   };
 }
+
+/// Whether an image of a seek bar package is among the reasons (the box then
+/// adds its note on what images are allowed).
+bool hasImageReason(InstallProblem problem) => problem.reasons.any(
+  (r) =>
+      r is PackageReason &&
+      (r.problem is InvalidAsset || r.problem is MissingAsset),
+);
 
 /// Whether a host line is among the reasons (the box then adds its note that
 /// only public names are allowed).

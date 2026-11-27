@@ -42,6 +42,12 @@ final class UnsupportedKind extends PackageProblem {
   const UnsupportedKind(super.type);
 }
 
+/// The package uses a feature of the format this app cannot handle yet
+/// (`seekbar.thumb.lottie`); the detail is the feature name.
+final class UnsupportedFeature extends PackageProblem {
+  const UnsupportedFeature(super.feature);
+}
+
 /// A host that is not a public DNS name; the detail is the host.
 final class InvalidHost extends PackageProblem {
   const InvalidHost(super.host);
@@ -87,6 +93,12 @@ final class UnsafeEntry extends PackageProblem {
   const UnsafeEntry(super.entry);
 }
 
+/// A seek bar package carries `src/*.js`; seek bar plugins are data only.
+/// The detail is the first script entry (`src/<name>.js`).
+final class CodeNotAllowed extends PackageProblem {
+  const CodeNotAllowed(super.entry);
+}
+
 /// More zip entries than allowed.
 final class TooManyEntries extends PackageProblem {
   const TooManyEntries() : super('');
@@ -106,6 +118,23 @@ final class MissingScript extends PackageProblem {
 /// A script is not valid UTF-8; the detail is the file name.
 final class ScriptNotUtf8 extends PackageProblem {
   const ScriptNotUtf8(super.file);
+}
+
+/// A file the seekbar block names (`thumb.image`, `emitter.image`) is not in
+/// `assets/`; the detail is the path the block gives.
+final class MissingAsset extends PackageProblem {
+  const MissingAsset(super.path);
+}
+
+/// An asset a seekbar plugin names cannot be used; the detail is its path and
+/// [reason] one of the `ImageProblem` values.
+final class InvalidAsset extends PackageProblem {
+  const InvalidAsset(super.path, this.reason);
+
+  final String reason;
+
+  @override
+  String toString() => 'InvalidAsset($detail, $reason)';
 }
 
 /// Thrown inside the parsers to stop at the first problem; the public entry

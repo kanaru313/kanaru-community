@@ -9,6 +9,7 @@ import 'package:kanaru/src/plugins/domain/install/held_package.dart';
 import 'package:kanaru/src/plugins/domain/install/install_result.dart';
 import 'package:kanaru/src/plugins/domain/install/prepare_result.dart';
 import 'package:kanaru/src/plugins/domain/net/fetch_failure.dart';
+import 'package:kanaru/src/plugins/domain/package/plugin_kind.dart';
 import 'package:kanaru/src/screens/plugins/install/package_flow.dart';
 
 import '../support/install_fixtures.dart';
@@ -52,6 +53,33 @@ void main() {
         expect(find.text('Static facts'), findsOneWidget);
         expect(find.text('Ask AI about this plugin'), findsOneWidget);
         expect(ops.installed, isEmpty, reason: 'nothing before Install');
+      });
+
+      testWidgets('an update of a seekbar plugin shows the seekbar progress', (
+        tester,
+      ) async {
+        final ops = FakeInstallOps();
+        final gate = Completer<Prepared>();
+        ops.onPrepare = () => gate.future;
+        await pumpFlowHost(
+          tester,
+          ops: ops,
+          size: size,
+          settle: false,
+          onTap: (c) => reviewPluginUpdate(
+            c,
+            ops,
+            installId: 'id-demo',
+            name: 'Demo',
+            kind: PluginKind.seekbar,
+          ),
+        );
+        expect(
+          find.text('Checking plugin.json, file names, images'),
+          findsOneWidget,
+        );
+        gate.complete(Ok(heldOf()));
+        await tester.pumpAndSettle();
       });
 
       testWidgets('Install writes the held package and says so', (
@@ -143,7 +171,10 @@ void main() {
               reviewPluginUpdate(c, ops, installId: 'id-demo', name: 'Demo'),
         );
         expect(find.text('Update Demo'), findsOneWidget);
-        expect(find.text('Lyrics plugin · someone (self-declared)'), findsOneWidget);
+        expect(
+          find.text('Lyrics plugin · someone (self-declared)'),
+          findsOneWidget,
+        );
         expect(find.text('NEW'), findsOneWidget);
         expect(find.text('new.example.com'), findsOneWidget);
         expect(find.textContaining('Updating means you agree'), findsOneWidget);

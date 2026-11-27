@@ -64,17 +64,25 @@ void main() {
           isNull,
         );
 
-        await tester.tap(_chip('Translation'));
-        await tester.pump();
+        // The functional kinds start selected; a tap takes one out.
         expect(
           tester.getSemantics(_chip('Translation')),
           isSemantics(isSelected: true),
         );
-        expect(find.text('Showing 1 plugin'), findsOneWidget);
-        expect(h.container.read(storeFilterProvider).kinds, {
-          PluginKind.translate,
-          PluginKind.aiTranslate,
-        });
+        await tester.tap(_chip('Translation'));
+        await tester.pump();
+        expect(
+          tester.getSemantics(_chip('Translation')),
+          isSemantics(isSelected: false),
+        );
+        expect(find.text('Showing 2 plugins'), findsOneWidget);
+        expect(
+          h.container.read(storeFilterProvider).kinds,
+          defaultStoreKinds.difference({
+            PluginKind.translate,
+            PluginKind.aiTranslate,
+          }),
+        );
         await tester.tap(_chip('ann'));
         await tester.pump();
         expect(h.container.read(storeFilterProvider).authors, {'ann'});
@@ -101,10 +109,12 @@ void main() {
     await tester.pump();
     final filter = h.container.read(storeFilterProvider);
     expect(filter.query, 'tra');
-    expect(filter.kinds, isEmpty);
+    expect(filter.kinds, defaultStoreKinds);
   });
 
-  testWidgets('the badge counts every chosen value', (tester) async {
+  testWidgets('the badge counts every value that differs from the default', (
+    tester,
+  ) async {
     await pumpPlugins(tester, _fixture());
     await _open(tester);
     await tester.tap(_chip('Lyrics'));
@@ -114,6 +124,50 @@ void main() {
     await tester.tap(find.text('Done'));
     await tester.pumpAndSettle();
     expect(tester.widget<KIconButton>(byIconButton('Filter')).badgeCount, 3);
+  });
+
+  testWidgets('the Seek bar chip is off by default and shows the uninstalled '
+      'styles', (tester) async {
+    final h = await pumpPlugins(
+      tester,
+      StoreFixture(
+        items: [
+          itemOf('l', StoreItemState.notInstalled, name: 'Lyr'),
+          itemOf(
+            's',
+            StoreItemState.notInstalled,
+            name: 'Style',
+            kind: PluginKind.seekbar,
+          ),
+        ],
+        repos: const [RepoView(id: 1, name: 'Kho', url: 'u', pluginCount: 2)],
+      ),
+    );
+    await _open(tester);
+    expect(
+      tester.getSemantics(_chip('Seek bar')),
+      isSemantics(isSelected: false),
+    );
+    expect(tester.getSemantics(_chip('Lyrics')), isSemantics(isSelected: true));
+    expect(find.text('Showing 1 plugin'), findsOneWidget);
+
+    await tester.tap(_chip('Seek bar'));
+    await tester.pump();
+    expect(find.text('Showing 2 plugins'), findsOneWidget);
+    expect(
+      tester.getSemantics(_chip('Seek bar')),
+      isSemantics(isSelected: true),
+    );
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+    expect(tester.widget<KIconButton>(byIconButton('Filter')).badgeCount, 1);
+
+    // Clear all goes back to the default, not to nothing selected.
+    await _open(tester);
+    await tester.tap(find.text('Clear all'));
+    await tester.pump();
+    expect(h.container.read(storeFilterProvider).kinds, defaultStoreKinds);
+    expect(find.text('Showing 1 plugin'), findsOneWidget);
   });
 
   testWidgets(

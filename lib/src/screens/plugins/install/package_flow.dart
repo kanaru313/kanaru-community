@@ -7,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../platform/domain/document_picker.dart';
 import '../../../plugins/domain/install/prepare_result.dart';
+import '../../../plugins/domain/package/plugin_kind.dart';
 import '../../../plugins/state/install_ops.dart';
 import '../plugin_paths.dart';
 import '../problems/install_problem_dialog.dart';
@@ -107,11 +108,12 @@ Future<void> installFromRepository(
   InstallOps ops, {
   required String installId,
   required String name,
+  PluginKind? kind,
 }) => runPackageFlow(
   context,
   ops: ops,
   start: () => ops.prepareInstall(installId),
-  subject: PackageSubject(name),
+  subject: PackageSubject(name, kind: kind),
 );
 
 /// [Xem] of an update row: the update screen for the new version.
@@ -120,11 +122,12 @@ Future<void> reviewPluginUpdate(
   InstallOps ops, {
   required String installId,
   required String name,
+  PluginKind? kind,
 }) => runPackageFlow(
   context,
   ops: ops,
   start: () => ops.prepareUpdate(installId),
-  subject: PackageSubject(name),
+  subject: PackageSubject(name, kind: kind),
   expectUpdate: true,
 );
 

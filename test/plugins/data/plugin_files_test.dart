@@ -10,6 +10,11 @@ import 'package:kanaru/src/plugins/domain/package/plugin_package.dart';
 import '../fixtures/zip_builders.dart';
 import 'store_test_support.dart';
 
+import 'package:kanaru/src/foundation/result.dart';
+import 'package:kanaru/src/plugins/domain/package/package_reader.dart';
+
+import '../fixtures/image_bytes.dart';
+
 /// The `plugin.json` text every default test package carries.
 final _demoManifest = packageOf().manifestText;
 
@@ -328,6 +333,167 @@ void main() {
         files.readPackage(row),
         throwsA(isA<PluginPackageUnreadable>()),
       );
+    });
+  });
+
+  group('assets', () {
+    final png = pngBytes(16, 16);
+    final webp = webpLossy(8, 8);
+
+    PluginPackage seekbarPackage() {
+      final zip = buildZip({
+        'plugin.json': jsonEncode({
+          'metadata': {
+            'apiVersion': 1,
+            'type': 'seekbar',
+            'name': 'Demo bar',
+            'version': 2,
+            'license': 'CC0-1.0',
+          },
+          'seekbar': {
+            'track': {'kind': 'flat'},
+            'thumb': {
+              'image': 'assets/t.png',
+              'size': [16, 16],
+            },
+            'emitter': {
+              'image': 'assets/p.webp',
+              'size': [8, 8],
+              'rate': 2,
+              'life': [1, 2],
+              'velocity': {
+                'x': [0, 1],
+                'y': [-5, 0],
+              },
+            },
+          },
+        }),
+        'assets/t.png': png,
+        'assets/p.webp': webp,
+      });
+      return switch (readPackage(zip)) {
+        Ok(:final value) => value,
+        Err(:final error) => fail('refused: $error'),
+      };
+    }
+
+    PluginRow row(String? dir) => _rowAt(id, dir);
+
+    test(
+      'write stores them under assets/ and readAsset gives them back',
+      () async {
+        final dir = await files.write(id, seekbarPackage());
+        expect(File('${folder(dir).path}/assets/t.png').readAsBytesSync(), png);
+        expect(await files.readAsset(row(dir), 't.png'), png);
+        expect(await files.readAsset(row(dir), 'p.webp'), webp);
+        expect(await files.readAssetAt(id, dir, 't.png'), png);
+      },
+    );
+
+    test('a package without assets creates no assets folder', () async {
+      final dir = await files.write(id, packageOf());
+      expect(Directory('${folder(dir).path}/assets').existsSync(), isFalse);
+      expect(await files.readAsset(row(dir), 't.png'), isNull);
+    });
+
+    test(
+      'a missing file, a bad name or a row without a folder is null',
+      () async {
+        final dir = await files.write(id, seekbarPackage());
+        expect(await files.readAsset(row(dir), 'nope.png'), isNull);
+        for (final bad in ['../plugin.json', 'a/b.png', 't.gif', '', '.png']) {
+          expect(await files.readAsset(row(dir), bad), isNull, reason: bad);
+        }
+        expect(await files.readAsset(row(null), 't.png'), isNull);
+        expect(await files.readAssetAt('..', dir, 't.png'), isNull);
+        expect(await files.readAssetAt(id, '../x', 't.png'), isNull);
+      },
+    );
+
+    test('a file over its cap is not read', () async {
+      final dir = await files.write(id, seekbarPackage());
+      File('${folder(dir).path}/assets/t.png')
+          .writeAsBytesSync(Uint8List(512 * 1024 + 1));
+      expect(await files.readAsset(row(dir), 't.png'), isNull);
+    });
+
+    test('a symbolic link is never followed', () async {
+      final dir = await files.write(id, seekbarPackage());
+      final secret = File('${data.path}/secret.png')..writeAsBytesSync(png);
+      final link = '${folder(dir).path}/assets/t.png';
+      File(link).deleteSync();
+      Link(link).createSync(secret.path);
+      expect(await files.readAsset(row(dir), 't.png'), isNull);
+      // A linked assets folder is refused too.
+      final moved = Directory('${data.path}/elsewhere')..createSync();
+      File('${moved.path}/p.webp').writeAsBytesSync(webp);
+      Directory('${folder(dir).path}/assets').deleteSync(recursive: true);
+      Link('${folder(dir).path}/assets').createSync(moved.path);
+      expect(await files.readAsset(row(dir), 'p.webp'), isNull);
+    });
+
+    test('packageBytes sums manifest, icon and plain asset files', () async {
+      final dir = await files.write(id, seekbarPackage());
+      final base = folder(dir).path;
+      final expected =
+          File('$base/plugin.json').lengthSync() + png.length + webp.length;
+      expect(await files.packageBytes(id, dir), expected);
+
+      // A symbolic link in assets/ is not counted, nor followed.
+      final secret = File('${data.path}/secret.bin')
+        ..writeAsBytesSync(Uint8List(5000));
+      Link('$base/assets/extra.png').createSync(secret.path);
+      expect(await files.packageBytes(id, dir), expected);
+
+      // A linked assets folder counts nothing from the target.
+      Directory('$base/assets').deleteSync(recursive: true);
+      final moved = Directory('${data.path}/elsewhere')..createSync();
+      File('${moved.path}/t.png').writeAsBytesSync(png);
+      Link('$base/assets').createSync(moved.path);
+      expect(
+        await files.packageBytes(id, dir),
+        File('$base/plugin.json').lengthSync(),
+      );
+    });
+
+    test('packageBytes is 0 for a bad name or a missing folder', () async {
+      expect(await files.packageBytes('..', 'v1-1'), 0);
+      expect(await files.packageBytes(id, '../x'), 0);
+      expect(await files.packageBytes(id, 'v9-9'), 0);
+    });
+
+    test('a bad asset name is refused before anything is created', () async {
+      final package = seekbarPackage();
+      final bad = PluginPackage(
+        manifestBytes: package.manifestBytes,
+        manifestText: package.manifestText,
+        manifest: package.manifest,
+        scripts: package.scripts,
+        assets: {'../x.png': png},
+        sha256: package.sha256,
+        size: package.size,
+      );
+      await expectLater(files.write(id, bad), throwsArgumentError);
+      expect(Directory('${data.path}/plugins').existsSync(), isFalse);
+    });
+
+    test('a failed asset write deletes the folder', () async {
+      var writes = 0;
+      final failing = PluginFiles(
+        data,
+        clock: () => now,
+        writeFile: (file, bytes) async {
+          if (file.path.contains('/assets/') && ++writes == 2) {
+            throw const FileSystemException('disk full');
+          }
+          await file.writeAsBytes(bytes);
+        },
+      );
+      await expectLater(
+        failing.write(id, seekbarPackage()),
+        throwsA(isA<FileSystemException>()),
+      );
+      expect(await failing.listFolders(), isEmpty);
     });
   });
 }

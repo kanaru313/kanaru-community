@@ -17,6 +17,7 @@ class HostsBlock extends StatelessWidget {
     this.newHosts = const [],
     this.endpointFields = const [],
     this.consent = HostsConsent.none,
+    this.emptyLine,
   });
 
   final List<String> hosts;
@@ -25,6 +26,10 @@ class HostsBlock extends StatelessWidget {
   /// Labels of the `format: url` fields of the plugin.
   final List<String> endpointFields;
   final HostsConsent consent;
+
+  /// The line shown when there is nothing to list; the default says there is
+  /// no fixed address.
+  final String? emptyLine;
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +76,7 @@ class HostsBlock extends StatelessWidget {
               ),
             ],
           ),
-        if (empty) Text(l10n.pluginsPkgNoHosts, style: soft),
+        if (empty) Text(emptyLine ?? l10n.pluginsPkgNoHosts, style: soft),
         if (!empty && consent != HostsConsent.none)
           Text(
             consent == HostsConsent.update

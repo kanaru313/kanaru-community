@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
@@ -40,6 +41,28 @@ final pluginFilesProvider = Provider<PluginFiles>(
     clock: ref.watch(pluginClockProvider),
   ),
 );
+
+/// One asset file of an installed seekbar package; null when it is missing
+/// or unreadable. Read with `ref.read(...future)` where it is needed.
+final pluginAssetProvider = FutureProvider.autoDispose
+    .family<Uint8List?, ({String installId, String packageDir, String name})>(
+      (ref, key) => ref
+          .watch(pluginFilesProvider)
+          .readAssetAt(key.installId, key.packageDir, key.name),
+      retry: _noRetry,
+    );
+
+Duration? _noRetry(int count, Object error) => null;
+
+/// Bytes of an installed package folder (manifest, icon, assets); see
+/// `PluginFiles.packageBytes`. An unreadable folder is an error, not retried.
+final pluginPackageBytesProvider = FutureProvider.autoDispose
+    .family<int, ({String installId, String packageDir})>(
+      (ref, key) => ref
+          .watch(pluginFilesProvider)
+          .packageBytes(key.installId, key.packageDir),
+      retry: _noRetry,
+    );
 
 final pluginConfigStoreProvider = Provider<PluginConfigStore>(
   (ref) => PluginConfigStore(

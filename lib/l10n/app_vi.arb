@@ -4618,7 +4618,7 @@
       }
     }
   },
-  "pluginsRemoveTooltip": "Xoá {name}",
+  "pluginsRemoveTooltip": "Gỡ {name}",
   "@pluginsRemoveTooltip": {
     "placeholders": {
       "name": {
@@ -5144,8 +5144,8 @@
   "pluginsReasonCheckUnavailable": "Kanaru chưa kiểm tra được script lúc này (thành phần chạy plugin không tải được) nên chưa biết gói có hợp lệ không",
   "pluginsReasonSameVersion": "Gói này cùng phiên bản với bản đã cài.",
   "pluginsReasonOlderVersion": "Gói này cũ hơn bản đã cài nên không được dùng.",
-  "pluginsReasonKindChange": "Gói này thuộc loại plugin khác với bản đã cài nên không được dùng. Hãy xoá plugin rồi cài bản mới.",
-  "pluginsReasonOtherOrigin": "Plugin này đã được cài từ {source}. Gói từ nơi khác không thay được nó: hãy xoá plugin đã cài rồi cài lại.",
+  "pluginsReasonKindChange": "Gói này thuộc loại plugin khác với bản đã cài nên không được dùng. Hãy gỡ plugin rồi cài bản mới.",
+  "pluginsReasonOtherOrigin": "Plugin này đã được cài từ {source}. Gói từ nơi khác không thay được nó: hãy gỡ plugin đã cài rồi cài lại.",
   "@pluginsReasonOtherOrigin": {
     "placeholders": {
       "source": {
@@ -5256,7 +5256,7 @@
       }
     }
   },
-  "pluginsRemoveTitle": "Xoá {name}?",
+  "pluginsRemoveTitle": "Gỡ “{name}”?",
   "@pluginsRemoveTitle": {
     "placeholders": {
       "name": {
@@ -5278,8 +5278,8 @@
   "pluginsRemoveWillDelete": "Sẽ bị xoá",
   "pluginsRemoveCode": "Code của plugin",
   "pluginsRemoveSettings": "Cài đặt của plugin",
-  "pluginsRemoveConfirm": "Xoá",
-  "pluginsRemoved": "Đã xoá {name}",
+  "pluginsRemoveConfirm": "Gỡ",
+  "pluginsRemoved": "Đã gỡ “{name}”",
   "@pluginsRemoved": {
     "placeholders": {
       "name": {
@@ -5287,7 +5287,7 @@
       }
     }
   },
-  "pluginsRemoveFailed": "Không xoá được {name}",
+  "pluginsRemoveFailed": "Không gỡ được {name}",
   "@pluginsRemoveFailed": {
     "placeholders": {
       "name": {
@@ -5358,7 +5358,7 @@
   "pluginsPageOpenConfig": "Mở cấu hình",
   "pluginsPageBrokenTitle": "Không đọc được gói của plugin",
   "pluginsPageBrokenBody": "Thư mục của plugin bị thiếu hoặc hỏng nên plugin không chạy. Cài lại giữ nguyên cài đặt và dữ liệu.",
-  "pluginsPageBrokenBodyFile": "Thư mục của plugin bị thiếu hoặc hỏng nên plugin không chạy. Plugin này cài từ file: hãy xoá rồi cài file mới.",
+  "pluginsPageBrokenBodyFile": "Thư mục của plugin bị thiếu hoặc hỏng nên plugin không chạy. Plugin này cài từ file: hãy gỡ rồi cài file mới.",
   "pluginsPageReinstall": "Cài lại",
   "pluginsPageReinstalled": "Đã cài lại {name}",
   "@pluginsPageReinstalled": {
@@ -5402,8 +5402,8 @@
       }
     }
   },
-  "pluginsPageNoUpdatesFile": "Plugin này cài từ file nên không có cập nhật. Hãy xoá rồi cài file mới.",
-  "pluginsPageNoUpdatesLink": "Plugin này cài từ đường dẫn nên không có cập nhật. Hãy xoá rồi cài bản mới.",
+  "pluginsPageNoUpdatesFile": "Plugin này cài từ file nên không có cập nhật. Hãy gỡ rồi cài file mới.",
+  "pluginsPageNoUpdatesLink": "Plugin này cài từ đường dẫn nên không có cập nhật. Hãy gỡ rồi cài bản mới.",
   "pluginsPageWildcardLine": "{label} ({host})",
   "@pluginsPageWildcardLine": {
     "placeholders": {
@@ -5758,6 +5758,183 @@
   "pluginsRemoveKeepLrc": "File .lrc đã ghi cạnh bài",
   "pluginsRemoveKeep": "Vẫn giữ",
   "pluginsPageConnectionRow": "Yêu cầu cùng lúc, giãn cách",
+  "pluginsKindSeekbar": "Thanh tua",
+  "pluginsKindNounSeekbar": "Plugin thanh tua",
+  "pluginsKindHelpSeekbar": "Đổi cách vẽ thanh tua ở Now Playing và màn lời.",
+  "pluginsReasonSeekbarCode": "{detail}: plugin thanh tua không được có mã",
+  "@pluginsReasonSeekbarCode": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonAssetMissing": "{detail}: gói không có tệp này",
+  "@pluginsReasonAssetMissing": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonAssetFormat": "{detail}: không phải ảnh PNG hoặc WebP hợp lệ",
+  "@pluginsReasonAssetFormat": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonAssetAnimated": "{detail}: không dùng ảnh động, hãy dùng ảnh tĩnh",
+  "@pluginsReasonAssetAnimated": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonAssetExtension": "{detail}: đuôi tệp không khớp với loại ảnh",
+  "@pluginsReasonAssetExtension": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonAssetSize": "{detail}: ảnh quá lớn, mỗi cạnh tối đa 2048 px",
+  "@pluginsReasonAssetSize": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonAssetFrames": "{detail}: chiều rộng ảnh không chia đều cho số khung hình",
+  "@pluginsReasonAssetFrames": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonAssetOther": "{detail}: không dùng được ảnh này",
+  "@pluginsReasonAssetOther": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsReasonAssetNote": "Ảnh của plugin thanh tua: PNG hoặc WebP, không động, mỗi ảnh tối đa 512 KB, mỗi cạnh tối đa 2048 px; cả gói tối đa 1 MB.",
+  "pluginsReasonLottie": "Cần bản Kanaru mới hơn để dùng hình động Lottie",
+  "pluginsProblemNewerBodyLottie": "{name} dùng con trỏ hoạt ảnh Lottie, bản Kanaru này chưa hỗ trợ. Hãy cập nhật Kanaru rồi cài lại.",
+  "@pluginsProblemNewerBodyLottie": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsPkgNoData": "Không gửi dữ liệu đi đâu.",
+  "pluginsPkgProgressSeekbar": "{done} / {total} KB · kiểm plugin.json, tên tệp, ảnh",
+  "@pluginsPkgProgressSeekbar": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsPkgProgressUnknownSeekbar": "{done} KB · kiểm plugin.json, tên tệp, ảnh",
+  "@pluginsPkgProgressUnknownSeekbar": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsPkgCheckingSeekbar": "Kiểm plugin.json, tên tệp, ảnh",
+  "pluginsPkgFactsHint": "Kanaru tự tính từ gói; AI không sửa được.",
+  "pluginsPkgFactsHintTooltip": "Giải thích về dữ kiện tĩnh",
+  "pluginsSkFactPackage": "Gói",
+  "pluginsSkFactCode": "Mã",
+  "pluginsSkFactBase": "Nền",
+  "pluginsSkFactLicense": "Giấy phép",
+  "pluginsSkFilesWithImages": "plugin.json + {images}",
+  "@pluginsSkFilesWithImages": {
+    "placeholders": {
+      "images": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsSkImagesPng": "{count} ảnh PNG",
+  "@pluginsSkImagesPng": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsSkImagesWebp": "{count} ảnh WebP",
+  "@pluginsSkImagesWebp": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsSkImagesLottie": "1 hoạt ảnh Lottie",
+  "pluginsSkPackageSize": "{files} · {size}",
+  "@pluginsSkPackageSize": {
+    "placeholders": {
+      "files": {
+        "type": "String"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsSkPackageNoCode": "{files} · không có mã",
+  "@pluginsSkPackageNoCode": {
+    "placeholders": {
+      "files": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsSkCodeNone": "Không có: Kanaru tự vẽ theo khai báo, trong dải thanh tua",
+  "pluginsSkBaseStar": "{base} · dùng được làm ★",
+  "@pluginsSkBaseStar": {
+    "placeholders": {
+      "base": {
+        "type": "String"
+      }
+    }
+  },
+  "pluginsSkUseTitle": "Dùng ở Cài đặt › Thanh tua",
+  "pluginsSkUseChosen": "Đang dùng",
+  "pluginsSkUseFallback": "★ khi bài chưa có dạng sóng",
+  "pluginsSkUseBoth": "Đang dùng · ★ khi bài chưa có dạng sóng",
+  "pluginsSkUseNone": "Chưa dùng",
+  "pluginsPageTypeValueSeekbar": "{kind} · nền {base} · API plugin {api}",
+  "@pluginsPageTypeValueSeekbar": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "base": {
+        "type": "String"
+      },
+      "api": {
+        "type": "int"
+      }
+    }
+  },
+  "pluginsRemovePackage": "Gói của plugin (khai báo và ảnh)",
   "fontsBuiltInTitle": "Có sẵn",
   "fontsBuiltInHint": "Chữ Hán, Hàn, Nhật và emoji luôn dùng phông của hệ thống.",
   "fontsDefaultSuffix": " · mặc định",

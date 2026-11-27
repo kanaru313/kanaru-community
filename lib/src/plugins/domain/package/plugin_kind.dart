@@ -4,7 +4,8 @@ enum PluginKind {
   translate('translate', ['translate']),
   aiTranslate('ai-translate', ['translate']),
   streaming('streaming', ['search', 'stream']),
-  aiChat('ai-chat', ['chat']);
+  aiChat('ai-chat', ['chat']),
+  seekbar('seekbar', []);
 
   const PluginKind(this.wire, this.requiredScripts);
 

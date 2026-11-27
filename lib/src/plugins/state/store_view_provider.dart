@@ -123,8 +123,7 @@ bool _extraMatches({
   required StoreFilter filter,
 }) {
   final kind = row.pluginKind;
-  if (filter.kinds.isNotEmpty &&
-      (kind == null || !filter.kinds.contains(kind))) {
+  if (!storeKindVisible(kind: kind, installed: true, filter: filter)) {
     return false;
   }
   if (filter.states.isNotEmpty &&
@@ -144,10 +143,6 @@ bool _extraMatches({
     return false;
   }
   final search = parseStoreSearch(filter.query);
-  final tagKinds = search.kinds;
-  if (tagKinds.isNotEmpty && (kind == null || !tagKinds.contains(kind))) {
-    return false;
-  }
   final words = [for (final w in search.words) foldDiacritics(w)];
   if (words.isEmpty) return true;
   final haystack = foldDiacritics([row.name, author, ...hosts].join('\n'));

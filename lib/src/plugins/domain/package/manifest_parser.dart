@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../../../foundation/result.dart';
+import '../config/config_field.dart';
 import '../config/config_schema_parser.dart';
 import 'chat_spec.dart';
 import 'json_read.dart';
@@ -9,6 +10,8 @@ import 'package_problem.dart';
 import 'plugin_kind.dart';
 import 'plugin_languages.dart';
 import 'plugin_manifest.dart';
+import 'seekbar_limits.dart';
+import 'seekbar_spec_read.dart';
 import 'translate_spec.dart';
 
 /// The newest `metadata.apiVersion` this app understands.
@@ -56,7 +59,10 @@ PluginManifest _read(String text) {
   if (version is! int || version < 1 || version > 2147483647) {
     invalid('metadata.version');
   }
-  final hosts = readHosts(metadata['hosts'], kind: kind);
+  final isSeekbar = kind == PluginKind.seekbar;
+  final hosts = isSeekbar
+      ? readNoHosts(metadata)
+      : readHosts(metadata['hosts'], kind: kind);
   final author = readText(
     metadata['author'],
     'metadata.author',
@@ -71,14 +77,32 @@ PluginManifest _read(String text) {
     keepNewlines: true,
   );
   final regexp = readRegexp(metadata['regexp']);
-  final scripts = readScripts(root['script'], kind: kind);
+  if (isSeekbar && root.containsKey('script')) invalid('script');
+  final scripts = isSeekbar
+      ? const <String, String>{}
+      : readScripts(root['script'], kind: kind);
   final translate = kind.isTranslation
       ? readTranslateSpec(root['translate']).spec
       : null;
   final isChat = kind == PluginKind.aiChat;
   if (!isChat && root['chat'] != null) invalid('chat');
   final chat = isChat ? readChatSpec(root['chat']) : null;
-  final config = readConfigSchema(root['config']);
+  if (!isSeekbar && root['seekbar'] != null) invalid('seekbar');
+  if (isSeekbar) requireNoConfig(root['config']);
+  final license = isSeekbar
+      ? readText(
+          metadata['license'],
+          'metadata.license',
+          min: 1,
+          max: seekbarLicenseMaxLength,
+        )
+      : '';
+  final seekbar = isSeekbar
+      ? readSeekbarSpec(root['seekbar'], strict: true)
+      : null;
+  final config = isSeekbar
+      ? const <ConfigField>[]
+      : readConfigSchema(root['config']);
   if (kind == PluginKind.aiTranslate) requireTuneFields(config);
   if (chat != null) requireChatFields(config, chat);
   return PluginManifest(
@@ -94,6 +118,8 @@ PluginManifest _read(String text) {
     regexp: regexp,
     translate: translate,
     chat: chat,
+    license: license,
+    seekbar: seekbar,
     config: config,
   );
 }

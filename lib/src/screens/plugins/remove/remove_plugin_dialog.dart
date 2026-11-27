@@ -6,8 +6,8 @@ import '../../../plugins/domain/package/plugin_kind.dart';
 import '../../../plugins/state/install_ops.dart';
 import '../common/reason_box.dart';
 
-/// "Xoá {tên}?": who wrote it and which version, then what goes and (for a
-/// lyrics or translate plugin) what stays. Pops true on [Xoá]. Only what is
+/// "Gỡ {tên}?": who wrote it and which version, then what goes and (for a
+/// lyrics or translate plugin) what stays. Pops true on [Gỡ]. Only what is
 /// true now is listed; nothing else is promised.
 class RemovePluginDialog extends StatelessWidget {
   const RemovePluginDialog({
@@ -43,12 +43,15 @@ class RemovePluginDialog extends StatelessWidget {
             ReasonBox(
               error: true,
               title: l10n.pluginsRemoveWillDelete,
-              lines: [
-                l10n.pluginsRemoveCode,
-                l10n.pluginsRemoveSettings,
-                l10n.pluginsRemoveStorage(storageKb),
-                l10n.pluginsRemoveLog,
-              ],
+              // A seek bar plugin is its package only: no settings, storage or log.
+              lines: preview.kind == PluginKind.seekbar
+                  ? [l10n.pluginsRemovePackage]
+                  : [
+                      l10n.pluginsRemoveCode,
+                      l10n.pluginsRemoveSettings,
+                      l10n.pluginsRemoveStorage(storageKb),
+                      l10n.pluginsRemoveLog,
+                    ],
             ),
             if (preview.kind == PluginKind.lyrics)
               ReasonBox(

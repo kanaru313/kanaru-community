@@ -201,4 +201,50 @@ void main() {
     final package = readOk(validZip());
     expect(() => package.scripts['x.js'] = 'y', throwsUnsupportedError);
   });
+
+  group('assets of a package that is not a seekbar', () {
+    // A lyrics package carries no assets; whatever it holds under assets/ is
+    // never inflated, stored or refused, even when broken.
+    final lyrics = readOk(validZip());
+
+    void expectUnchanged(Uint8List zip) {
+      final package = readOk(zip);
+      expect(package.assets, isEmpty);
+      expect(package.scripts, lyrics.scripts);
+      expect(package.manifestBytes, lyrics.manifestBytes);
+    }
+
+    test('an oversized asset', () {
+      expectUnchanged(
+        validZip(extra: {'assets/big.png': Uint8List(900 * 1024)}),
+      );
+    });
+
+    test('a corrupt asset', () {
+      final zip = patchEntry(
+        validZip(extra: {'assets/x.png': 'not a png'}),
+        'assets/x.png',
+        crc: 1,
+      );
+      expectUnchanged(zip);
+    });
+
+    test('an asset whose method does not match its data', () {
+      final zip = patchEntry(
+        validZip(extra: {'assets/x.png': Uint8List(4000)}),
+        'assets/x.png',
+        method: 0,
+      );
+      expectUnchanged(zip);
+    });
+
+    test('an asset that declares more than the caps allow', () {
+      final zip = patchEntry(
+        validZip(extra: {'assets/x.png': Uint8List(4000)}),
+        'assets/x.png',
+        size: 4 * 1024 * 1024,
+      );
+      expectUnchanged(zip);
+    });
+  });
 }

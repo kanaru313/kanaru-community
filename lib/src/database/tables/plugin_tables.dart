@@ -34,6 +34,7 @@ abstract final class PluginKindValues {
     'ai-translate',
     'streaming',
     'ai-chat',
+    'seekbar',
   };
 }
 

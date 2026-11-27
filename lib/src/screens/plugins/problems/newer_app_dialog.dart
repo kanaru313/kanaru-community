@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../plugins/domain/package/manifest_parser.dart';
+import '../../../plugins/domain/package/seekbar_features.dart';
 import 'install_problem.dart';
 
 /// "Cần Kanaru mới hơn": the plugin uses an API (or a type) this app does not
@@ -18,7 +19,9 @@ class NewerAppDialog extends StatelessWidget {
     return AlertDialog(
       title: Text(l10n.pluginsProblemNewerTitle),
       content: Text(
-        version == null
+        problem.feature == lottieFeature
+            ? l10n.pluginsProblemNewerBodyLottie(problem.subject)
+            : version == null
             ? l10n.pluginsProblemNewerBody(problem.subject)
             : l10n.pluginsProblemNewerBodyVersion(
                 problem.subject,

@@ -7849,6 +7849,178 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pluginsPageConnectionRow => 'Requests at once, spacing';
 
   @override
+  String get pluginsKindSeekbar => 'Seek bar';
+
+  @override
+  String get pluginsKindNounSeekbar => 'Seek bar plugin';
+
+  @override
+  String get pluginsKindHelpSeekbar =>
+      'Changes how the seek bar is drawn in Now Playing and on the lyrics screen.';
+
+  @override
+  String pluginsReasonSeekbarCode(String detail) {
+    return '$detail: a seek bar plugin cannot contain code';
+  }
+
+  @override
+  String pluginsReasonAssetMissing(String detail) {
+    return '$detail: the package does not contain this file';
+  }
+
+  @override
+  String pluginsReasonAssetFormat(String detail) {
+    return '$detail: not a valid PNG or WebP image';
+  }
+
+  @override
+  String pluginsReasonAssetAnimated(String detail) {
+    return '$detail: animated images are not supported, use a still image';
+  }
+
+  @override
+  String pluginsReasonAssetExtension(String detail) {
+    return '$detail: the file extension does not match the image';
+  }
+
+  @override
+  String pluginsReasonAssetSize(String detail) {
+    return '$detail: the image is too large, at most 2048 px on each side';
+  }
+
+  @override
+  String pluginsReasonAssetFrames(String detail) {
+    return '$detail: the image width does not divide by its number of frames';
+  }
+
+  @override
+  String pluginsReasonAssetOther(String detail) {
+    return '$detail: the image cannot be used';
+  }
+
+  @override
+  String get pluginsReasonAssetNote =>
+      'Images of a seek bar plugin: PNG or WebP, not animated, at most 512 KB each and 2048 px on each side; the whole package at most 1 MB.';
+
+  @override
+  String get pluginsReasonLottie =>
+      'Needs a newer Kanaru to use the Lottie animation';
+
+  @override
+  String pluginsProblemNewerBodyLottie(String name) {
+    return '$name uses an animated Lottie thumb, which this version of Kanaru does not support yet. Update Kanaru, then install it again.';
+  }
+
+  @override
+  String get pluginsPkgNoData => 'Sends no data anywhere.';
+
+  @override
+  String pluginsPkgProgressSeekbar(int done, int total) {
+    return '$done / $total KB · checking plugin.json, file names, images';
+  }
+
+  @override
+  String pluginsPkgProgressUnknownSeekbar(int done) {
+    return '$done KB · checking plugin.json, file names, images';
+  }
+
+  @override
+  String get pluginsPkgCheckingSeekbar =>
+      'Checking plugin.json, file names, images';
+
+  @override
+  String get pluginsPkgFactsHint =>
+      'Kanaru works these out from the package; the AI cannot change them.';
+
+  @override
+  String get pluginsPkgFactsHintTooltip => 'About the static facts';
+
+  @override
+  String get pluginsSkFactPackage => 'Package';
+
+  @override
+  String get pluginsSkFactCode => 'Code';
+
+  @override
+  String get pluginsSkFactBase => 'Base';
+
+  @override
+  String get pluginsSkFactLicense => 'License';
+
+  @override
+  String pluginsSkFilesWithImages(String images) {
+    return 'plugin.json + $images';
+  }
+
+  @override
+  String pluginsSkImagesPng(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count PNG images',
+      one: '1 PNG image',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String pluginsSkImagesWebp(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count WebP images',
+      one: '1 WebP image',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pluginsSkImagesLottie => '1 Lottie animation';
+
+  @override
+  String pluginsSkPackageSize(String files, String size) {
+    return '$files · $size';
+  }
+
+  @override
+  String pluginsSkPackageNoCode(String files) {
+    return '$files · no code';
+  }
+
+  @override
+  String get pluginsSkCodeNone =>
+      'None: Kanaru draws it from the declaration, inside the seek bar band';
+
+  @override
+  String pluginsSkBaseStar(String base) {
+    return '$base · can be the ★ style';
+  }
+
+  @override
+  String get pluginsSkUseTitle => 'Used in Settings › Seek bar';
+
+  @override
+  String get pluginsSkUseChosen => 'In use';
+
+  @override
+  String get pluginsSkUseFallback => '★ while a song has no waveform';
+
+  @override
+  String get pluginsSkUseBoth => 'In use · ★ while a song has no waveform';
+
+  @override
+  String get pluginsSkUseNone => 'Not in use';
+
+  @override
+  String pluginsPageTypeValueSeekbar(String kind, String base, int api) {
+    return '$kind · $base base · plugin API $api';
+  }
+
+  @override
+  String get pluginsRemovePackage =>
+      'The plugin’s package (declaration and images)';
+
+  @override
   String get fontsBuiltInTitle => 'Built in';
 
   @override

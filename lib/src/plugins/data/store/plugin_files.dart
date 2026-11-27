@@ -67,9 +67,10 @@ class PluginFiles {
 
   /// Writes [package] into a new folder of [installId] and returns its name
   /// (the `package_dir` value): the original `plugin.json` bytes, `icon.png`
-  /// when kept, and every `src/*.js`, each file flushed. A failure deletes
-  /// what was written and rethrows. Throws [ArgumentError] before touching the
-  /// disk for an id or script name with the wrong shape.
+  /// when kept, every `src/*.js` and every `assets/*` file, each flushed. A
+  /// failure deletes what was written and rethrows. Throws [ArgumentError]
+  /// before touching the disk for an id, script or asset name with the wrong
+  /// shape.
   Future<String> write(String installId, PluginPackage package) async {
     if (!isInstallIdShape(installId)) {
       throw ArgumentError.value(installId, 'installId', 'not an install id');
@@ -77,6 +78,11 @@ class PluginFiles {
     for (final name in package.scripts.keys) {
       if (!scriptFileName.hasMatch(name)) {
         throw ArgumentError.value(name, 'scripts', 'not a script file name');
+      }
+    }
+    for (final name in package.assets.keys) {
+      if (!assetFileName.hasMatch(name)) {
+        throw ArgumentError.value(name, 'assets', 'not an asset file name');
       }
     }
     final version = package.manifest.version;
@@ -100,6 +106,12 @@ class PluginFiles {
           File('${dir.path}/src/${entry.key}'),
           utf8.encode(entry.value),
         );
+      }
+      if (package.assets.isNotEmpty) {
+        await Directory('${dir.path}/assets').create();
+        for (final entry in package.assets.entries) {
+          await _write(File('${dir.path}/assets/${entry.key}'), entry.value);
+        }
       }
     } on Object {
       await _delete(dir);
@@ -146,6 +158,68 @@ class PluginFiles {
     } on FileSystemException {
       return null;
     }
+  }
+
+  /// The asset [name] (`t.png`) of [row]'s package, or null when [name] has
+  /// the wrong shape, the file is missing, over its cap, unreadable, or not a
+  /// plain file (a symbolic link is never followed).
+  Future<Uint8List?> readAsset(PluginRow row, String name) {
+    final packageDir = row.packageDir;
+    if (packageDir == null) return Future.value();
+    return readAssetAt(row.installId, packageDir, name);
+  }
+
+  /// [readAsset] for a package named by its folder, for callers that hold
+  /// the ids and not the row.
+  Future<Uint8List?> readAssetAt(
+    String installId,
+    String packageDir,
+    String name,
+  ) async {
+    if (!isInstallIdShape(installId) ||
+        !isPackageDirShape(packageDir) ||
+        !assetFileName.hasMatch(name)) {
+      return null;
+    }
+    final folder = '${_dir(installId, packageDir).path}/assets';
+    final file = File('$folder/$name');
+    try {
+      if (await FileSystemEntity.type(folder, followLinks: false) !=
+              FileSystemEntityType.directory ||
+          !await isPlainFile(file.path) ||
+          await file.length() > assetByteCap(name)) {
+        return null;
+      }
+      return await file.readAsBytes();
+    } on FileSystemException {
+      return null;
+    }
+  }
+
+  /// The bytes of `plugin.json`, `icon.png` and every `assets/*` file of the
+  /// package folder [installId]/[packageDir]; 0 when the name has the wrong
+  /// shape or the folder is missing. Only plain files count: a symbolic link
+  /// is never followed. Throws [FileSystemException] when a file cannot be
+  /// read.
+  Future<int> packageBytes(String installId, String packageDir) async {
+    if (!isInstallIdShape(installId) || !isPackageDirShape(packageDir)) {
+      return 0;
+    }
+    final dir = _dir(installId, packageDir);
+    var total = 0;
+    for (final name in const ['plugin.json', 'icon.png']) {
+      final file = File('${dir.path}/$name');
+      if (await isPlainFile(file.path)) total += await file.length();
+    }
+    final assets = Directory('${dir.path}/assets');
+    if (await FileSystemEntity.type(assets.path, followLinks: false) !=
+        FileSystemEntityType.directory) {
+      return total;
+    }
+    await for (final entry in assets.list(followLinks: false)) {
+      if (entry is File) total += await entry.length();
+    }
+    return total;
   }
 
   /// Whether the folder [row] points at is on disk with its `plugin.json`

@@ -11,6 +11,7 @@ import 'package:kanaru/src/plugins/domain/package/plugin_kind.dart';
 import 'chat_test_support.dart';
 import 'config_test_support.dart';
 import 'plugin_test_support.dart';
+import 'seekbar_manifest_test.dart' show seekbarManifest;
 
 const _int64Min = -9223372036854775808;
 const _unsafe = 9007199254740992;
@@ -116,6 +117,7 @@ void main() {
       PluginKind.aiTranslate: aiManifest(),
       PluginKind.streaming: streamingManifest(),
       PluginKind.aiChat: chatManifest(),
+      PluginKind.seekbar: seekbarManifest(),
     };
     for (final MapEntry(key: kind, value: json) in manifests.entries) {
       test(kind.wire, () => expect(parseOk(json).kind, kind));
