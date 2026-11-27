@@ -19,6 +19,13 @@ bool chatPageInStack(GoRouter router) => router
     .matches
     .any((m) => m.matchedLocation == chatPath);
 
+/// The location of the page the chat covers: the top route, unless that is
+/// the chat page itself (null then: the page under it was written earlier).
+String? pageUnderChat(GoRouter router) {
+  final top = router.routerDelegate.currentConfiguration.last.matchedLocation;
+  return top == chatPath ? null : top;
+}
+
 /// Shows the phone's chat page once: pushed when it is not open, brought back
 /// to the top when it is already below other pages, left alone when it is on
 /// top.

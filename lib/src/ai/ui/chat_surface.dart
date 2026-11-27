@@ -8,6 +8,7 @@ import '../state/chat_providers.dart';
 import '../state/chat_session.dart';
 import '../state/chat_view/chat_view_state.dart';
 import '../state/chat_view/composer_view.dart';
+import 'chat_suggestions_sync.dart';
 import 'composer/composer.dart';
 import 'composer/prompt_chips.dart';
 import 'empty_states.dart';
@@ -72,6 +73,7 @@ class _ChatSurfaceState extends ConsumerState<ChatSurface> {
         messages != null && !hasMessages && plugins != null && plugins.isEmpty;
     return Column(
       children: [
+        const ChatSuggestionsSync(),
         Expanded(child: historyOpen ? const ChatHistoryPage() : _body()),
         if (!historyOpen && id != null && !guide)
           Composer(showPromptChips: hasMessages),

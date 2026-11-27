@@ -93,13 +93,16 @@ class ChatViewNotifier extends Notifier<ChatViewState> {
   }
 
   /// Deletes conversation [id]: the controller stops its turn first and opens
-  /// a new empty conversation when it was the open one.
-  Future<void> deleteConversation(int id) async {
+  /// a new empty conversation when it was the open one. True when it was
+  /// deleted; a failure is logged and gives false.
+  Future<bool> deleteConversation(int id) async {
     state = state.copyWith(renaming: false);
     try {
       await ref.read(chatSessionProvider.notifier).delete(id);
+      return true;
     } on Object catch (e, s) {
       _log.warning('delete failed: ${e.runtimeType}', e, s);
+      return false;
     }
   }
 

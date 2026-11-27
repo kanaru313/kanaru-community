@@ -2,6 +2,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 
 import '../../../media/domain/play_context.dart';
 import '../../../media/domain/track_id.dart';
+import '../../domain/ask_ai_target.dart';
 import '../browse/library_labels.dart';
 import 'menu_items.dart';
 import 'menu_model.dart';
@@ -12,6 +13,7 @@ class SelectionMenuData {
     required this.ids,
     required this.durationMs,
     required this.allFavorite,
+    this.tracks = const [],
   });
 
   final List<TrackId> ids;
@@ -19,6 +21,9 @@ class SelectionMenuData {
 
   /// Every selected track is a favourite: the row removes them.
   final bool allFavorite;
+
+  /// The selected songs as the chat names them, in selection order.
+  final List<AskAiTrack> tracks;
 }
 
 /// Menu of the selected songs. Play all, edit and add-to-playlist are on the
@@ -61,7 +66,12 @@ MenuSpec buildSelectionMenu(SelectionMenuData data, MenuEnv env) {
             action: MenuAction.favorite(data.ids, on: !data.allFavorite),
             enabled: count > 0,
           ),
-          proRow(l10n, l10n.libraryMenuAskAiSongs),
+          askAiRow(
+            env,
+            l10n.libraryMenuAskAiSongs,
+            AskAiTarget.songs(data.tracks),
+            enabled: data.tracks.isNotEmpty,
+          ),
         ],
       ],
       advanced,

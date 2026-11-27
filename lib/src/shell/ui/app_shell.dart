@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 
+import '../../ai/state/chat_view/page_suggestions.dart';
 import '../../ai/ui/play_context_label_sync.dart';
 import '../../extension/state/extension_providers.dart';
 import '../../playback/state/now_playing_panel.dart';
@@ -83,7 +84,21 @@ class _AppShellState extends ConsumerState<AppShell> {
     if (!identical(router, _router)) {
       _router?.routerDelegate.removeListener(_onRoute);
       _router = router..routerDelegate.addListener(_onRoute);
+      _syncChatPageLocation();
     }
+  }
+
+  /// Tells the chat which page it covers (desktop: the page beside the
+  /// panel, live; phone: the last page before `/chat` was pushed), so it can
+  /// offer that page's chip. After the current work: a route change can
+  /// arrive while the tree builds.
+  void _syncChatPageLocation() {
+    final router = _router;
+    final location = router == null ? null : pageUnderChat(router);
+    if (location == null) return;
+    scheduleMicrotask(() {
+      if (mounted) ref.read(chatPageLocationProvider.notifier).set(location);
+    });
   }
 
   /// A page above the phone's chat page was popped while the window is wide:
@@ -91,6 +106,7 @@ class _AppShellState extends ConsumerState<AppShell> {
   void _onRoute() {
     final router = _router;
     if (!mounted || router == null) return;
+    _syncChatPageLocation();
     if (FormFactor.of(context) == FormFactor.desktop && chatPageOnTop(router)) {
       _chatToPanel();
     }

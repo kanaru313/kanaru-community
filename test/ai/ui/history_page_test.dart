@@ -24,9 +24,13 @@ import 'support/chat_ui_support.dart';
 class _HistorySession extends FakeChatSession {
   Completer<void>? deleteGate;
 
+  /// The store refuses the delete.
+  bool failDelete = false;
+
   @override
   Future<void> delete(int id) async {
     await deleteGate?.future;
+    if (failDelete) throw StateError('store refused');
     await super.delete(id);
   }
 
@@ -317,6 +321,42 @@ void main() {
       expect(setup.session.calls, contains('delete 2'));
       // Another conversation was deleted: the open one stays.
       expect(setup.container.read(chatSessionProvider).conversationId, 1);
+    });
+
+    testWidgets('a deleted conversation is announced with a toast', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        conversations: [
+          historyConversation(1, 'Current', at: _daysAgo(0)),
+          historyConversation(2, 'Doomed', at: _daysAgo(1)),
+        ],
+      );
+      await _rowMenu(tester, 'Doomed', 'Delete');
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(find.text('Conversation deleted'), findsNothing);
+
+      await _rowMenu(tester, 'Doomed', 'Delete');
+      await tester.tap(find.text('Delete').last);
+      await tester.pumpAndSettle();
+      expect(find.text('Conversation deleted'), findsOneWidget);
+    });
+
+    testWidgets('a delete that fails shows no toast', (tester) async {
+      await _pump(
+        tester,
+        session: _HistorySession()..failDelete = true,
+        conversations: [
+          historyConversation(1, 'Current', at: _daysAgo(0)),
+          historyConversation(2, 'Doomed', at: _daysAgo(1)),
+        ],
+      );
+      await _rowMenu(tester, 'Doomed', 'Delete');
+      await tester.tap(find.text('Delete').last);
+      await tester.pumpAndSettle();
+      expect(find.text('Conversation deleted'), findsNothing);
     });
 
     testWidgets(

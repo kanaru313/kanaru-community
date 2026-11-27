@@ -56,6 +56,10 @@
   "@aiChatDeleteConfirm": {
     "description": "Confirm button of the delete dialog."
   },
+  "aiChatDeleted": "Đã xoá cuộc trò chuyện",
+  "@aiChatDeleted": {
+    "description": "Toast shown after a conversation was deleted."
+  },
   "aiChatEmptyTitle": "Hỏi gì về nhạc của bạn?",
   "@aiChatEmptyTitle": {
     "description": "Greeting of an empty conversation."

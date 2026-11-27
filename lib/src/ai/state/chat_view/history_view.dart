@@ -102,12 +102,13 @@ class ChatHistoryActions extends Notifier<Set<int>> {
 
   /// Deletes conversation [id]: its turn stops first and, when it was the
   /// open one, the controller opens a new empty conversation in the same
-  /// call. A second call for the same id while it runs does nothing.
-  Future<void> delete(int id) async {
-    if (state.contains(id)) return;
+  /// call. A second call for the same id while it runs does nothing. True
+  /// when this call deleted it.
+  Future<bool> delete(int id) async {
+    if (state.contains(id)) return false;
     state = {...state, id};
     try {
-      await ref.read(chatViewProvider.notifier).deleteConversation(id);
+      return await ref.read(chatViewProvider.notifier).deleteConversation(id);
     } finally {
       state = {...state}..remove(id);
     }

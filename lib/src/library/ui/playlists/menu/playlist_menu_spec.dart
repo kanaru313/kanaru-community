@@ -1,6 +1,7 @@
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../domain/ask_ai_target.dart';
 import '../../../domain/playlists/playlist_models.dart';
 import '../../../domain/playlists/playlist_text_rules.dart';
 import '../../library_locations.dart';
@@ -116,11 +117,11 @@ MenuSpec buildPlaylistMenu(
               (ctx) => showEditPlaylistDialog(ctx, summary),
             ),
           ),
-          MenuItemSpec(
-            MenuItemId.playlistAskAi,
-            icon: KIcons.ai,
-            title: l10n.playlistMenuAskAi,
-            soon: true,
+          askAiRow(
+            env,
+            l10n.playlistMenuAskAi,
+            AskAiTarget.playlist(summary.uid, name),
+            id: MenuItemId.playlistAskAi,
           ),
         ],
       ],

@@ -130,6 +130,10 @@ class HistoryRow extends ConsumerWidget {
   ) async {
     if (!context.mounted) return;
     final l10n = AppLocalizations.of(context);
+    // Taken before the awaits: the row may be gone when the delete ends.
+    final messenger = ScaffoldMessenger.of(
+      Navigator.of(context, rootNavigator: true).context,
+    );
     final ok = await confirmAction(
       context,
       title: l10n.aiChatDeleteTitle,
@@ -137,7 +141,11 @@ class HistoryRow extends ConsumerWidget {
       confirmLabel: l10n.aiChatDeleteConfirm,
       destructive: true,
     );
-    if (ok) await actions.delete(conversation.id);
+    if (!ok) return;
+    final deleted = await actions.delete(conversation.id);
+    if (deleted && messenger.mounted) {
+      showAppSnackBarOn(messenger, l10n.aiChatDeleted);
+    }
   }
 }
 

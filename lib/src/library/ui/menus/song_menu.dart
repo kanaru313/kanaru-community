@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart' show BuildContext;
 import 'package:kanaru_ui/kanaru_ui.dart';
 
 import '../../../media/domain/track_info.dart';
+import '../../domain/ask_ai_target.dart';
 import '../../domain/browse/menu_targets.dart';
 import '../library_locations.dart';
 import 'link_rows.dart';
@@ -141,7 +142,20 @@ MenuSpec buildSongMenu(SongMenuData data, MenuOrigin origin, MenuEnv env) {
                 : l10n.libraryMenuSelect,
             action: MenuAction.select(id, on: !data.selected),
           ),
-          proRow(l10n, l10n.libraryMenuAskAiSong),
+          askAiRow(
+            env,
+            l10n.libraryMenuAskAiSong,
+            AskAiTarget.song(
+              AskAiTrack(
+                id: id.value,
+                title: info.title,
+                artist: info.artists.isEmpty
+                    ? info.artist ?? ''
+                    : info.artists.join(', '),
+                album: info.album,
+              ),
+            ),
+          ),
         ],
       ],
       advanced,

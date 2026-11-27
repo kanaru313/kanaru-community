@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/widgets.dart';
+import 'package:material_ui/material_ui.dart' show ScaffoldMessenger;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 
@@ -104,6 +105,9 @@ class ChatMenu extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final id = container.read(chatSessionProvider).conversationId;
     if (id == null || !context.mounted) return;
+    final messenger = ScaffoldMessenger.of(
+      Navigator.of(context, rootNavigator: true).context,
+    );
     final ok = await confirmAction(
       context,
       title: l10n.aiChatDeleteTitle,
@@ -112,6 +116,11 @@ class ChatMenu extends ConsumerWidget {
       destructive: true,
     );
     if (!ok) return;
-    await container.read(chatViewProvider.notifier).deleteConversation(id);
+    final deleted = await container
+        .read(chatViewProvider.notifier)
+        .deleteConversation(id);
+    if (deleted && messenger.mounted) {
+      showAppSnackBarOn(messenger, l10n.aiChatDeleted);
+    }
   }
 }

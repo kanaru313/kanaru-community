@@ -161,8 +161,12 @@ list and from the empty search field (a search with text clears first).
   disabled (dimmed, taps ignored).
 - **Open:** `ChatSessionController.open(id)` (stops a running turn, Q5), then
   the history closes. [Cuộc trò chuyện mới] is `startNewConversation()`.
-- **Not drawn by the mockup, not built:** toast after delete; empty-list text
-  without a search (the open conversation is always in the list).
+- **Toast:** a delete that succeeded shows "Đã xoá cuộc trò chuyện"
+  (`showAppSnackBarOn` on a messenger captured before the awaits); the same
+  toast follows "Xoá cuộc trò chuyện này" of the ⋮ menu. A failed delete is only
+  logged (`deleteConversation` / `ChatHistoryActions.delete` return false).
+- **Not drawn by the mockup, not built:** empty-list text without a search (the
+  open conversation is always in the list).
 
 ## Message list and answer renderer
 
@@ -349,3 +353,42 @@ because a tool call can start a queue while the chat is closed.
 records calls), `chatUiOverrides`, `RecordingChatHost`. Shell tests use the same
 overrides through `test/shell/support/desktop_now_playing_host.dart`
 (`withChat`, `savedSettings`, `playerPhase`).
+
+## "Hỏi AI" entry points
+
+One interface, one implementation, no second route:
+
+- `library/ui/menus/ask_ai_entry.dart`: `AskAiEntry.ask(context, AskAiTarget)`
+  and `askAiEntryProvider` (null until the app overrides it; `library` cannot
+  import `ai`). `lib/kanaru.dart` overrides it with `askAiEntryOverride`, an
+  `AskAiEntryShell`.
+- **Menus:** `loadMenuEnv` puts the entry in `MenuEnv.askAi`; builders call
+  `askAiRow(env, title, target)` (`menu_items.dart`), which is the old
+  "Sắp có" row while the entry is null. Targets: song (id, title, artists,
+  album), album (key + title), artist (key + name), selection (the loader reads
+  the rows through `trackRowLoaderProvider`; dimmed until they are loaded),
+  playlist (uid + display name). The queue row menu, the Now Playing ⋮ and the
+  song menu of a row inside the chat are the same song menu, so they need no
+  code of their own. Genre, language, folder and Favorites menus have no
+  Ask AI row (the mockup draws none).
+- **Screens:** Now Playing mobile button row (tile 3, inert with a "coming
+  soon" tooltip while there is no entry) and the desktop header ✦ after the
+  Dịch pill (absent without an entry); both ask `AskAiTarget.nowPlaying()`.
+  No ✦ on the lyrics header.
+- **`AskAiEntryShell.ask`** (`shell/ui/ask_ai_entry_shell.dart`): attaches the
+  chip (`chatAttachmentsProvider.attachTarget`), closes the history list, shows
+  the chat (desktop: `RightPanelKind.chat`, which also replaces the queue;
+  phone: `openChatPage`, so a chat already on top is left alone and a second
+  `/chat` is never pushed), then `composerFocusRequestProvider.request()`. The
+  form factor is read from the caller's context before anything else (a menu
+  closes after the tap).
+- **Page suggestions** (`state/chat_view/page_suggestions.dart`):
+  `chatPageLocationProvider` holds the location of the page the chat covers.
+  `AppShell` writes it on every route change except while `/chat` is the top
+  route, so on desktop it follows the page beside the panel and on the phone it
+  is the page captured before the push. `chatSuggestionsProvider(l10n)` returns
+  the chips in order: Bài đang phát (only when a track is loaded), "N bài đã
+  chọn" (selection), then the page's chip (album / artist / genre / language /
+  playlist; a root page or a page without a chip adds none), all through
+  `chipRefOf`. `ChatSuggestionsSync` (inside `ChatSurface`) copies them into
+  `chatAttachmentsProvider.setSuggestions`.

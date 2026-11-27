@@ -9,6 +9,8 @@ import '../../../../lyrics/state/playing_lyrics_providers.dart';
 import '../../../../lyrics/ui/lyrics_for_track_modal.dart';
 import '../../../../lyrics/ui/lyrics_source_button.dart';
 import '../../../../lyrics/ui/translation/translate_entry.dart';
+import '../../../../library/domain/ask_ai_target.dart';
+import '../../../../library/ui/menus/ask_ai_entry.dart';
 import '../../../../media/domain/track_id.dart';
 import '../../../../playback/state/playback_providers.dart';
 import '../../../../playback/state/track_info_providers.dart';
@@ -135,6 +137,15 @@ class _DesktopNowPlayingHeaderState
               padding: const EdgeInsets.only(left: KSpace.x1),
               child: TranslatePill(opener: _openTranslate),
             ),
+            // Only when the app has the chat (there is no "coming soon" here).
+            if (ref.watch(askAiEntryProvider) case final askAi?)
+              KIconButton(
+                icon: KIcons.ai,
+                tooltip: l10n.libraryMenuAskAiSong,
+                onPressed: trackId == null
+                    ? null
+                    : () => askAi.ask(context, const AskAiTarget.nowPlaying()),
+              ),
             const Spacer(),
             const RepeatButton(),
             SleepTimerDesktopEntry(opener: _openSleepTimer),

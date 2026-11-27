@@ -4,6 +4,7 @@ import '../../../media/domain/library_keys.dart';
 import '../../../media/domain/play_context.dart';
 import '../../../media/domain/track_id.dart';
 import '../../domain/browse/browse_items.dart';
+import '../../domain/ask_ai_target.dart';
 import '../../domain/browse/menu_targets.dart';
 import '../browse/library_labels.dart';
 import '../../state/custom_cover_providers.dart' show CustomCoverKind;
@@ -126,7 +127,11 @@ MenuSpec buildAlbumMenu(AlbumMenuData data, MenuOrigin origin, MenuEnv env) {
             l10n.libraryMenuEditAlbum,
             subtitle: l10n.librarySongCount(album.trackCount),
           ),
-          proRow(l10n, l10n.libraryMenuAskAiAlbum),
+          askAiRow(
+            env,
+            l10n.libraryMenuAskAiAlbum,
+            AskAiTarget.album(data.key.encode(), album.title),
+          ),
         ],
       ],
       advanced,

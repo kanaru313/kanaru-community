@@ -24,6 +24,7 @@ import 'src/fonts/data/startup_font.dart';
 import 'src/fonts/state/font_providers.dart';
 import 'src/foundation/app_logger.dart';
 import 'src/library/library_extension.dart';
+import 'src/library/ui/menus/ask_ai_entry.dart';
 import 'src/library/ui/menus/song_lyrics_entry.dart';
 import 'src/lyrics/data/native_local_lyrics_reader.dart';
 import 'src/lyrics/lyrics_extension.dart';
@@ -42,6 +43,7 @@ import 'src/router/state/router_provider.dart';
 import 'src/router/ui/kanaru_app.dart';
 import 'src/screens/screens_extension.dart';
 import 'src/screens/settings/state/appearance_settings.dart';
+import 'src/shell/ui/ask_ai_entry_shell.dart';
 import 'src/shell/ui/chat_host_shell.dart';
 
 export 'src/database/database.dart';
@@ -71,6 +73,12 @@ final translationAppLanguageOverride = translationAppLanguageProvider
 /// supplies the shell's implementation here.
 final chatHostOverride = chatHostProvider.overrideWith(
   (ref) => ChatHostShell(ref, () => ref.read(routerProvider)),
+);
+
+/// The "Ask AI" entry of menus and screens: attaches a chip and opens the
+/// chat (panel on desktop, page on the phone).
+final askAiEntryOverride = askAiEntryProvider.overrideWith(
+  (ref) => AskAiEntryShell(ref, () => ref.read(routerProvider)),
 );
 
 /// Starts the app: native library, paths, settings, device id, database, extensions, then the UI.
@@ -136,6 +144,7 @@ Future<void> runKanaru({List<KanaruExtension> extensions = const []}) async {
         songLyricsEntryProvider.overrideWithValue(const LyricsSongEntry()),
         translationAppLanguageOverride,
         chatHostOverride,
+        askAiEntryOverride,
       ],
       child: const KanaruApp(),
     ),
