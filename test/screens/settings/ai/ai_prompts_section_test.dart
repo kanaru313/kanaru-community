@@ -133,18 +133,18 @@ void main() {
     expect(find.text('Play {{now_playing}}'), findsOneWidget);
   });
 
-  testWidgets('row tap shows Sắp có before the editor ships', (tester) async {
+  testWidgets('row tap opens the editor of that prompt', (tester) async {
     await openAiSettings(tester);
     await tester.tap(find.text('Explain the lyrics'));
-    await tester.pump();
-    expect(find.text('Coming soon'), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.text('Edit prompt'), findsOneWidget);
   });
 
-  testWidgets('Add prompt shows Sắp có', (tester) async {
+  testWidgets('Add prompt opens an empty editor', (tester) async {
     await openAiSettings(tester);
     await tester.tap(find.text('Add prompt'));
-    await tester.pump();
-    expect(find.text('Coming soon'), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.text('New prompt'), findsOneWidget);
   });
 
   testWidgets('empty list state', (tester) async {

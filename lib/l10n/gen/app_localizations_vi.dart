@@ -8643,4 +8643,146 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get aiSetRemoveKeepChats =>
       'Các cuộc trò chuyện đã dùng plugin này (đọc được, chọn plugin khác để tiếp tục)';
+
+  @override
+  String get aiSetEdTitleEdit => 'Sửa prompt';
+
+  @override
+  String get aiSetEdTitleNew => 'Prompt mới';
+
+  @override
+  String get aiSetEdLabel => 'Nhãn';
+
+  @override
+  String get aiSetEdLabelPlaceholder => 'vd. Giải nghĩa lời';
+
+  @override
+  String get aiSetEdLabelHelp => 'Chữ trên chip ở ô nhập chat';
+
+  @override
+  String get aiSetEdBodyTitle => 'Prompt';
+
+  @override
+  String aiSetEdBodyHint(String input) {
+    return 'Biến do Kanaru điền lúc gửi; thiếu dữ liệu thì không gửi gì, chữ ở nguyên trong ô. $input là chỗ bạn gõ tiếp: bấm chip có $input chỉ điền prompt vào ô nhập, con trỏ đặt ở đó. Không có biến tự tạo.';
+  }
+
+  @override
+  String aiSetEdBodyPlaceholder(String nowPlaying, String lyrics) {
+    return 'vd. Giải nghĩa lời bài $nowPlaying: $lyrics';
+  }
+
+  @override
+  String get aiSetEdBodyHelp =>
+      'Gửi như tin nhắn của bạn khi bấm chip trên ô nhập chat.';
+
+  @override
+  String get aiSetEdVars => 'Chèn biến';
+
+  @override
+  String aiSetEdUnknown(String names, String allowed) {
+    return 'Biến $names không có. Dùng được: $allowed';
+  }
+
+  @override
+  String aiSetEdGroupOff(String names, String groups, String setting) {
+    return '$names cần công cụ $groups, đang tắt. Vẫn lưu được; bấm chip sẽ chưa gửi được tới khi bật lại công cụ, hoặc bật “$setting”.';
+  }
+
+  @override
+  String aiSetEdGroupOffBypass(String names, String groups, String setting) {
+    return '$names: công cụ $groups đang tắt, nhưng biến vẫn gửi vì “$setting” đang bật.';
+  }
+
+  @override
+  String get aiSetEdPreviewTitle => 'Xem trước';
+
+  @override
+  String get aiSetEdPreviewHint =>
+      'Điền bằng dữ liệu ví dụ (bài Lạc trôi), không phải bài đang phát. Khi bấm chip, Kanaru điền dữ liệu thật lúc gửi.';
+
+  @override
+  String get aiSetEdPreviewEmpty => 'Gõ prompt ở trên để xem trước.';
+
+  @override
+  String get aiSetEdPreviewUnknown => 'Biến không có';
+
+  @override
+  String aiSetEdPreviewOff(String variable, String group) {
+    return '$variable · công cụ “$group” đang tắt';
+  }
+
+  @override
+  String get aiSetEdSampleNowPlaying => 'Lạc trôi · Sơn Tùng M-TP';
+
+  @override
+  String get aiSetEdSampleTitle => 'Lạc trôi';
+
+  @override
+  String get aiSetEdSampleArtist => 'Sơn Tùng M-TP';
+
+  @override
+  String get aiSetEdSampleAlbum => 'm-tp M-TP';
+
+  @override
+  String get aiSetEdSampleLyrics => '‹lời bài Lạc trôi · 42 dòng›';
+
+  @override
+  String get aiSetEdSampleQueue => '‹hàng đợi · 12 bài›';
+
+  @override
+  String get aiSetEdSampleInput => '‹chữ bạn gõ›';
+
+  @override
+  String get aiSetEdDeleteRow => 'Xoá prompt';
+
+  @override
+  String aiSetEdDeleteBuiltinDesc(String restore) {
+    return 'Prompt có sẵn: “$restore” thêm lại được bản gốc';
+  }
+
+  @override
+  String aiSetEdDeleteTitle(String label) {
+    return 'Xoá prompt “$label”?';
+  }
+
+  @override
+  String aiSetEdDeleteBodyBuiltin(String restore) {
+    return 'Đây là prompt có sẵn: “$restore” thêm lại được bản gốc, phần bạn đã sửa thì mất.';
+  }
+
+  @override
+  String get aiSetEdDeleteBodyCustom =>
+      'Chip của prompt này biến khỏi ô nhập chat. Không hoàn tác được.';
+
+  @override
+  String get aiSetEdDeleteConfirm => 'Xoá';
+
+  @override
+  String aiSetEdDeleted(String label) {
+    return 'Đã xoá “$label”';
+  }
+
+  @override
+  String aiSetEdSaved(String label) {
+    return 'Đã lưu “$label”';
+  }
+
+  @override
+  String get aiSetEdCancel => 'Huỷ';
+
+  @override
+  String get aiSetEdSave => 'Lưu';
+
+  @override
+  String get aiSetEdDiscardTitle => 'Bỏ thay đổi?';
+
+  @override
+  String get aiSetEdDiscardBody => 'Thay đổi của prompt này chưa được lưu.';
+
+  @override
+  String get aiSetEdDiscardKeep => 'Tiếp tục sửa';
+
+  @override
+  String get aiSetEdDiscardConfirm => 'Bỏ';
 }

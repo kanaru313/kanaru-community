@@ -9330,4 +9330,146 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get aiSetRemoveKeepChats =>
       'Chats that used this plugin (readable; pick another plugin to continue)';
+
+  @override
+  String get aiSetEdTitleEdit => 'Edit prompt';
+
+  @override
+  String get aiSetEdTitleNew => 'New prompt';
+
+  @override
+  String get aiSetEdLabel => 'Label';
+
+  @override
+  String get aiSetEdLabelPlaceholder => 'e.g. Explain the lyrics';
+
+  @override
+  String get aiSetEdLabelHelp => 'Text on the chip in the chat input';
+
+  @override
+  String get aiSetEdBodyTitle => 'Prompt';
+
+  @override
+  String aiSetEdBodyHint(String input) {
+    return 'Kanaru fills in variables when sending; with no data it sends nothing and the text stays in the box. $input is where you type next: tapping a chip with $input only fills the prompt into the box, with the cursor there. There are no custom variables.';
+  }
+
+  @override
+  String aiSetEdBodyPlaceholder(String nowPlaying, String lyrics) {
+    return 'e.g. Explain the lyrics of $nowPlaying: $lyrics';
+  }
+
+  @override
+  String get aiSetEdBodyHelp =>
+      'Sent as your own message when you tap the chip in the chat input.';
+
+  @override
+  String get aiSetEdVars => 'Insert variable';
+
+  @override
+  String aiSetEdUnknown(String names, String allowed) {
+    return 'Variable $names does not exist. You can use: $allowed';
+  }
+
+  @override
+  String aiSetEdGroupOff(String names, String groups, String setting) {
+    return '$names needs the $groups tool, which is off. You can still save; tapping the chip will not send it until the tool is back on, or turn on “$setting”.';
+  }
+
+  @override
+  String aiSetEdGroupOffBypass(String names, String groups, String setting) {
+    return '$names: the $groups tool is off, but the variable is still sent because “$setting” is on.';
+  }
+
+  @override
+  String get aiSetEdPreviewTitle => 'Preview';
+
+  @override
+  String get aiSetEdPreviewHint =>
+      'Filled with sample data (the song Lạc trôi), not the playing song. When you tap the chip, Kanaru fills in the real data when sending.';
+
+  @override
+  String get aiSetEdPreviewEmpty => 'Type the prompt above to preview it.';
+
+  @override
+  String get aiSetEdPreviewUnknown => 'No such variable';
+
+  @override
+  String aiSetEdPreviewOff(String variable, String group) {
+    return '$variable · the “$group” tool is off';
+  }
+
+  @override
+  String get aiSetEdSampleNowPlaying => 'Lạc trôi · Sơn Tùng M-TP';
+
+  @override
+  String get aiSetEdSampleTitle => 'Lạc trôi';
+
+  @override
+  String get aiSetEdSampleArtist => 'Sơn Tùng M-TP';
+
+  @override
+  String get aiSetEdSampleAlbum => 'm-tp M-TP';
+
+  @override
+  String get aiSetEdSampleLyrics => '‹lyrics of Lạc trôi · 42 lines›';
+
+  @override
+  String get aiSetEdSampleQueue => '‹queue · 12 songs›';
+
+  @override
+  String get aiSetEdSampleInput => '‹what you type›';
+
+  @override
+  String get aiSetEdDeleteRow => 'Delete prompt';
+
+  @override
+  String aiSetEdDeleteBuiltinDesc(String restore) {
+    return 'Built-in prompt: “$restore” adds the original back';
+  }
+
+  @override
+  String aiSetEdDeleteTitle(String label) {
+    return 'Delete the prompt “$label”?';
+  }
+
+  @override
+  String aiSetEdDeleteBodyBuiltin(String restore) {
+    return 'This is a built-in prompt: “$restore” adds the original back, but your edits are lost.';
+  }
+
+  @override
+  String get aiSetEdDeleteBodyCustom =>
+      'The chip of this prompt disappears from the chat input. This cannot be undone.';
+
+  @override
+  String get aiSetEdDeleteConfirm => 'Delete';
+
+  @override
+  String aiSetEdDeleted(String label) {
+    return 'Deleted “$label”';
+  }
+
+  @override
+  String aiSetEdSaved(String label) {
+    return 'Saved “$label”';
+  }
+
+  @override
+  String get aiSetEdCancel => 'Cancel';
+
+  @override
+  String get aiSetEdSave => 'Save';
+
+  @override
+  String get aiSetEdDiscardTitle => 'Discard changes?';
+
+  @override
+  String get aiSetEdDiscardBody => 'The changes to this prompt are not saved.';
+
+  @override
+  String get aiSetEdDiscardKeep => 'Keep editing';
+
+  @override
+  String get aiSetEdDiscardConfirm => 'Discard';
 }

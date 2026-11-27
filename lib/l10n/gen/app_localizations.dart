@@ -13810,6 +13810,240 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Chats that used this plugin (readable; pick another plugin to continue)'**
   String get aiSetRemoveKeepChats;
+
+  /// No description provided for @aiSetEdTitleEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit prompt'**
+  String get aiSetEdTitleEdit;
+
+  /// No description provided for @aiSetEdTitleNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New prompt'**
+  String get aiSetEdTitleNew;
+
+  /// No description provided for @aiSetEdLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Label'**
+  String get aiSetEdLabel;
+
+  /// No description provided for @aiSetEdLabelPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Explain the lyrics'**
+  String get aiSetEdLabelPlaceholder;
+
+  /// No description provided for @aiSetEdLabelHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Text on the chip in the chat input'**
+  String get aiSetEdLabelHelp;
+
+  /// No description provided for @aiSetEdBodyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompt'**
+  String get aiSetEdBodyTitle;
+
+  /// No description provided for @aiSetEdBodyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Kanaru fills in variables when sending; with no data it sends nothing and the text stays in the box. {input} is where you type next: tapping a chip with {input} only fills the prompt into the box, with the cursor there. There are no custom variables.'**
+  String aiSetEdBodyHint(String input);
+
+  /// No description provided for @aiSetEdBodyPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Explain the lyrics of {nowPlaying}: {lyrics}'**
+  String aiSetEdBodyPlaceholder(String nowPlaying, String lyrics);
+
+  /// No description provided for @aiSetEdBodyHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent as your own message when you tap the chip in the chat input.'**
+  String get aiSetEdBodyHelp;
+
+  /// No description provided for @aiSetEdVars.
+  ///
+  /// In en, this message translates to:
+  /// **'Insert variable'**
+  String get aiSetEdVars;
+
+  /// No description provided for @aiSetEdUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Variable {names} does not exist. You can use: {allowed}'**
+  String aiSetEdUnknown(String names, String allowed);
+
+  /// No description provided for @aiSetEdGroupOff.
+  ///
+  /// In en, this message translates to:
+  /// **'{names} needs the {groups} tool, which is off. You can still save; tapping the chip will not send it until the tool is back on, or turn on “{setting}”.'**
+  String aiSetEdGroupOff(String names, String groups, String setting);
+
+  /// No description provided for @aiSetEdGroupOffBypass.
+  ///
+  /// In en, this message translates to:
+  /// **'{names}: the {groups} tool is off, but the variable is still sent because “{setting}” is on.'**
+  String aiSetEdGroupOffBypass(String names, String groups, String setting);
+
+  /// No description provided for @aiSetEdPreviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get aiSetEdPreviewTitle;
+
+  /// No description provided for @aiSetEdPreviewHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Filled with sample data (the song Lạc trôi), not the playing song. When you tap the chip, Kanaru fills in the real data when sending.'**
+  String get aiSetEdPreviewHint;
+
+  /// No description provided for @aiSetEdPreviewEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Type the prompt above to preview it.'**
+  String get aiSetEdPreviewEmpty;
+
+  /// No description provided for @aiSetEdPreviewUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'No such variable'**
+  String get aiSetEdPreviewUnknown;
+
+  /// No description provided for @aiSetEdPreviewOff.
+  ///
+  /// In en, this message translates to:
+  /// **'{variable} · the “{group}” tool is off'**
+  String aiSetEdPreviewOff(String variable, String group);
+
+  /// No description provided for @aiSetEdSampleNowPlaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Lạc trôi · Sơn Tùng M-TP'**
+  String get aiSetEdSampleNowPlaying;
+
+  /// No description provided for @aiSetEdSampleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lạc trôi'**
+  String get aiSetEdSampleTitle;
+
+  /// No description provided for @aiSetEdSampleArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Sơn Tùng M-TP'**
+  String get aiSetEdSampleArtist;
+
+  /// No description provided for @aiSetEdSampleAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'m-tp M-TP'**
+  String get aiSetEdSampleAlbum;
+
+  /// No description provided for @aiSetEdSampleLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'‹lyrics of Lạc trôi · 42 lines›'**
+  String get aiSetEdSampleLyrics;
+
+  /// No description provided for @aiSetEdSampleQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'‹queue · 12 songs›'**
+  String get aiSetEdSampleQueue;
+
+  /// No description provided for @aiSetEdSampleInput.
+  ///
+  /// In en, this message translates to:
+  /// **'‹what you type›'**
+  String get aiSetEdSampleInput;
+
+  /// No description provided for @aiSetEdDeleteRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete prompt'**
+  String get aiSetEdDeleteRow;
+
+  /// No description provided for @aiSetEdDeleteBuiltinDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Built-in prompt: “{restore}” adds the original back'**
+  String aiSetEdDeleteBuiltinDesc(String restore);
+
+  /// No description provided for @aiSetEdDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete the prompt “{label}”?'**
+  String aiSetEdDeleteTitle(String label);
+
+  /// No description provided for @aiSetEdDeleteBodyBuiltin.
+  ///
+  /// In en, this message translates to:
+  /// **'This is a built-in prompt: “{restore}” adds the original back, but your edits are lost.'**
+  String aiSetEdDeleteBodyBuiltin(String restore);
+
+  /// No description provided for @aiSetEdDeleteBodyCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'The chip of this prompt disappears from the chat input. This cannot be undone.'**
+  String get aiSetEdDeleteBodyCustom;
+
+  /// No description provided for @aiSetEdDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get aiSetEdDeleteConfirm;
+
+  /// No description provided for @aiSetEdDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted “{label}”'**
+  String aiSetEdDeleted(String label);
+
+  /// No description provided for @aiSetEdSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved “{label}”'**
+  String aiSetEdSaved(String label);
+
+  /// No description provided for @aiSetEdCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get aiSetEdCancel;
+
+  /// No description provided for @aiSetEdSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get aiSetEdSave;
+
+  /// No description provided for @aiSetEdDiscardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard changes?'**
+  String get aiSetEdDiscardTitle;
+
+  /// No description provided for @aiSetEdDiscardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The changes to this prompt are not saved.'**
+  String get aiSetEdDiscardBody;
+
+  /// No description provided for @aiSetEdDiscardKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep editing'**
+  String get aiSetEdDiscardKeep;
+
+  /// No description provided for @aiSetEdDiscardConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get aiSetEdDiscardConfirm;
 }
 
 class _AppLocalizationsDelegate
