@@ -1278,6 +1278,7 @@
   },
   "aiChatErrCutOffTitle": "The answer was cut off when Kanaru closed",
   "aiChatErrCutOffBody": "What was received stays above. Kanaru does not resend when it opens; tap Try again to let the AI go on.",
+  "aiChatErrCutOffBodyEmpty": "Nothing of the answer had arrived when Kanaru closed. Kanaru does not resend when it opens; tap Try again to let the AI answer.",
   "aiChatActionOpenPlugin": "Open plugin",
   "@aiChatActionOpenPlugin": {
     "description": "Button of the broken-plugin error card."

@@ -298,12 +298,36 @@ void main() {
     t.session.liveText.listen((e) => live.add(e.text));
     await t.session.send('go');
     await until(() => live.isNotEmpty);
-    expect((await transcript()).last.liveText, isNull);
+    t.engine.lastOnEvent!('{"t":"text","d":"def"}');
+    await until(() => live.length == 2);
 
     await flushChat(t.container);
 
-    expect((await transcript()).last.liveText, 'abc');
+    expect((await transcript()).last.liveText, 'abcdef');
   });
+
+  test(
+    'the first streamed text is written without waiting for a flush',
+    () async {
+      await start();
+      t.engine.rounds.add(
+        const ScriptedRound(
+          events: ['{"t":"text","d":"abc"}'],
+          untilCancelled: true,
+        ),
+      );
+      final live = <String>[];
+      t.session.liveText.listen((e) => live.add(e.text));
+      await t.session.send('go');
+      await until(() => live.isNotEmpty);
+
+      // No flushChat and no interval elapsed: a kill now still keeps it.
+      final swept = await t.store.sweepAfterCrash();
+
+      expect(swept.stopped, 1);
+      expect((await transcript()).last.liveText, 'abc');
+    },
+  );
 
   test('kill after some deltas keeps the flushed prefix', () async {
     await start();

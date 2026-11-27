@@ -72,8 +72,7 @@ class _KanaruAppState extends ConsumerState<KanaruApp>
   }
 
   void _onState(AppLifecycleState state) {
-    if (state == AppLifecycleState.hidden ||
-        state == AppLifecycleState.paused) {
+    if (flushesOnLifecycle(state)) {
       final container = ProviderScope.containerOf(context, listen: false);
       unawaited(
         _flusher.flush(container).catchError((Object error, StackTrace stack) {

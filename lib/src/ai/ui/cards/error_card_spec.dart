@@ -47,12 +47,14 @@ class ErrorCardNames {
 /// The card of [kind], or null for a kind that draws no error card
 /// ([ChatCardKind.stopped], and [ChatCardKind.limitReached], which has its own
 /// card). [countdown]: the card counts down to a retry, so its body speaks of
-/// the countdown.
+/// the countdown. [hasText]: the failed message kept some answer text; the
+/// cut-off card only says "what was received stays above" when it did.
 ErrorCardSpec? errorCardSpec(
   AppLocalizations l10n,
   ChatCardKind kind,
   ErrorCardNames names, {
   bool countdown = false,
+  bool hasText = true,
 }) {
   final plugin = names.plugin;
   final model = names.model ?? plugin;
@@ -202,7 +204,9 @@ ErrorCardSpec? errorCardSpec(
       return ErrorCardSpec(
         icon: KIcons.refresh,
         title: l10n.aiChatErrCutOffTitle,
-        body: l10n.aiChatErrCutOffBody,
+        body: hasText
+            ? l10n.aiChatErrCutOffBody
+            : l10n.aiChatErrCutOffBodyEmpty,
         action: retry,
       );
     case ChatCardKind.badRequest:

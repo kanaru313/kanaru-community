@@ -8207,6 +8207,10 @@ class AppLocalizationsVi extends AppLocalizations {
       'Phần đã nhận vẫn ở trên. Kanaru không tự gửi lại khi mở; bấm Thử lại để AI làm tiếp.';
 
   @override
+  String get aiChatErrCutOffBodyEmpty =>
+      'Kanaru chưa nhận được chữ nào của câu trả lời trước khi đóng. Kanaru không tự gửi lại khi mở; bấm Thử lại để AI trả lời.';
+
+  @override
   String get aiChatActionOpenPlugin => 'Mở plugin';
 
   @override

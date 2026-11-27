@@ -148,6 +148,9 @@ class _ErrorCardState extends ConsumerState<ErrorCard> {
         code: AiErrorCode.parse('ai:${part?.code ?? 'server'}').wire,
       ),
       countdown: counting,
+      hasText:
+          (message.liveText?.isNotEmpty ?? false) ||
+          message.parts.any((p) => p is TextPart && p.text.isNotEmpty),
     );
     if (spec == null) return const SizedBox.shrink();
 

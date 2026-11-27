@@ -8890,6 +8890,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'What was received stays above. Kanaru does not resend when it opens; tap Try again to let the AI go on.';
 
   @override
+  String get aiChatErrCutOffBodyEmpty =>
+      'Nothing of the answer had arrived when Kanaru closed. Kanaru does not resend when it opens; tap Try again to let the AI answer.';
+
+  @override
   String get aiChatActionOpenPlugin => 'Open plugin';
 
   @override

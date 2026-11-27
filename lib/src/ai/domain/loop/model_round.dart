@@ -332,8 +332,9 @@ String _kindOf(String code) => switch (code) {
   _ => 'server',
 };
 
-/// The streamed text of the running round, flushed to the store at most once
-/// per interval and on demand.
+/// The streamed text of the running round. The first text is written at once
+/// (so a kill right after the first words keeps them), later text at most once
+/// per interval, and on demand.
 class _LiveText {
   _LiveText(this.ctx, this.messageId) : _lastFlush = ctx.now();
 
@@ -341,12 +342,16 @@ class _LiveText {
   final int messageId;
   final StringBuffer _buffer = StringBuffer();
   DateTime _lastFlush;
+  bool _wroteFirst = false;
   Future<void> _chain = Future.value();
 
   void add(String delta) {
     _buffer.write(delta);
     ctx.emitLive(messageId, _buffer.toString());
-    if (ctx.now().difference(_lastFlush) >= ctx.liveFlushInterval) flush();
+    if (!_wroteFirst ||
+        ctx.now().difference(_lastFlush) >= ctx.liveFlushInterval) {
+      flush();
+    }
   }
 
   /// Queues a write of the text as it is when the write runs, so an older
@@ -354,6 +359,7 @@ class _LiveText {
   Future<void> flush() {
     _lastFlush = ctx.now();
     if (_buffer.isEmpty) return _chain;
+    _wroteFirst = true;
     return _chain = _chain.then((_) async {
       try {
         await ctx.store.updateLiveText(messageId, _buffer.toString());

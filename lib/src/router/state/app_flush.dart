@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/widgets.dart' show AppLifecycleState;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 
@@ -16,6 +17,15 @@ const exitFlushCap = Duration(seconds: 2);
 /// A flush that started earlier than this is not trusted to include state
 /// changed since: an exit request runs one more flush after it.
 const flushFreshWindow = Duration(milliseconds: 250);
+
+/// The first state that tells the app may be killed soon: the flush starts at
+/// the earliest of these (`inactive` comes before `hidden` and `paused`, and a
+/// swipe-away can follow within a second); the coordinator joins the later
+/// ones to the running flush.
+bool flushesOnLifecycle(AppLifecycleState state) =>
+    state == AppLifecycleState.inactive ||
+    state == AppLifecycleState.hidden ||
+    state == AppLifecycleState.paused;
 
 /// Writes pending state to disk: the settings store first, then every flush
 /// hook of the registry in order. A failing step is logged and does not stop

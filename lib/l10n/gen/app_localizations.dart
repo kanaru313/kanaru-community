@@ -13085,6 +13085,12 @@ abstract class AppLocalizations {
   /// **'What was received stays above. Kanaru does not resend when it opens; tap Try again to let the AI go on.'**
   String get aiChatErrCutOffBody;
 
+  /// No description provided for @aiChatErrCutOffBodyEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing of the answer had arrived when Kanaru closed. Kanaru does not resend when it opens; tap Try again to let the AI answer.'**
+  String get aiChatErrCutOffBodyEmpty;
+
   /// Button of the broken-plugin error card.
   ///
   /// In en, this message translates to:
