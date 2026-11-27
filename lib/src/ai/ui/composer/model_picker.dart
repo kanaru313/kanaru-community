@@ -47,22 +47,6 @@ Widget modelTags(AppLocalizations l10n, ChatModelOption model) {
   );
 }
 
-/// The same chips as plain words, for screen readers; a missing capability is
-/// said as unavailable.
-String modelTagsSpoken(AppLocalizations l10n, ChatModelOption model) {
-  final caps = model.capabilities;
-  return [
-    caps.vision
-        ? l10n.aiChatCapVision
-        : l10n.aiChatCapUnavailable(l10n.aiChatCapVision),
-    caps.tools
-        ? l10n.aiChatCapTools
-        : l10n.aiChatCapUnavailable(l10n.aiChatCapTools),
-    contextSizeText(caps.context),
-    if (model.isCustom) l10n.aiChatModelCustom,
-  ].join(', ');
-}
-
 /// Picks the model of the open chat among its plugin's models and the ones
 /// the user added (text rows, with capability tags).
 Future<void> showModelPicker(
@@ -95,7 +79,6 @@ Future<void> showModelPicker(
           value: m.id,
           title: Text(m.title),
           subtitle: modelTags(l10n, m),
-          hint: modelTagsSpoken(l10n, m),
         ),
     ],
   );

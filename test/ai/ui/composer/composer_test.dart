@@ -7,7 +7,6 @@ import 'package:kanaru/src/ai/domain/conversation/parts.dart';
 import 'package:kanaru/src/ai/domain/loop/loop_state.dart';
 import 'package:kanaru/src/ai/domain/output/chat_readiness.dart';
 import 'package:kanaru/src/ai/domain/settings/prompt_template.dart';
-import 'package:kanaru_ui/kanaru_ui.dart' show KChip;
 import 'package:kanaru/src/ai/domain/settings/tool_groups.dart';
 import 'package:kanaru/src/ai/domain/variables/template_analysis.dart';
 import 'package:kanaru/src/ai/domain/variables/variable_catalog.dart';
@@ -18,6 +17,7 @@ import 'package:kanaru/src/ai/state/chat_view/composer_draft.dart';
 import 'package:kanaru/src/ai/state/chat_view/composer_inputs.dart';
 import 'package:kanaru/src/ai/ui/composer/composer_notice.dart';
 import 'package:kanaru/src/ai/ui/composer/composer_text_controller.dart';
+import 'package:kanaru_ui/kanaru_ui.dart' show KChip;
 import 'package:material_ui/material_ui.dart';
 
 import '../../../support/icon_button_finders.dart';

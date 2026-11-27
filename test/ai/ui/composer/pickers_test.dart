@@ -2,12 +2,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/ai/domain/loop/loop_state.dart';
 import 'package:kanaru/src/ai/domain/output/chat_readiness.dart';
 import 'package:kanaru/src/ai/state/chat_view/composer_inputs.dart';
-import 'package:kanaru/src/ai/ui/chat_auto_confirm_provider.dart';
 import 'package:kanaru/src/ai/ui/auto_mode_confirm.dart';
+import 'package:kanaru/src/ai/ui/chat_auto_confirm_provider.dart';
 import 'package:kanaru/src/platform/state/settings_providers.dart';
-import 'package:material_ui/material_ui.dart';
-
 import 'package:kanaru_ui/kanaru_ui.dart' show KChip, SelectionRow;
+import 'package:material_ui/material_ui.dart';
 
 import '../../../support/icon_button_finders.dart';
 import '../../../support/kanaru_ui_finders.dart';
@@ -174,17 +173,18 @@ void main() {
       expect(find.widgetWithText(KChip, '32K'), findsOneWidget);
       expect(find.widgetWithText(KChip, 'Custom'), findsOneWidget);
       // The model without images / tools shows those chips dimmed, said aloud.
+      // The tags are spoken once, in the label; no second copy as a hint.
+      final row = tester.getSemantics(
+        find.ancestor(
+          of: find.text('Model 2'),
+          matching: find.byType(SelectionRow),
+        ),
+      );
       expect(
-        tester
-            .getSemantics(
-              find.ancestor(
-                of: find.text('Model 2'),
-                matching: find.byType(SelectionRow),
-              ),
-            )
-            .label,
+        row.label,
         'Model 2\nImages: unavailable\nTools: unavailable\n32K\nCustom',
       );
+      expect(row.hint, isEmpty);
 
       await tester.tap(find.text('Model 2'));
       await tester.pumpAndSettle();
