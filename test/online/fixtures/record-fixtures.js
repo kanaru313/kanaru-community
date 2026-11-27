@@ -19,10 +19,15 @@ const slugs = ['audius', 'jamendo', 'youtube'];
 const limits = { maxSends: 10, deadlineSec: 20 };
 const forbidden = /ip=|sig=|signature=|token=|key=/;
 
-/** Keeps scheme, host and path of the stream url; the query becomes fixture=1. */
+/**
+ * Keeps scheme and path of the stream url; the query becomes fixture=1. A
+ * Google video cache host (its label names the recorder's nearby node) becomes
+ * a fixed neutral one.
+ */
 function sanitiseStream(data) {
   const u = new URL(data.url);
-  return { ...data, url: `${u.protocol}//${u.host}${u.pathname}?fixture=1` };
+  const host = /\.googlevideo\.com$/.test(u.hostname) ? 'rr1---sn-fixture.googlevideo.com' : u.host;
+  return { ...data, url: `${u.protocol}//${host}${u.pathname}?fixture=1` };
 }
 
 function firstTrackId(search) {
@@ -61,12 +66,14 @@ for (const slug of slugs) {
     if (script === 'stream') data = sanitiseStream(data);
     const file = path.join(outDir, slug, `${script}.json`);
     const text = JSON.stringify(data, null, 2) + '\n';
+    // Checked before anything is written: no unsanitised file is left behind.
+    if (forbidden.test(text)) {
+      console.error(`unsanitised content for ${slug} ${script}; not written`);
+      process.exitCode = 1;
+      continue;
+    }
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, text);
-    if (forbidden.test(text)) {
-      console.error(`unsanitised content in ${file}`);
-      process.exitCode = 1;
-    }
   }
 }
 if (failed) console.error('some scripts did not answer ok; hand-write those fixtures');

@@ -19,6 +19,9 @@ const autocompleteTimeout = Duration(seconds: 5);
 const pageRunTimeout = Duration(seconds: 20);
 const streamRunTimeout = Duration(seconds: 20);
 
+/// How long a `stream` call waits for its turn behind a run in flight.
+const streamQueueWait = Duration(seconds: 5);
+
 /// The only way the online module runs a streaming plugin's scripts.
 ///
 /// `search` and `stream` run one at a time per install (a `stream` goes
@@ -31,12 +34,15 @@ class StreamingRunClient {
     this._runner, {
     IsolateRunner run = runInIsolate,
     InstallRunQueue? queue,
+    Duration streamWait = streamQueueWait,
   }) : _isolate = run,
+       _queueWait = streamWait,
        _queue = queue ?? InstallRunQueue();
 
   final PluginRunner _runner;
   final IsolateRunner _isolate;
   final InstallRunQueue _queue;
+  final Duration _queueWait;
   final _autocompletes = <String, RunCancel>{};
 
   Future<OnlineResult<PageRead>> search(
@@ -66,9 +72,7 @@ class StreamingRunClient {
       'search',
       outcome,
       OnlineScriptRole.page,
-      (json) => json.length > onlineIsolateThreshold
-          ? _isolate(() => readSearchOutput(json, inputNext: next))
-          : Future.value(readSearchOutput(json, inputNext: next)),
+      (json) => _readSearch(_isolate, json, next),
       isEmpty: (read) => read.page.sections.every((s) => s.cards.isEmpty),
       notes: (read) => read.rejectionSummary,
     );
@@ -82,29 +86,33 @@ class StreamingRunClient {
     bool fresh = false,
     RunCancel? cancel,
   }) async {
-    if (itemId.isEmpty) throw ArgumentError.value(itemId, 'itemId', 'empty');
-    final outcome = await _queued(
-      installId,
-      PluginRunRequest(
-        installId: installId,
-        script: 'stream',
-        input: {'id': itemId, if (fresh) 'fresh': true},
-        timeout: streamRunTimeout,
-        kinds: const {PluginKind.streaming},
-        logInput: false,
-      ),
-      priority: true,
-      cancel: cancel,
-    );
+    if (itemId.isEmpty) throw ArgumentError('itemId must not be empty');
+    final RunOutcome? outcome;
+    try {
+      outcome = await _queued(
+        installId,
+        PluginRunRequest(
+          installId: installId,
+          script: 'stream',
+          input: {'id': itemId, if (fresh) 'fresh': true},
+          timeout: streamRunTimeout,
+          kinds: const {PluginKind.streaming},
+          logInput: false,
+        ),
+        priority: true,
+        cancel: cancel,
+        maxWait: _queueWait,
+      );
+    } on QueueWaitExceeded {
+      return const OnlineFailed(OnlineFailure(OnlineFailureKind.busy));
+    }
     if (outcome == null) return const OnlineAbandoned();
     return _finish<StreamRead>(
       installId,
       'stream',
       outcome,
       OnlineScriptRole.stream,
-      (json) => json.length > onlineIsolateThreshold
-          ? _isolate(() => readStreamOutput(json))
-          : Future.value(readStreamOutput(json)),
+      (json) => _readStream(_isolate, json),
     );
   }
 
@@ -115,7 +123,7 @@ class StreamingRunClient {
     final text = query.trim();
     if (text.isEmpty) return const OnlineOk(<String>[]);
     if (text.runes.length > maxQueryRunes) {
-      throw ArgumentError.value(query, 'query', 'too long');
+      throw ArgumentError('query must be at most $maxQueryRunes code points');
     }
     _autocompletes.remove(installId)?.cancel();
     final cancel = RunCancel();
@@ -161,11 +169,13 @@ class StreamingRunClient {
     PluginRunRequest request, {
     required bool priority,
     RunCancel? cancel,
+    Duration? maxWait,
   }) => _queue.run<RunOutcome>(
     installId,
     () => _runner.run(request, cancel: cancel),
     priority: priority,
     cancel: cancel,
+    maxWait: maxWait,
   );
 
   Future<OnlineResult<T>> _finish<T>(
@@ -211,7 +221,20 @@ String _checkedQuery(String query) {
   final text = query.trim();
   final length = text.runes.length;
   if (length < 1 || length > maxQueryRunes) {
-    throw ArgumentError.value(query, 'query', 'must be 1-$maxQueryRunes');
+    throw ArgumentError('query must be 1-$maxQueryRunes code points');
   }
   return text;
 }
+
+// These take only plain values, so what reaches the isolate is the output
+// text and the cursor: a closure made inside a client method would carry the
+// whole client (database, ports), which an isolate cannot receive.
+Future<PageRead> _readSearch(IsolateRunner run, String json, String? next) =>
+    json.length > onlineIsolateThreshold
+    ? run(() => readSearchOutput(json, inputNext: next))
+    : Future.value(readSearchOutput(json, inputNext: next));
+
+Future<StreamRead> _readStream(IsolateRunner run, String json) =>
+    json.length > onlineIsolateThreshold
+    ? run(() => readStreamOutput(json))
+    : Future.value(readStreamOutput(json));

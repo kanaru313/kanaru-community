@@ -18,7 +18,8 @@ const maxUpsertCards = 200;
 const maxPlaylistCards = 1000;
 
 /// The plugin cannot be written for: not installed, removed, not a
-/// streaming plugin, or its stored `plugin.json` no longer parses.
+/// streaming plugin, its stored `plugin.json` no longer parses, or it was
+/// removed, reinstalled or updated while the write was starting.
 class OnlineWriteRefused implements Exception {
   const OnlineWriteRefused(this.reason);
 
@@ -119,7 +120,16 @@ class OnlineTrackWriter {
     ).toList();
     final stamp = now ?? _now();
     return _db.transaction(() async {
-      final source = await ensurePluginSource(_db, row, now: stamp);
+      // The plugin may have been removed, reinstalled or updated since the
+      // read above: the rows written must belong to the plugin as it is now.
+      final live = await _plugins.liveById(installId);
+      if (live == null ||
+          live.kind != row.kind ||
+          live.installedAt != row.installedAt ||
+          live.packageSha256 != row.packageSha256) {
+        throw const OnlineWriteRefused('plugin changed');
+      }
+      final source = await ensurePluginSource(_db, live, now: stamp);
       final ids = <TrackId>[];
       for (final card in cards) {
         final id = await upsertTrackSnapshot(

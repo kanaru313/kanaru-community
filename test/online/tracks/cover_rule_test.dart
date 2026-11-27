@@ -45,6 +45,16 @@ void main() {
       'API_KEY in upper case': 'https://i.ytimg.com/x.jpg?API_KEY=abc',
       'fragment': 'https://i.ytimg.com/x.jpg#frag',
       'subsonic signature': subsonic,
+      'X-Amz-Signature': 'https://i.ytimg.com/x.jpg?X-Amz-Signature=ab',
+      'X-Amz-Credential': 'https://i.ytimg.com/x.jpg?X-Amz-Credential=ab',
+      'X-Amz-Security-Token':
+          'https://i.ytimg.com/x.jpg?x-amz-security-token=a',
+      'Key-Pair-Id': 'https://i.ytimg.com/x.jpg?Key-Pair-Id=K1',
+      'Policy': 'https://i.ytimg.com/x.jpg?Policy=eyJ',
+      'hdnts': 'https://i.ytimg.com/x.jpg?hdnts=exp~1~hmac~a',
+      'hmac': 'https://i.ytimg.com/x.jpg?HMAC=abc',
+      'bad escape in the query': 'https://i.ytimg.com/x.jpg?q=%FF',
+      'bad escape in the path': 'https://i.ytimg.com/%FF.jpg',
     };
     cases.forEach((name, url) => test(name, () => expect(rule(url), isNull)));
 
@@ -72,6 +82,11 @@ void main() {
 
     test('an empty config value never matches', () {
       expect(rule('https://i.ytimg.com/vi/x.jpg', config: ['']), isNotNull);
+    });
+
+    test('a bad percent escape returns null and never throws', () {
+      expect(() => rule('https://i.ytimg.com/%FF.jpg'), returnsNormally);
+      expect(() => rule('https://i.ytimg.com/x.jpg?q=%FF'), returnsNormally);
     });
 
     test('a URL over 2000 characters', () {

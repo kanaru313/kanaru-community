@@ -17,6 +17,7 @@ String? idProblem(Object? id) {
   // A proxy URL cannot carry them: URI parsing removes dot segments.
   if (id == '.' || id == '..') return 'id must not be "." or ".."';
   if (isUrlShapedId(id)) return 'id looks like a URL';
+  if (hasUnpairedSurrogate(id)) return 'id is not valid text';
   return null;
 }
 

@@ -75,6 +75,9 @@ void main() {
       'https://x.y/a',
       '//x.y',
       'file:///etc/passwd',
+      '\ud800x',
+      'x\udc00',
+      'a\udbffb',
     ]) {
       test('drops ${id.length > 20 ? 'long id' : id.codeUnits}', () {
         final (c, why) = readCard(card({'id': id}));
@@ -87,7 +90,14 @@ void main() {
       () => expect(readCard(card({'id': 7})).$1, isNull),
     );
     test('keeps plain odd ids untouched', () {
-      for (final id in ['a/b', '100%', 'with space ', 'ä日本', 'a' * 200]) {
+      for (final id in [
+        'a/b',
+        '100%',
+        'with space ',
+        'ä日本',
+        '😀 ok',
+        'a' * 200,
+      ]) {
         expect(readCard(card({'id': id})).$1!.id, id);
       }
     });
@@ -133,12 +143,32 @@ void main() {
       'https://h.example:8443/a',
       'https://h.example/${'a' * 2000}',
       'https:///a',
+      'https://h.example/a b',
+      'https://h.example/a\nb',
+      'https://h.example/a\tb',
+      'https://h.example/é',
+      ' https://h.example/a',
       7,
     ]) {
       final (c, _) = readCard(card({'artworkUrl': url, 'webUrl': url}));
       expect(c!.artworkUrl, isNull, reason: '$url');
       expect(c.webUrl, isNull, reason: '$url');
     }
+  });
+
+  test('an artist or album id with a lone surrogate reads as absent', () {
+    final (c, _) = readCard(
+      card({
+        'artists': [
+          {'id': 'x\ud800', 'title': 'A'},
+        ],
+        'albums': [
+          {'id': '\udc00', 'title': 'B'},
+        ],
+      }),
+    );
+    expect(c!.artists, const [CardRef(name: 'A')]);
+    expect(c.album, const CardRef(name: 'B'));
   });
 
   test('artists are capped at 10', () {

@@ -89,6 +89,52 @@ void main() {
     },
   );
 
+  testWidgets('a waiter past maxWait leaves the queue and throws', (
+    tester,
+  ) async {
+    final gate = Completer<void>();
+    final first = queue.run('a', () => gate.future);
+    var ran = false;
+    Object? error;
+    unawaited(
+      queue
+          .run('a', () async => ran = true, maxWait: const Duration(seconds: 5))
+          .then<void>((_) {}, onError: (Object e) => error = e),
+    );
+    await tester.pump(const Duration(seconds: 4));
+    expect(error, isNull);
+    await tester.pump(const Duration(seconds: 2));
+    expect(error, isA<QueueWaitExceeded>());
+    gate.complete();
+    await first;
+    await tester.pump();
+    expect(ran, isFalse);
+    expect(queue.isIdle('a'), isTrue);
+  });
+
+  testWidgets('maxWait neither cuts a body in flight nor a waiter served', (
+    tester,
+  ) async {
+    final gate = Completer<void>();
+    final first = queue.run(
+      'a',
+      () => gate.future,
+      maxWait: const Duration(seconds: 1),
+    );
+    int? second;
+    unawaited(
+      queue
+          .run('a', () async => 2, maxWait: const Duration(seconds: 5))
+          .then((v) => second = v),
+    );
+    await tester.pump(const Duration(seconds: 3));
+    gate.complete();
+    await first;
+    await tester.pump(const Duration(seconds: 10));
+    expect(second, 2);
+    expect(queue.isIdle('a'), isTrue);
+  });
+
   test('an already cancelled token never runs', () async {
     final cancel = RunCancel()..cancel();
     var ran = false;

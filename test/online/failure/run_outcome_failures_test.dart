@@ -92,7 +92,7 @@ void main() {
       FetchFailureInfo? f,
     }) => RunScriptError(k, 'm', retryAfter: retry, fetchFailure: f);
 
-    test('every kind has a mapping with the expected class', () {
+    test('every kind has a mapping', () {
       final expected = {
         RunErrorKind.rateLimited: OnlineFailureKind.rateLimited,
         RunErrorKind.quota: OnlineFailureKind.rateLimited,
@@ -105,9 +105,7 @@ void main() {
       };
       expect(expected.keys.toSet(), RunErrorKind.values.toSet());
       for (final e in expected.entries) {
-        final f = failure(err(e.key));
-        expect(f.kind, e.value, reason: '${e.key}');
-        expect(f.failureClass, e.value.failureClass);
+        expect(failure(err(e.key)).kind, e.value, reason: '${e.key}');
       }
     });
 
@@ -128,7 +126,7 @@ void main() {
       );
       expect(
         failure(err(RunErrorKind.auth), stream).failureClass,
-        OnlineFailureClass.track,
+        OnlineFailureClass.source,
       );
       expect(
         failure(err(RunErrorKind.auth)).failureClass,
@@ -195,14 +193,28 @@ void main() {
         ),
         OnlineFailureKind.blockedHost,
       );
+    });
+
+    test('a 429 seen in the run is a rate limit whatever the script says', () {
+      for (final k in RunErrorKind.values) {
+        final f = failure(
+          err(
+            k,
+            retry: const Duration(seconds: 3),
+            f: fetch(FetchFailureKind.rateLimited, const Duration(seconds: 8)),
+          ),
+        );
+        expect(f.kind, OnlineFailureKind.rateLimited, reason: '$k');
+        expect(f.retryAfter, const Duration(seconds: 8), reason: '$k');
+      }
       expect(
-        kindOf(
+        failure(
           err(
             RunErrorKind.invalidResponse,
             f: fetch(FetchFailureKind.rateLimited),
           ),
-        ),
-        OnlineFailureKind.invalidOutput,
+        ).retryAfter,
+        isNull,
       );
     });
   });
@@ -275,7 +287,6 @@ void main() {
     const track = {
       OnlineFailureKind.gone,
       OnlineFailureKind.unsupported,
-      OnlineFailureKind.authRequired,
       OnlineFailureKind.invalidOutput,
       OnlineFailureKind.blockedHost,
       OnlineFailureKind.pluginMissing,

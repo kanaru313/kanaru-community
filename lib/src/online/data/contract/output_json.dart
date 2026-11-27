@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../../domain/contract/contract_limits.dart';
+import '../../domain/contract/link_port.dart';
 import '../../domain/contract/online_output_exception.dart';
 
 /// The decoded output JSON of a streaming script. Throws
@@ -12,6 +13,8 @@ Object? decodeOutput(String json) {
     throw const OnlineOutputException('output is not JSON');
   }
 }
+
+final _notPrintableAscii = RegExp(r'[^\x21-\x7e]');
 
 /// [value] as an integer above 0 (a whole double such as `5.0` counts), else
 /// null.
@@ -38,26 +41,16 @@ int tokenBytes(String text) {
   return utf8.encode(text).length;
 }
 
-/// [url] spells a port, even the default one, which [Uri] drops (so
-/// `https://a.com:443/` has no `hasPort`).
-bool writesPort(String url) {
-  final start = url.indexOf('//') + 2;
-  var end = url.length;
-  for (final mark in const ['/', '?', '#']) {
-    final at = url.indexOf(mark, start);
-    if (at >= 0 && at < end) end = at;
-  }
-  final authority = url.substring(start, end);
-  final host = authority.substring(authority.lastIndexOf('@') + 1);
-  return host.replaceAll(_ipv6Literal, '').contains(':');
-}
-
-final _ipv6Literal = RegExp(r'\[[^\]]*\]');
-
 /// [value] when it is an absolute `https` URL of at most [maxLinkChars]
-/// characters without user info or a written port; else null.
+/// characters without user info or a written port; else null. Only printable
+/// ASCII is accepted (no space, control or non-ASCII character): a link must
+/// arrive already percent-encoded, so what is stored is what was sent.
 String? httpsLink(Object? value) {
-  if (value is! String || value.length > maxLinkChars) return null;
+  if (value is! String ||
+      value.length > maxLinkChars ||
+      _notPrintableAscii.hasMatch(value)) {
+    return null;
+  }
   final uri = Uri.tryParse(value);
   if (uri == null ||
       uri.scheme != 'https' ||

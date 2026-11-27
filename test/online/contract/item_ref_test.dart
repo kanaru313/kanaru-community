@@ -24,6 +24,16 @@ void main() {
     expect(decodeItemId('%'), isNull);
   });
 
+  test('an id with an unpaired surrogate is found; pairs are fine', () {
+    for (final id in ['\ud800', 'a\udc00', '\ud800\ud800', '\udc00\ud800']) {
+      expect(hasUnpairedSurrogate(id), isTrue, reason: '${id.codeUnits}');
+    }
+    for (final id in ['', 'abc', '😀', 'a😀b😀']) {
+      expect(hasUnpairedSurrogate(id), isFalse, reason: id);
+      expect(decodeItemId(encodeItemId(id)), id.isEmpty ? isNull : id);
+    }
+  });
+
   test('isUrlShapedId', () {
     expect(isUrlShapedId('https://x.y/a'), isTrue);
     expect(isUrlShapedId('file:///etc/passwd'), isTrue);

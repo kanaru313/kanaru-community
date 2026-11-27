@@ -6,7 +6,6 @@ enum OnlineFailureKind {
   // Track level: this item cannot be used, the source is fine.
   gone(OnlineFailureClass.track),
   unsupported(OnlineFailureClass.track),
-  authRequired(OnlineFailureClass.track),
   invalidOutput(OnlineFailureClass.track),
   blockedHost(OnlineFailureClass.track),
   pluginMissing(OnlineFailureClass.track),
@@ -20,6 +19,7 @@ enum OnlineFailureKind {
   pluginChanged(OnlineFailureClass.source),
   server(OnlineFailureClass.source),
   authFailed(OnlineFailureClass.source),
+  authRequired(OnlineFailureClass.source),
   noScript(OnlineFailureClass.source),
   internal(OnlineFailureClass.source),
 

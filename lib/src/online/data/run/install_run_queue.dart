@@ -2,6 +2,14 @@ import 'dart:async';
 
 import '../../../plugins/domain/net/cancel_token.dart';
 
+/// A waiter's turn did not come within its `maxWait`.
+class QueueWaitExceeded implements Exception {
+  const QueueWaitExceeded();
+
+  @override
+  String toString() => 'QueueWaitExceeded';
+}
+
 /// Runs one body at a time per plugin install. Waiters go first in, first
 /// out; a priority waiter goes ahead of every non-priority one (never ahead
 /// of the body in flight).
@@ -13,12 +21,16 @@ class InstallRunQueue {
 
   /// Runs [body] when the install's turn comes and returns its result, or
   /// null without running it when [cancel] fires (or was fired) while
-  /// waiting. A throwing body rethrows to its caller and frees the slot.
+  /// waiting. A throwing body rethrows to its caller and frees the slot. When
+  /// [maxWait] is set and the turn has not come by then, the waiter leaves
+  /// the queue without running and [QueueWaitExceeded] is thrown (a body
+  /// already running is never cut).
   Future<T?> run<T>(
     String installId,
     Future<T> Function() body, {
     bool priority = false,
     CancelToken? cancel,
+    Duration? maxWait,
   }) async {
     if (cancel != null && cancel.isCancelled) return null;
     final lane = _lanes[installId];
@@ -28,11 +40,24 @@ class InstallRunQueue {
       final waiter = _Waiter(priority);
       lane.add(waiter);
       final stop = cancel?.listen(() {
-        if (lane.remove(waiter)) waiter.turn.complete(false);
+        if (lane.remove(waiter)) waiter.turn.complete(_Turn.cancelled);
       });
-      final granted = await waiter.turn.future;
+      final timer = maxWait == null
+          ? null
+          : Timer(maxWait, () {
+              if (lane.remove(waiter)) waiter.turn.complete(_Turn.timedOut);
+            });
+      final turn = await waiter.turn.future;
+      timer?.cancel();
       stop?.call();
-      if (!granted) return null;
+      switch (turn) {
+        case _Turn.granted:
+          break;
+        case _Turn.cancelled:
+          return null;
+        case _Turn.timedOut:
+          throw const QueueWaitExceeded();
+      }
     }
     try {
       return await body();
@@ -48,16 +73,18 @@ class InstallRunQueue {
       _lanes.remove(installId);
     } else {
       // The slot passes straight to the next waiter.
-      next.turn.complete(true);
+      next.turn.complete(_Turn.granted);
     }
   }
 }
+
+enum _Turn { granted, cancelled, timedOut }
 
 class _Waiter {
   _Waiter(this.priority);
 
   final bool priority;
-  final turn = Completer<bool>();
+  final turn = Completer<_Turn>();
 }
 
 class _Lane {

@@ -13,7 +13,7 @@ import '../../domain/contract/online_card.dart';
 /// no artist rows are written.
 ///
 /// Throws [ArgumentError] for a card that is not a track or whose id looks
-/// like a URL.
+/// like a URL or is not valid UTF-16.
 TracksCompanion cardTrackRow(
   OnlineCard card, {
   required int sourceId,
@@ -26,6 +26,9 @@ TracksCompanion cardTrackRow(
   }
   if (isUrlShapedId(card.id)) {
     throw ArgumentError.value('<id>', 'card.id', 'looks like a URL');
+  }
+  if (hasUnpairedSurrogate(card.id)) {
+    throw ArgumentError.value('<id>', 'card.id', 'is not valid text');
   }
   final artist = card.artist;
   final album = card.album?.name;

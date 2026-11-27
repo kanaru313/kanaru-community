@@ -19,3 +19,24 @@ String? decodeItemId(String encoded) {
 
 /// [id] looks like a URL (has a scheme separator or is scheme-relative).
 bool isUrlShapedId(String id) => id.contains('://') || id.startsWith('//');
+
+/// [text] holds a UTF-16 surrogate without its pair. Such a string does not
+/// survive UTF-8 (it turns into U+FFFD), so it cannot round-trip.
+bool hasUnpairedSurrogate(String text) {
+  final units = text.codeUnits;
+  for (var i = 0; i < units.length; i++) {
+    final u = units[i];
+    if (u >= 0xD800 && u <= 0xDBFF) {
+      if (i + 1 < units.length &&
+          units[i + 1] >= 0xDC00 &&
+          units[i + 1] <= 0xDFFF) {
+        i++;
+      } else {
+        return true;
+      }
+    } else if (u >= 0xDC00 && u <= 0xDFFF) {
+      return true;
+    }
+  }
+  return false;
+}

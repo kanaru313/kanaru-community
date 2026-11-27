@@ -132,6 +132,33 @@ void main() {
     }
   });
 
+  test('mimeType is kept as the bare normalised type', () {
+    expect(
+      ok(body({'mimeType': ' Audio/WebM; codecs="opus"; x=y '})).mimeType,
+      'audio/webm',
+    );
+    expect(ok(body({'mimeType': 'audio/mpeg'})).mimeType, 'audio/mpeg');
+  });
+
+  test(
+    'mimeType with controls, non-token characters or over 200 is invalid',
+    () {
+      for (final mime in [
+        'audio/mpeg\r\nX-Evil: 1',
+        'audio/mpeg; codecs=a\nb',
+        'audio/mp\u00e9g',
+        'audio/mpeg; ${'x' * 200}',
+        'audio/${'a' * 200}',
+      ]) {
+        expect(() => read(body({'mimeType': mime})), invalid, reason: mime);
+      }
+      expect(
+        ok(body({'mimeType': 'audio/mpeg; ${'x' * 150}'})).mimeType,
+        'audio/mpeg',
+      );
+    },
+  );
+
   test('bitrate and expiry that are not positive read as unknown', () {
     for (final v in [0, -1, 'x', null]) {
       final a = ok(body({'bitrate': v, 'expiresAtMs': v}));

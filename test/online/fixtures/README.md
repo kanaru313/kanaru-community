@@ -4,11 +4,11 @@ Real outputs of the `search`, `stream` and `autocomplete` scripts of the Audius,
 
 ## Record
 
-Network needed; run by hand, never in CI. From the repo root:
+Network needed; run by hand, never in CI. `<plugins-clone>` is your checkout of the plugins repository. From the repo root:
 
 ```bash
 node test/online/fixtures/record-fixtures.js \
-  /home/hieunm/dev/apps/kanaru/kanaru-plugins test/online/fixtures
+  <plugins-clone> test/online/fixtures
 grep -rEn 'ip=|sig=|signature=|token=|key=' test/online/fixtures/*/ || echo clean
 ```
 
@@ -16,7 +16,7 @@ The recorder runs each script through the plugins clone's `tools/source_harness.
 
 ## Sanitising
 
-`stream.json`: the `url` keeps scheme, host and path; the query becomes `fixture=1` and the fragment is dropped (signed stream links carry the recorder's IP and a signature). Header values are kept (these plugins set no cookies). The recorder exits non-zero when a written file still contains `ip=`, `sig=`, `signature=`, `token=` or `key=`. Never commit unsanitised output. Re-record when a plugin's output contract changes.
+`stream.json`: the `url` keeps scheme and path (a `googlevideo.com` host becomes `rr1---sn-fixture.googlevideo.com`, because its label names the recorder's nearby cache node); the query becomes `fixture=1` and the fragment is dropped (signed stream links carry the recorder's IP and a signature). Header values are kept (these plugins set no cookies). The recorder checks the text for `ip=`, `sig=`, `signature=`, `token=` or `key=` before writing, skips that file and exits non-zero. Never commit unsanitised output. Re-record when a plugin's output contract changes.
 
 ## Provenance
 

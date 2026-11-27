@@ -1,5 +1,6 @@
 import '../../../plugins/domain/net/plugin_fetch_rules.dart';
 import '../../domain/contract/contract_limits.dart';
+import '../../domain/contract/link_port.dart';
 import '../../domain/contract/online_output_exception.dart';
 import '../../domain/contract/stream_answer.dart';
 import 'output_json.dart';
@@ -20,6 +21,9 @@ StreamRead readStreamOutput(String json) {
   if (mimeType is! String) {
     throw const OnlineOutputException('mimeType must be a string');
   }
+  if (mimeType.length > _maxMimeChars || _control.hasMatch(mimeType)) {
+    throw const OnlineOutputException('mimeType is too long or has controls');
+  }
   final type = mimeType.split(';').first.trim().toLowerCase();
   if (!_wellFormed.hasMatch(type)) {
     throw const OnlineOutputException('mimeType is not an audio or video type');
@@ -31,7 +35,7 @@ StreamRead readStreamOutput(String json) {
     StreamAnswer(
       url: url,
       headers: Map.unmodifiable(headers),
-      mimeType: mimeType,
+      mimeType: type,
       container: container,
       bitrate: positiveInt(data['bitrate']),
       expiresAt: expiresAtMs == null || expiresAtMs > _maxEpochMs
@@ -46,7 +50,13 @@ const _maxEpochMs = 8640000000000000;
 
 // A media type of a family that can carry audio; the HLS types are
 // `application/*` or `audio/*`.
-final _wellFormed = RegExp(r'^(audio|video|application)/[^/\s]+$');
+final _wellFormed = RegExp(r'^(audio|video|application)/[a-z0-9!#$&^_.+-]+$');
+
+// The whole value, parameters included, stays short and free of controls.
+// Only the normalised `type/subtype` is kept: the player needs the container,
+// and parameters (`; codecs=...`) would be plugin text reaching headers/logs.
+const _maxMimeChars = 200;
+final _control = RegExp(r'\p{Cc}', unicode: true);
 
 // Types the player has a demuxer for. Every HLS type and anything else is
 // unsupported for now.

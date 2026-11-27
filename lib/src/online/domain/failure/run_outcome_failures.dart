@@ -73,42 +73,7 @@ OnlineRunDecision decideOnlineRun(
   RunOk(:final outputJson, :final fetchFailure, :final rateLimitSeen) =>
     OnlineRunData(outputJson, _stickyOf(fetchFailure, rateLimitSeen)),
   RunScriptError(:final kind, :final retryAfter, :final fetchFailure) =>
-    switch (kind) {
-      RunErrorKind.rateLimited || RunErrorKind.quota => _fail(
-        OnlineFailureKind.rateLimited,
-        retryAfter: retryAfter,
-      ),
-      RunErrorKind.network => _fail(OnlineFailureKind.network),
-      RunErrorKind.unavailable => _fail(OnlineFailureKind.gone),
-      RunErrorKind.unsupported => _fail(OnlineFailureKind.unsupported),
-      RunErrorKind.auth => switch (role) {
-        OnlineScriptRole.stream => _fail(OnlineFailureKind.authRequired),
-        OnlineScriptRole.page => _fail(OnlineFailureKind.authFailed),
-      },
-      RunErrorKind.server => switch (fetchFailure?.kind) {
-        FetchFailureKind.network => _fail(OnlineFailureKind.network),
-        FetchFailureKind.rateLimited => _fail(
-          OnlineFailureKind.rateLimited,
-          retryAfter: fetchFailure?.retryAfter ?? retryAfter,
-        ),
-        FetchFailureKind.blockedHost => _fail(OnlineFailureKind.blockedHost),
-        FetchFailureKind.notConsented ||
-        FetchFailureKind.abandoned ||
-        FetchFailureKind.invalidRequest ||
-        FetchFailureKind.invalidResponse ||
-        null => _fail(OnlineFailureKind.server),
-      },
-      RunErrorKind.invalidResponse => switch (fetchFailure?.kind) {
-        FetchFailureKind.network => _fail(OnlineFailureKind.network),
-        FetchFailureKind.blockedHost => _fail(OnlineFailureKind.blockedHost),
-        FetchFailureKind.rateLimited ||
-        FetchFailureKind.notConsented ||
-        FetchFailureKind.abandoned ||
-        FetchFailureKind.invalidRequest ||
-        FetchFailureKind.invalidResponse ||
-        null => _fail(OnlineFailureKind.invalidOutput),
-      },
-    },
+    _scriptError(kind, retryAfter, fetchFailure, role),
   RunFailed(:final reason, :final fetchFailure) => switch (reason) {
     RunFailReason.timeout =>
       fetchFailure?.kind == FetchFailureKind.network
@@ -135,3 +100,55 @@ OnlineRunDecision decideOnlineRun(
     RunUnavailableReason.noScript => _fail(OnlineFailureKind.noScript),
   },
 };
+
+/// A script that ended with its own error. A 429 seen inside the run wins over
+/// whatever kind the script chose (an HTML 429 body is often reported as an
+/// invalid response): it is a rate limit of the whole source.
+OnlineRunFailed _scriptError(
+  RunErrorKind kind,
+  Duration? retryAfter,
+  FetchFailureInfo? fetchFailure,
+  OnlineScriptRole role,
+) {
+  if (fetchFailure?.kind == FetchFailureKind.rateLimited) {
+    return _fail(
+      OnlineFailureKind.rateLimited,
+      retryAfter: fetchFailure?.retryAfter ?? retryAfter,
+    );
+  }
+  return switch (kind) {
+    RunErrorKind.rateLimited || RunErrorKind.quota => _fail(
+      OnlineFailureKind.rateLimited,
+      retryAfter: retryAfter,
+    ),
+    RunErrorKind.network => _fail(OnlineFailureKind.network),
+    RunErrorKind.unavailable => _fail(OnlineFailureKind.gone),
+    RunErrorKind.unsupported => _fail(OnlineFailureKind.unsupported),
+    // Wrong credentials on any script are the source's problem. A stream's
+    // own kind lets the player tell it from a page's.
+    RunErrorKind.auth => switch (role) {
+      OnlineScriptRole.stream => _fail(OnlineFailureKind.authRequired),
+      OnlineScriptRole.page => _fail(OnlineFailureKind.authFailed),
+    },
+    RunErrorKind.server => switch (fetchFailure?.kind) {
+      FetchFailureKind.network => _fail(OnlineFailureKind.network),
+      FetchFailureKind.blockedHost => _fail(OnlineFailureKind.blockedHost),
+      FetchFailureKind.rateLimited ||
+      FetchFailureKind.notConsented ||
+      FetchFailureKind.abandoned ||
+      FetchFailureKind.invalidRequest ||
+      FetchFailureKind.invalidResponse ||
+      null => _fail(OnlineFailureKind.server),
+    },
+    RunErrorKind.invalidResponse => switch (fetchFailure?.kind) {
+      FetchFailureKind.network => _fail(OnlineFailureKind.network),
+      FetchFailureKind.blockedHost => _fail(OnlineFailureKind.blockedHost),
+      FetchFailureKind.rateLimited ||
+      FetchFailureKind.notConsented ||
+      FetchFailureKind.abandoned ||
+      FetchFailureKind.invalidRequest ||
+      FetchFailureKind.invalidResponse ||
+      null => _fail(OnlineFailureKind.invalidOutput),
+    },
+  };
+}

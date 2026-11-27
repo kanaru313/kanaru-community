@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:isolate';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/online/data/run/install_run_queue.dart';
@@ -15,6 +16,11 @@ import 'package:kanaru/src/plugins/domain/run/run_outcome.dart';
 import '../../lyrics/support/fake_plugin_runner.dart';
 
 const id = 'inst';
+
+/// A runner that holds something no isolate can receive.
+class _PortRunner extends FakePluginRunner {
+  final port = ReceivePort();
+}
 
 RunOk pageOk([int cards = 1, int pad = 0]) => RunOk(
   jsonEncode({
@@ -185,6 +191,98 @@ void main() {
       expect(failed(r).kind, OnlineFailureKind.invalidOutput);
       expect(runner.rejectedOutputs, isEmpty);
     });
+  });
+
+  group('real isolate', () {
+    final pad = 'x' * (onlineIsolateThreshold + 1000);
+
+    test(
+      'big outputs are read off the isolate with an unsendable client',
+      () async {
+        final r = _PortRunner();
+        addTearDown(r.port.close);
+        final real = StreamingRunClient(r);
+        final page = jsonEncode({
+          'items': [
+            {'id': '1', 'title': 'Song 1'},
+          ],
+          'pad': pad,
+        });
+        final audio = jsonEncode({
+          'url': 'https://cdn.example.com/a.mp3',
+          'mimeType': 'audio/mpeg',
+          'pad': pad,
+        });
+        expect(page.length, greaterThan(onlineIsolateThreshold));
+        r
+          ..answer(id, 'search', RunOk(page))
+          ..answer(id, 'stream', RunOk(audio));
+        final found = value(await real.search(id, 'q', next: 'n'));
+        expect(found.page.sections.single.cards.single.id, '1');
+        final played = value(await real.stream(id, 'x'));
+        expect(
+          (played as StreamPlayable).answer.container,
+          StreamContainer.mp3,
+        );
+      },
+    );
+  });
+
+  group('stream queue wait', () {
+    testWidgets('behind a long run: busy after 5 s, never run', (tester) async {
+      runner.blockUntilCancelled(id, 'search');
+      final running = RunCancel();
+      final search = client.search(id, 'q', cancel: running);
+      await tester.pump();
+      OnlineResult<StreamRead>? result;
+      final stream = client.stream(id, 'x').then((r) => result = r);
+      await tester.pump(const Duration(seconds: 4));
+      expect(result, isNull);
+      await tester.pump(const Duration(seconds: 2));
+      await stream;
+      expect(failed(result!).kind, OnlineFailureKind.busy);
+      expect(failed(result!).failureClass, OnlineFailureClass.source);
+      expect(runner.calls.map((c) => c.script), ['search']);
+      running.cancel();
+      await search;
+    });
+
+    testWidgets('a caller cancel while waiting is abandoned, not busy', (
+      tester,
+    ) async {
+      runner.blockUntilCancelled(id, 'search');
+      final running = RunCancel();
+      final search = client.search(id, 'q', cancel: running);
+      await tester.pump();
+      final waiting = RunCancel();
+      final stream = client.stream(id, 'x', cancel: waiting);
+      await tester.pump(const Duration(seconds: 1));
+      waiting.cancel();
+      expect(await stream, isA<OnlineAbandoned<StreamRead>>());
+      running.cancel();
+      await search;
+    });
+  });
+
+  test('argument errors never carry the query', () {
+    const secret = 'my private query';
+    final long = '$secret${'a' * 2000}';
+    for (final call in [
+      () => client.search(id, long),
+      () => client.search(id, '  '),
+      () => client.autocomplete(id, long),
+    ]) {
+      expect(
+        call,
+        throwsA(
+          isA<ArgumentError>().having(
+            (e) => e.toString(),
+            'text',
+            isNot(contains('private')),
+          ),
+        ),
+      );
+    }
   });
 
   group('cancel', () {

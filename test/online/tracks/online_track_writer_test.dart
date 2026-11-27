@@ -3,12 +3,29 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/database/app_database.dart';
 import 'package:kanaru/src/online/data/tracks/online_track_writer.dart';
 import 'package:kanaru/src/online/domain/contract/online_card.dart';
+import 'package:kanaru/src/plugins/data/store/plugin_config_store.dart';
 import 'package:kanaru/src/plugins/data/store/plugin_row_types.dart';
 import 'package:kanaru/src/plugins/data/store/plugin_rows.dart';
 
 import '../../database/support/test_db.dart';
 import '../../plugins/data/store_test_support.dart';
 import 'tracks_test_support.dart';
+
+/// A config store that runs [before] ahead of every read: the writer reads
+/// it after the plugin row and before its transaction.
+class _RacingConfig extends PluginConfigStore {
+  _RacingConfig(super.db, super.rows);
+
+  Future<void> Function()? before;
+
+  @override
+  Future<PluginConfigData> read(String installId) async {
+    final run = before;
+    before = null;
+    await run?.call();
+    return super.read(installId);
+  }
+}
 
 void main() {
   late AppDatabase db;
@@ -125,6 +142,10 @@ void main() {
         writer.upsertCards(id, [track('a1'), track('//host/x')]),
         throwsArgumentError,
       );
+      await expectLater(
+        writer.upsertCards(id, [track('a1'), track('x\ud800')]),
+        throwsArgumentError,
+      );
       final after = await counts(db);
       expect(after, before);
       expect(after.tracks, 0);
@@ -161,6 +182,28 @@ void main() {
       expect(dump.read<int>('c'), 0);
     });
 
+    test('a card with a bad percent escape does not stop the others', () async {
+      await installStreaming(rows);
+      final cards = [
+        track('a1', artworkUrl: 'https://cdn.example.com/%FF.jpg'),
+        track('b2', artworkUrl: 'https://cdn.example.com/x.jpg?q=%FF'),
+        track('c3', artworkUrl: 'https://cdn.example.com/x.jpg?w=300'),
+      ];
+      final ids = await writer.upsertCards(id, cards);
+      expect((await trackRow(ids[0].value))['cover_url'], isNull);
+      expect((await trackRow(ids[1].value))['cover_url'], isNull);
+      expect(
+        (await trackRow(ids[2].value))['cover_url'],
+        'https://cdn.example.com/x.jpg?w=300',
+      );
+      final saved = await writer.saveAsNewPlaylist(
+        id,
+        name: 'Mix',
+        cards: cards,
+      );
+      expect(saved.trackCount, 3);
+    });
+
     test('a safe link is stored; one with a config value is not', () async {
       await installStreaming(
         rows,
@@ -181,6 +224,43 @@ void main() {
       );
       expect((await trackRow(ids[1].value))['cover_url'], isNull);
     });
+  });
+
+  group('plugin changed while the write starts', () {
+    late _RacingConfig racing;
+    setUp(() {
+      racing = _RacingConfig(db, rows);
+      writer = OnlineTrackWriter(db, rows, racing, now: () => clock);
+    });
+
+    test('removed: refused, nothing written', () async {
+      await installStreaming(rows);
+      racing.before = () async {
+        await rows.remove(id);
+      };
+      await expectLater(
+        writer.upsertCards(id, [track('a1')]),
+        throwsA(isA<OnlineWriteRefused>()),
+      );
+      expect(await counts(db), (sources: 0, tracks: 0, playlists: 0));
+    });
+
+    test(
+      'removed and installed again: refused, no source of the old one',
+      () async {
+        await installStreaming(rows);
+        racing.before = () async {
+          await rows.remove(id);
+          clock = 2000;
+          await installStreaming(rows);
+        };
+        await expectLater(
+          writer.saveAsNewPlaylist(id, name: 'Mix', cards: [track('a1')]),
+          throwsA(isA<OnlineWriteRefused>()),
+        );
+        expect(await counts(db), (sources: 0, tracks: 0, playlists: 0));
+      },
+    );
   });
 
   group('refused plugins', () {
@@ -269,6 +349,28 @@ void main() {
       );
       expect(await counts(db), before);
     });
+
+    test(
+      'a failure after the playlist row is inserted leaves nothing',
+      () async {
+        await installStreaming(rows);
+        await db.customStatement(
+          'CREATE TRIGGER refuse_entries BEFORE INSERT ON playlist_entries '
+          "BEGIN SELECT RAISE(ABORT, 'refused'); END",
+        );
+        final before = await counts(db);
+        await expectLater(
+          writer.saveAsNewPlaylist(
+            id,
+            name: 'Mix',
+            cards: [track('a'), track('b')],
+          ),
+          throwsA(anything),
+        );
+        expect(await counts(db), before);
+        expect(before, (sources: 0, tracks: 0, playlists: 0));
+      },
+    );
 
     test('1001 cards and none are refused', () async {
       await installStreaming(rows);
