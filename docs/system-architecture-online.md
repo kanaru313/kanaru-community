@@ -1,12 +1,15 @@
 # Online sources architecture
 
-The `online` module (`lib/src/online/`) sits above `library`, `playback` and `plugins` (`architecture.yaml`). It owns what streaming plugins (`metadata.type = streaming`) return and how the app turns it into rows and playback. This document grows with the module; today it covers the contract, the run client and failures.
+The `online` module (`lib/src/online/`) sits above `library`, `playback` and `plugins` (`architecture.yaml`). It owns what streaming plugins (`metadata.type = streaming`) return and how the app turns it into rows and playback. This document grows with the module; today it covers the contract, the run client, failures, source rows and the track writer.
 
 ## Layout
 
 - `domain/contract/`: pure Dart models and limits. No Flutter, drift or `data/` import.
 - `domain/failure/`: `OnlineFailure` (kind + class), `OnlineResult`, and `decideOnlineRun` (outcome to decision).
 - `data/run/`: `StreamingRunClient`, `InstallRunQueue`, the isolate runner.
+- `domain/tracks/`: `persistableCoverUrl` (cover rule) and `playWindow`.
+- `data/tracks/`: `ensurePluginSource`, `cardTrackRow`, `OnlineTrackWriter`.
+- `state/online_data_providers.dart`: run client, writer and capabilities providers.
 - `data/contract/`: readers that check plugin output once. They use `cleanText` and `pluginRequestHeaders` from `plugins/domain`.
 
 `online` does not import `lyrics`, so it has its own output exception (`OnlineOutputException`) instead of the lyrics one.
@@ -59,3 +62,26 @@ Readers (`data/contract/`): `readSearchOutput`, `readStreamOutput`, `readAutocom
 | unavailable: not installed / unreadable / no script | `pluginMissing` / `internal` / `noScript` |
 
 The `auth` split: on `stream` it means this item needs an account or an age check (other items may play); on `search` it means the source's own login or key is wrong, which the user fixes for the whole source.
+
+## Source rows
+
+One `sources` row (`kind = 'plugin'`) per streaming install, made by `ensurePluginSource` when a track is first written for it. The uid is `sourceUidForRemote('plugin', account, installId)`, `root` is the install id, there is no `source_mounts` row.
+
+| Install origin | `account` | Uid after remove + install |
+|---|---|---|
+| repository | null | same (the id comes from repository + slug) |
+| file or link | `install:<plugins.installed_at>` | new (the id comes from name + author, so the same plugin would otherwise inherit the old tracks) |
+
+An update or repair keeps `installed_at`, so it keeps the uid. Rows of an older install stay on their old source row; nothing is deleted on uninstall.
+
+Rule for later PRs (playback, resolver): a track's source belongs to the live install only when `sources.root == installId && sources.account == pluginSourceAccount(row)`. Several `sources` rows can share one `root`; otherwise the track is unplayable (source removed). `ensurePluginSource` throws `ArgumentError` for a removed row or a plugin that is not streaming. A live source keeps its stored name when the plugin is renamed by an update.
+
+## Track writer
+
+Rows are written only when the user refers to them: `OnlineTrackWriter.upsertCards` (play from a list) and `saveAsNewPlaylist`. The proxy and search never write; the garbage collector keeps referenced rows, and `updated_at` is set on every write so its grace period restarts.
+
+- **Transaction.** Plugin row, manifest and stored config are read before it; inside it `ensurePluginSource` and one `upsertTrackSnapshot` per card. `saveAsNewPlaylist` also calls `PlaylistRepository(db).createPlaylist` inside the same transaction (a nested savepoint on the same database object), so the playlist and its tracks are one undo unit and any throw (a bad name, a URL-shaped id) leaves nothing. `OnlineWriteRefused` when the plugin is missing, removed, not streaming or its manifest does not parse.
+- **Caps.** `upsertCards` 1..200 cards, tracks only; `saveAsNewPlaylist` 1..1000, repeated ids dropped (first wins); else `ArgumentError`. `playWindow(items, tapped)` picks at most 200 around the tapped card.
+- **Columns written:** `locator = rel_path = card id` (no format is derived), `title` + `title_search` + `title_sort`, `artist` + `artist_search`, the album triple (`album`, `album_title_key`, `album_artist_key` from `albumKeyFor`), `duration_ms`, `cover_url`. Optional fields are absent when the card has none, so a later write never erases a stored value. **Never written:** `track_artists`, `track_details`, `codec`, `status` (derived `remote`), user columns.
+- **Cover rule** (`persistableCoverUrl`). `cover_url` is stored only for an `https` link without user info, port or fragment, to a public name the plugin's manifest hosts cover (a host the user typed never does), at most 2000 characters, with no query parameter named like a credential (`t`, `s`, `u`, `token`, `key`, `sig`, `api_key`, ...) and no query value or path segment equal to a value the user entered in the plugin's settings. Otherwise null. The card in memory keeps its `artworkUrl` for display.
+- **Measured cost (Linux, load about 4.6, 200 new cards with artist and cover, median of 3):** about 210 ms in memory, about 260 ms on a file database on the background isolate. Above the 50 ms goal; it is latency off the UI isolate (one statement per row). A multi-row upsert helper in `database/` is the follow-up if it matters.
