@@ -1347,5 +1347,55 @@
   "aiChatActionChangeModel": "Change model",
   "@aiChatActionChangeModel": {
     "description": "Button of the model-not-found error card: opens the model picker."
+  },
+  "aiChatHistoryTitle": "Chat history",
+  "@aiChatHistoryTitle": {
+    "description": "Title of the history page."
+  },
+  "aiChatHistoryBackPanel": "Back to the open conversation",
+  "@aiChatHistoryBackPanel": {
+    "description": "Tooltip of the back button of the history page in the desktop panel."
+  },
+  "aiChatHistoryBackPage": "Back",
+  "@aiChatHistoryBackPage": {
+    "description": "Tooltip of the back button of the history page on the phone."
+  },
+  "aiChatHistorySearch": "Search conversations",
+  "@aiChatHistorySearch": {
+    "description": "Hint and label of the search field of the history page."
+  },
+  "aiChatHistoryToday": "Today",
+  "@aiChatHistoryToday": {
+    "description": "Group heading of the history list."
+  },
+  "aiChatHistoryWeek": "Past 7 days",
+  "@aiChatHistoryWeek": {
+    "description": "Group heading of the history list."
+  },
+  "aiChatHistoryOlder": "Older",
+  "@aiChatHistoryOlder": {
+    "description": "Group heading of the history list."
+  },
+  "aiChatHistoryPluginRemoved": "plugin removed",
+  "@aiChatHistoryPluginRemoved": {
+    "description": "Shown in the error colour on a history row whose plugin is no longer installed."
+  },
+  "aiChatHistoryNoMatch": "No conversation matches “{query}”.",
+  "@aiChatHistoryNoMatch": {
+    "description": "Shown when the history search finds nothing.",
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatHistoryRowOptions": "Options for {title}",
+  "@aiChatHistoryRowOptions": {
+    "description": "Tooltip of the ⋮ button of a history row.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
   }
 }

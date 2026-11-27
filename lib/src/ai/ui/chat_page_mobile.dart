@@ -8,6 +8,7 @@ import 'chat_header_title.dart';
 import 'chat_host.dart';
 import 'chat_menu.dart';
 import 'chat_surface.dart';
+import 'history_page.dart';
 
 /// The chat as a full-screen page on the phone: header (close, name, ⋮) over
 /// the chat. Back steps out of rename mode, then the history, then closes.
@@ -21,6 +22,9 @@ class ChatPageMobile extends ConsumerWidget {
     final canPop = ref.watch(
       chatViewProvider.select((s) => !s.renaming && !s.historyOpen),
     );
+    final historyOpen = ref.watch(
+      chatViewProvider.select((s) => s.historyOpen),
+    );
     return PopScope(
       canPop: canPop,
       onPopInvokedWithResult: (didPop, _) {
@@ -31,28 +35,34 @@ class ChatPageMobile extends ConsumerWidget {
         body: SafeArea(
           child: Column(
             children: [
-              SizedBox(
-                height: KLayout.minTarget + KSpace.x2,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: KSpace.x2),
-                  child: Row(
-                    children: [
-                      KIconButton(
-                        icon: KIcons.collapse,
-                        tooltip: l10n.aiChatCloseMobile,
-                        onPressed: ref.read(chatHostProvider).close,
-                      ),
-                      Expanded(
-                        child: ChatHeaderTitle(
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.w700),
+              if (historyOpen)
+                ChatHistoryHeader(
+                  style: Theme.of(context).textTheme.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                )
+              else
+                SizedBox(
+                  height: KLayout.minTarget + KSpace.x2,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: KSpace.x2),
+                    child: Row(
+                      children: [
+                        KIconButton(
+                          icon: KIcons.collapse,
+                          tooltip: l10n.aiChatCloseMobile,
+                          onPressed: ref.read(chatHostProvider).close,
                         ),
-                      ),
-                      const ChatMenu(menuWhileRenaming: false),
-                    ],
+                        Expanded(
+                          child: ChatHeaderTitle(
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        const ChatMenu(menuWhileRenaming: false),
+                      ],
+                    ),
                   ),
                 ),
-              ),
               const Expanded(child: ChatSurface()),
             ],
           ),

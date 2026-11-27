@@ -11,3 +11,9 @@ String chatClockWithDate(DateTime at) {
 }
 
 String _two(int n) => n.toString().padLeft(2, '0');
+
+/// "14/11", the day and month of a history row older than today.
+String chatDayMonth(DateTime at) {
+  final t = at.toLocal();
+  return '${_two(t.day)}/${_two(t.month)}';
+}

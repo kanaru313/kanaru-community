@@ -88,6 +88,8 @@ disposed) or the panel and the page replacing each other lose nothing. No
 | Provider | Holds |
 |---|---|
 | `chatViewProvider` | `historyOpen`, `renaming`, `renameText`; `back()` (rename, then history; true when it took a step), `startNewConversation()`, `deleteConversation(id)`, `commitRename()`, `ensureConversation()` |
+| `chatHistoryQueryProvider` | the history search text (auto-dispose: the next visit starts with the whole list) |
+| `chatHistoryActionsProvider` | ids whose delete runs (rows busy); `delete(id)`, `open(id)`, `rename(conversation, text)` |
 | `chatScrollAnchorProvider` | id of the message the list was scrolled to (read by the message list) |
 | `composerDraftProvider` | the composer's `TextEditingValue` (text and selection) |
 | `composerFocusRequestProvider` | a pending "put the cursor in the composer"; `consume()` is true for one caller only |
@@ -124,14 +126,43 @@ place of ⋮ while renaming.
 ## Frame and bodies
 
 `ChatSurface` opens a conversation on first build (`ensureConversation`) and
-ends a rename when another conversation opens. Body, in order: the history area
-(`ChatHistorySlot`, empty until the history page) when the flag is set; nothing
+ends a rename when another conversation opens. Body, in order: the history
+page (`ChatHistoryPage`) when the flag is set; nothing
 while the messages load; the message list (`ChatMessageList`) when there are
 messages (a failed read shows `ChatMessagesError` with a retry); with none: the no-plugin guide (`ChatNoPluginGuide`: cloud option
 [Mở kho plugin AI] → `host.openSettings(aiPluginStoreLocation)`, consent line;
 no MCP option until MCP exists) when no `ai-chat` plugin is installed, else the
 greeting (`ChatEmptyGreeting`, with a slot for the prompt chips). The removed
 and reinstalled plugin states are notices above the composer, not bodies.
+
+## History (`ui/history_page.dart`, `ui/history_row.dart`, `state/chat_view/history_view.dart`)
+
+The history flag swaps the body for `ChatHistoryPage` and the header for
+`ChatHistoryHeader` (set in `RightPanelHost._ChatContent` and `ChatPageMobile`):
+[←] "Lịch sử trò chuyện" and, on the desktop panel only, ✕. The page holds
+focus (`Focus(autofocus)`), so Esc reaches `chatViewProvider.back()` from the
+list and from the empty search field (a search with text clears first).
+
+- **Data:** `chatHistoryConversationsProvider` reads the store (`list()`, or
+  `search(query)` for title and message text) and reloads on `store.changes`,
+  keeping the list on screen meanwhile. `groupHistory(list, now)` (pure) splits
+  by local calendar day: today, 1-7 days before today ("7 ngày qua"), older;
+  `chatHistoryClockProvider` is the injectable clock. The list is not paged
+  (rows are cheap); search runs on each keystroke without debounce.
+- **Row:** `SelectionRow` icon row (plugin icon, name, line "giờ | dd/mm · plugin
+  · quyền"), the open conversation `selected` (tint). A plugin missing from
+  `chatPluginsProvider` shows "plugin đã gỡ" in the error colour (the name is
+  not known any more). ⋮ (`SelectionRowAction`) opens a layered menu: Đổi tên
+  (an input in place of the name; Enter saves, Esc cancels) and Xoá (confirm
+  dialog, then `chatHistoryActionsProvider.delete`).
+- **Delete:** goes through `ChatViewNotifier.deleteConversation`, so the
+  controller stops the turn and, for the open conversation, opens a new empty
+  one in the same call; the history stays up on it. While it runs the row is
+  disabled (dimmed, taps ignored).
+- **Open:** `ChatSessionController.open(id)` (stops a running turn, Q5), then
+  the history closes. [Cuộc trò chuyện mới] is `startNewConversation()`.
+- **Not drawn by the mockup, not built:** toast after delete; empty-list text
+  without a search (the open conversation is always in the list).
 
 ## Message list and answer renderer
 

@@ -8,10 +8,10 @@ import '../state/chat_providers.dart';
 import '../state/chat_session.dart';
 import '../state/chat_view/chat_view_state.dart';
 import '../state/chat_view/composer_view.dart';
-import 'chat_history_slot.dart';
 import 'composer/composer.dart';
 import 'composer/prompt_chips.dart';
 import 'empty_states.dart';
+import 'history_page.dart';
 import 'messages_error.dart';
 import 'message_list.dart';
 
@@ -72,7 +72,7 @@ class _ChatSurfaceState extends ConsumerState<ChatSurface> {
         messages != null && !hasMessages && plugins != null && plugins.isEmpty;
     return Column(
       children: [
-        Expanded(child: historyOpen ? const ChatHistorySlot() : _body()),
+        Expanded(child: historyOpen ? const ChatHistoryPage() : _body()),
         if (!historyOpen && id != null && !guide)
           Composer(showPromptChips: hasMessages),
       ],

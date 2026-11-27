@@ -15,6 +15,7 @@ import 'package:kanaru/src/ai/state/chat_messages_provider.dart';
 import 'package:kanaru/src/ai/state/chat_providers.dart';
 import 'package:kanaru/src/ai/state/chat_session.dart';
 import 'package:kanaru/src/ai/state/chat_view/composer_inputs.dart';
+import 'package:kanaru/src/ai/state/chat_view/history_view.dart';
 import 'package:kanaru/src/ai/state/live_text_provider.dart';
 import 'package:kanaru/src/plugins/state/store_ops.dart';
 import 'package:kanaru/src/ai/ui/chat_host.dart';
@@ -325,6 +326,39 @@ const fakeChatPlugin = ChatPluginInfo(
   readiness: ChatReady(),
 );
 
+/// The conversations the history page lists, newest first.
+class FakeHistory extends Notifier<List<AiConversation>> {
+  @override
+  List<AiConversation> build() => const [];
+
+  void set(List<AiConversation> conversations) => state = conversations;
+}
+
+final fakeHistoryProvider = NotifierProvider<FakeHistory, List<AiConversation>>(
+  FakeHistory.new,
+);
+
+/// "Today" of every history test: Friday 27 Nov 2026, 15:00, local time.
+final historyNow = DateTime(2026, 11, 27, 15);
+
+/// A conversation row for the history tests; [at] is its last message.
+AiConversation historyConversation(
+  int id,
+  String title, {
+  required DateTime at,
+  String? installId = 'plugin-1',
+  AiPermission permission = AiPermission.ask,
+}) => AiConversation(
+  id: id,
+  title: title,
+  titleAuto: false,
+  installId: installId,
+  permission: permission,
+  createdAt: at,
+  updatedAt: at,
+  lastMessageAt: at,
+);
+
 /// Overrides that stand in for the engine behind the chat screens.
 List<Override> chatUiOverrides({
   required FakeChatSession session,
@@ -345,6 +379,17 @@ List<Override> chatUiOverrides({
     (ref) => ref.watch(fakePromptDataProvider),
   ),
   pluginIconProvider.overrideWith((ref, id) async => null),
+  chatHistoryClockProvider.overrideWithValue(() => historyNow),
+  chatHistoryConversationsProvider.overrideWith((ref) async {
+    final query = ref.watch(chatHistoryQueryProvider).trim().toLowerCase();
+    final all = ref.watch(fakeHistoryProvider);
+    return query.isEmpty
+        ? all
+        : [
+            for (final c in all)
+              if (c.title.toLowerCase().contains(query)) c,
+          ];
+  }),
   chatMessagesProvider.overrideWith2(_FakeMessages.new),
   liveTextProvider.overrideWith2(_FakeLive.new),
   chatConversationProvider.overrideWith((ref, id) {

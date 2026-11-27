@@ -2,9 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
+import '../../../ai/state/chat_view/chat_view_state.dart';
 import '../../../ai/ui/chat_header_title.dart';
 import '../../../ai/ui/chat_menu.dart';
 import '../../../ai/ui/chat_surface.dart';
+import '../../../ai/ui/history_page.dart';
 import '../../../playback/state/queue_view_provider.dart';
 import '../../../screens/now_playing/ui/queue_host.dart';
 import '../../../screens/now_playing/ui/queue_panel.dart';
@@ -119,16 +121,24 @@ class _ChatContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final historyOpen = ref.watch(
+      chatViewProvider.select((s) => s.historyOpen),
+    );
+    final style = Theme.of(context).textTheme.titleMedium;
     return Column(
       children: [
-        RightPanelHeader(
-          title: ChatHeaderTitle(
-            style: Theme.of(context).textTheme.titleMedium,
+        if (historyOpen)
+          ChatHistoryHeader(
+            style: style,
+            onClose: ref.read(rightPanelProvider.notifier).close,
+          )
+        else
+          RightPanelHeader(
+            title: ChatHeaderTitle(style: style),
+            menu: const ChatMenu(),
+            closeTooltip: AppLocalizations.of(context).aiChatClosePanel,
+            onClose: ref.read(rightPanelProvider.notifier).close,
           ),
-          menu: const ChatMenu(),
-          closeTooltip: AppLocalizations.of(context).aiChatClosePanel,
-          onClose: ref.read(rightPanelProvider.notifier).close,
-        ),
         const Expanded(child: ChatSurface()),
       ],
     );

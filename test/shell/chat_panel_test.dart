@@ -8,7 +8,7 @@ import 'package:kanaru/src/ai/ai_extension.dart';
 import 'package:kanaru/src/ai/state/chat_session.dart';
 import 'package:kanaru/src/ai/state/chat_view/chat_view_state.dart';
 import 'package:kanaru/src/ai/state/chat_view/composer_draft.dart';
-import 'package:kanaru/src/ai/ui/chat_history_slot.dart';
+import 'package:kanaru/src/ai/ui/history_page.dart';
 import 'package:kanaru/src/ai/ui/chat_page_mobile.dart';
 import 'package:kanaru/src/ai/ui/chat_surface.dart';
 import 'package:kanaru/src/playback/state/player_ready.dart';
@@ -185,7 +185,7 @@ void main() {
           .read(rightPanelProvider.notifier)
           .show(RightPanelKind.chat);
       await _settle(tester, host);
-      expect(find.byKey(chatHistorySlotKey), findsOneWidget);
+      expect(find.byKey(chatHistoryPageKey), findsOneWidget);
     });
 
     testWidgets('restored chat panel does not create the player during the '
@@ -216,11 +216,11 @@ void main() {
       final host = await pumpDesktopShell(tester, withChat: true);
       host.container.read(chatViewProvider.notifier).openHistory();
       await _settle(tester, host);
-      expect(find.byKey(chatHistorySlotKey), findsOneWidget);
+      expect(find.byKey(chatHistoryPageKey), findsOneWidget);
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await _settle(tester, host);
       expect(host.container.read(chatViewProvider).historyOpen, isFalse);
-      expect(find.byKey(chatHistorySlotKey), findsNothing);
+      expect(find.byKey(chatHistoryPageKey), findsNothing);
       expect(_kind(host), RightPanelKind.chat);
     });
 

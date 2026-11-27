@@ -7,7 +7,7 @@ import 'package:kanaru/src/ai/state/chat_view/chat_view_state.dart';
 import 'package:kanaru/src/ai/state/chat_view/composer_draft.dart';
 import 'package:kanaru/src/ai/state/chat_view/composer_view.dart';
 import 'package:kanaru/src/ai/ui/chat_header_title.dart';
-import 'package:kanaru/src/ai/ui/chat_history_slot.dart';
+import 'package:kanaru/src/ai/ui/history_page.dart';
 import 'package:kanaru/src/ai/ui/chat_host.dart';
 import 'package:kanaru/src/ai/ui/chat_menu.dart';
 import 'package:kanaru/src/ai/ui/chat_page_mobile.dart';
@@ -381,14 +381,14 @@ void main() {
       );
       await _menuRow(tester, 'Chat history');
       expect(setup.view.historyOpen, isTrue);
-      expect(find.byKey(chatHistorySlotKey), findsOneWidget);
+      expect(find.byKey(chatHistoryPageKey), findsOneWidget);
       expect(find.text(_greeting), findsNothing);
 
       await tester.binding.handlePopRoute();
       await tester.pump();
       await tester.pump();
       expect(setup.view.historyOpen, isFalse);
-      expect(find.byKey(chatHistorySlotKey), findsNothing);
+      expect(find.byKey(chatHistoryPageKey), findsNothing);
       expect(find.text(_greeting), findsOneWidget);
     });
   });
