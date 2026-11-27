@@ -281,6 +281,10 @@ void main() {
           .set(const ChatPromptData(hasPlaying: false));
       await tester.pump();
       // No playing song: the lyrics prompt does nothing.
+      expect(
+        tester.getSemantics(find.text('Lyrics')),
+        isSemantics(isEnabled: false),
+      );
       await tester.tap(find.text('Lyrics'), warnIfMissed: false);
       await tester.pump();
       expect(setup.sends, isEmpty);
