@@ -37,6 +37,11 @@ final selectionTracksProvider = Provider.autoDispose<List<AskAiTrack>>((ref) {
   return askAiTracksOfIds([for (final id in ids) id.value]);
 });
 
+/// How many songs are selected (the chip may carry fewer ids).
+final selectionCountProvider = Provider.autoDispose<int>(
+  (ref) => ref.watch(librarySelectionProvider.select((s) => s.ids.length)),
+);
+
 ChipPart _chip(AskAiTarget target) {
   final ref = chipRefOf(target);
   return ChipPart(
@@ -105,7 +110,13 @@ final chatSuggestionsProvider = Provider.autoDispose
       return [
         if (ref.watch(hasCurrentTrackProvider))
           _chip(const AskAiTarget.nowPlaying()),
-        if (selected.isNotEmpty) _chip(AskAiTarget.songs(selected)),
+        if (selected.isNotEmpty)
+          _chip(
+            AskAiTarget.songs(
+              selected,
+              total: ref.watch(selectionCountProvider),
+            ),
+          ),
         if (page != null) _chip(page),
       ];
     });

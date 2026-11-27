@@ -183,4 +183,6 @@ void expectButtonAtEnd(WidgetTester tester, String label) {
   final card = tester.getRect(find.byType(KActionCard));
   final button = tester.getRect(find.widgetWithText(OutlinedButton, label));
   expect(card.right - button.right, closeTo(KSpace.x3, 0.01));
+  // Not stretched: a full-width button would start at the card's inner edge.
+  expect(button.left, greaterThan(card.left + KSpace.x3 + 1));
 }

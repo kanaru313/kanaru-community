@@ -67,6 +67,7 @@ MenuSpec buildSelectionMenu(SelectionMenuData data, MenuEnv env) {
             l10n.libraryMenuAskAiSongs,
             AskAiTarget.songs(
               askAiTracksOfIds([for (final id in data.ids) id.value]),
+              total: count,
             ),
             enabled: count > 0,
           ),

@@ -141,6 +141,39 @@ void main() {
     expect(setup.host.calls, ['openSettings /playlists']);
   });
 
+  testWidgets('a long replaced queue loads the rows that "+N bài" opens', (
+    tester,
+  ) async {
+    final ids = [for (var i = 1; i <= 12; i++) 100 + i];
+    final call = _play;
+    await pumpCard(
+      tester,
+      _done(
+        call,
+        DonePart(
+          callId: call.id,
+          added: songsOf(3),
+          replacedQueue: ReplacedQueueSnapshot(
+            tracks: ids,
+            userOrder: ids,
+            shuffled: false,
+          ),
+        ),
+      ),
+      library: {for (final id in ids) id: fakeTrack(id, title: 'Cũ $id')},
+    );
+    await tester.tap(find.text('Hàng đợi cũ · 12 bài'));
+    await settle(tester);
+    expect(find.text('Cũ 101'), findsOneWidget);
+    expect(find.text('Cũ 106'), findsNothing);
+    await tester.tap(find.text('+7 bài'));
+    await settle(tester);
+    for (final id in ids.skip(5)) {
+      expect(find.text('Cũ $id'), findsOneWidget);
+    }
+    expect(find.text('Không còn trong thư viện'), findsNothing);
+  });
+
   testWidgets('a replaced queue folds the old queue and offers the replay', (
     tester,
   ) async {

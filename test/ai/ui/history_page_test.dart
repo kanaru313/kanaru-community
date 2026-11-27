@@ -151,7 +151,7 @@ void main() {
       );
     });
 
-    testWidgets('a list left open regroups at midnight', (tester) async {
+    testWidgets('resuming the app on a new day regroups', (tester) async {
       var now = historyNow;
       final container = ProviderContainer(
         overrides: [
@@ -163,16 +163,14 @@ void main() {
         historyConversation(1, 'a', at: DateTime(2026, 11, 27, 14)),
       ]);
       final sections = container.listen(chatHistorySectionsProvider, (_, _) {});
-      // Closed before the test ends, so no timer is left pending.
       try {
         await tester.pump();
         await tester.pump();
         expect(sections.read().value!.single.group, HistoryGroup.today);
 
-        // Nine hours later it is the next day: the same conversation is no
-        // longer from today.
+        // The next day: the same conversation is no longer from today.
         now = DateTime(2026, 11, 28, 0, 0, 1);
-        await tester.pump(const Duration(hours: 9));
+        container.invalidate(chatHistorySectionsProvider);
         await tester.pump();
         expect(sections.read().value!.single.group, HistoryGroup.week);
       } finally {

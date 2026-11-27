@@ -132,11 +132,6 @@ DateTime _day(DateTime at) {
 final chatHistorySectionsProvider =
     Provider.autoDispose<AsyncValue<List<HistorySection>>>((ref) {
       final now = ref.watch(chatHistoryClockProvider)();
-      // A list left open past midnight regroups: rebuild at the next local
-      // midnight.
-      final midnight = DateTime(now.year, now.month, now.day + 1);
-      final timer = Timer(midnight.difference(now), ref.invalidateSelf);
-      ref.onDispose(timer.cancel);
       return ref
           .watch(chatHistoryConversationsProvider)
           .whenData((list) => groupHistory(list, now));

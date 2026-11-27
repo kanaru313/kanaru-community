@@ -75,14 +75,35 @@ class ChatHistoryPage extends ConsumerStatefulWidget {
   ConsumerState<ChatHistoryPage> createState() => _ChatHistoryPageState();
 }
 
-class _ChatHistoryPageState extends ConsumerState<ChatHistoryPage> {
+class _ChatHistoryPageState extends ConsumerState<ChatHistoryPage>
+    with WidgetsBindingObserver {
   final _search = TextEditingController();
 
   /// The conversation whose name is an input, if any.
   int? _renamingId;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  /// The calendar day the list was last built for; a build on another day
+  /// regroups (no timer: a list left open is checked when it builds or when
+  /// the app resumes).
+  DateTime? _builtDay;
+
+  /// Regroup when the app comes back: the day may have changed meanwhile.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.invalidate(chatHistorySectionsProvider);
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _search.dispose();
     super.dispose();
   }
@@ -90,6 +111,14 @@ class _ChatHistoryPageState extends ConsumerState<ChatHistoryPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final clock = ref.read(chatHistoryClockProvider)();
+    final day = DateTime(clock.year, clock.month, clock.day);
+    if (_builtDay != null && _builtDay != day) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) ref.invalidate(chatHistorySectionsProvider);
+      });
+    }
+    _builtDay = day;
     final query = ref.watch(chatHistoryQueryProvider).trim();
     final sections = ref.watch(chatHistorySectionsProvider).value;
     final openId = ref.watch(

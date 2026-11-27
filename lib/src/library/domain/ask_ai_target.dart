@@ -11,7 +11,11 @@ sealed class AskAiTarget {
   const factory AskAiTarget.song(AskAiTrack track) = AskAiSong;
 
   /// A selection of songs (any list selection).
-  const factory AskAiTarget.songs(List<AskAiTrack> tracks) = AskAiSongs;
+  ///
+  /// [total] is how many songs are selected when [tracks] was cut to
+  /// [askAiMaxSongs]; null = all of them.
+  const factory AskAiTarget.songs(List<AskAiTrack> tracks, {int? total}) =
+      AskAiSongs;
 
   /// An album; [key] is the library's album key text, [label] what the chip
   /// shows.
@@ -78,9 +82,12 @@ class AskAiSong extends AskAiTarget {
 }
 
 class AskAiSongs extends AskAiTarget {
-  const AskAiSongs(this.tracks);
+  const AskAiSongs(this.tracks, {this.total});
 
   final List<AskAiTrack> tracks;
+
+  /// The real selection size when [tracks] was cut; null = all of them.
+  final int? total;
 }
 
 class AskAiAlbum extends AskAiTarget {

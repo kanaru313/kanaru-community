@@ -51,7 +51,10 @@ class _TrackRowsPreviewState extends ConsumerState<TrackRowsPreview> {
   /// never keeps a live watch per row). Ids already read are not read again.
   final Map<int, TrackInfo> _infos = {};
   final Set<int> _asked = {};
-  bool _loaded = false;
+
+  /// Ids whose read finished: only these can be "gone" (no row). A read
+  /// that failed leaves its ids unknown and is tried again on the next load.
+  final Set<int> _read = {};
 
   int get _shownCount => widget.tracks.length > _showAllUpTo && !_all
       ? _shortRows
@@ -84,12 +87,13 @@ class _TrackRowsPreviewState extends ConsumerState<TrackRowsPreview> {
         for (final r in rows) {
           _infos[r.id.value] = r;
         }
-        _loaded = true;
+        _read.addAll(ids.map((i) => i.value));
       });
     } on Object catch (e, s) {
-      // Rows keep the text the engine stored; only covers are missing.
+      // Rows keep the text the engine stored; only covers are missing. The
+      // ids stay unknown (not "gone") and are asked again on the next load.
       _log.warning('reading the card songs failed: ${e.runtimeType}', e, s);
-      if (mounted) setState(() => _loaded = true);
+      _asked.removeAll(ids.map((i) => i.value));
     }
   }
 
@@ -115,14 +119,17 @@ class _TrackRowsPreviewState extends ConsumerState<TrackRowsPreview> {
               _SongLine(
                 track: tracks[i],
                 info: _infos[tracks[i].trackId],
-                loaded: _loaded,
+                loaded: _read.contains(tracks[i].trackId),
               ),
             ],
             if (rest > 0)
               Align(
                 alignment: AlignmentDirectional.centerStart,
                 child: TextButton(
-                  onPressed: () => setState(() => _all = true),
+                  onPressed: () {
+                    setState(() => _all = true);
+                    _load();
+                  },
                   style: TextButton.styleFrom(
                     minimumSize: Size(0, _buttonHeight(context)),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -227,7 +234,7 @@ class _SongLine extends StatelessWidget {
   /// The song's library row; null while it loads or when it left the library.
   final TrackInfo? info;
 
-  /// Whether the library read finished (a missing row is then "gone").
+  /// Whether this song's library read finished (no row is then "gone").
   final bool loaded;
 
   @override

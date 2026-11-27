@@ -146,8 +146,10 @@ list and from the empty search field (a search with text clears first).
   `search(query)` for title and message text) and reloads on `store.changes`,
   keeping the list on screen meanwhile. `groupHistory(list, now)` (pure) splits
   by local calendar day: today, 1-7 days before today ("7 ngày qua"), older;
-  `chatHistoryClockProvider` is the injectable clock; `chatHistorySectionsProvider` invalidates itself at the next local midnight, so a list left open regroups. The list is not paged
-  (rows are cheap); search runs on each keystroke without debounce.
+  `chatHistoryClockProvider` is the injectable clock; `chatHistorySectionsProvider` has no timer: the history page
+  invalidates it when the app resumes and when it builds on a new day, so a
+  list left open regroups. The list is not paged (rows are cheap); search
+  is debounced (see below).
 - **Row:** `SelectionRow` icon row (plugin icon, name, line "giờ | dd/mm · plugin
   · quyền"), the open conversation `selected` (tint). A plugin missing from
   `chatPluginsProvider` shows "plugin đã gỡ" in the error colour (the name is
@@ -311,7 +313,7 @@ stored row:
   `chatConfirmPreviewProvider` asks the tool's `describe` again on the library
   as it is now (summary = playlist name, songs); a refusal or an error leaves
   the card with what the call says. Rows come from `TrackRowsPreview` (cover 40,
-  title, artist; text from the stored snapshot, cover from one `trackRowLoaderProvider` read per card for the rows shown, not a watch per row).
+  title, artist; text from the stored snapshot, cover from one batched `trackRowLoaderProvider` read per batch of rows shown, again when "+N bài" opens more, not a watch per row; "Không còn trong thư viện" only for ids whose read finished with no row, a failed read leaves them blank and is retried).
 - **Error card source of truth:** the stored `ErrorPart` gives the kind through
   `cardOfStoredError`; for the newest row `chatLiveOutcomeProvider` (the
   session's `lastView`) wins, because it knows the host, the busy and timeout
@@ -365,8 +367,8 @@ One interface, one implementation, no second route:
 - **Menus:** `loadMenuEnv` puts the entry in `MenuEnv.askAi`; builders call
   `askAiRow(env, title, target)` (`menu_items.dart`), which is the old
   "Sắp có" row while the entry is null. Targets: song (id, title, artists,
-  album), album (key + title), artist (key + name), selection (the loader reads
-  the rows through `trackRowLoaderProvider`; dimmed until they are loaded),
+  album), album (key + title), artist (key + name), selection (ids only, at
+  most `askAiMaxSongs`, plus the real count; no library read),
   playlist (uid + display name). The queue row menu, the Now Playing ⋮ and the
   song menu of a row inside the chat are the same song menu, so they need no
   code of their own. Genre, language, folder and Favorites menus have no
@@ -397,7 +399,7 @@ One interface, one implementation, no second route:
 ## Review fixes (behaviour notes)
 
 - Liveness: event rows (plugin or model switch lines) are not a newer turn (`turnEdgesOf`); an error card stays live after a plugin switch.
-- Selection chip and menu: ids only, at most `askAiMaxSongs` (= engine `chipMaxRows`); nothing is read from the library when the menu opens or the selection changes. The chip label counts the capped list.
+- Selection chip and menu: ids only, at most `askAiMaxSongs` (= engine `chipMaxRows`); nothing is read from the library when the menu opens or the selection changes. A selection above the cap keeps its first `askAiMaxSongs` ids but the chip label names the real count (`AskAiSongs.total`, carried in `ChipRef.label`); the model is not told the total yet (engine follow-up: a `total` on the chip part and in `_songs`).
 - History search: the typed text (`chatHistoryQueryProvider`) is debounced into `chatHistorySearchProvider` (250 ms, `chatHistoryDebounceProvider`); store changes are coalesced with the same delay.
 - `ChatPluginIcon.removed` draws the "?" tile only for an uninstalled plugin; no plugin or plugins still loading shows the AI glyph. History shows "Plugin đã gỡ" only when a plugin id is set but not installed.
 - Skipped cards: the engine result wording is read in one function (`skipFromResultText`); the engine has no reason code for Auto mode yet.

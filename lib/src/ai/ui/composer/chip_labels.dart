@@ -12,7 +12,9 @@ String chipLabel(AppLocalizations l10n, ChipPart chip) {
   return switch (chip.kind) {
     ChipKind.nowPlaying => l10n.aiChatChipNowPlaying,
     ChipKind.song => label.isEmpty ? l10n.aiChatChipSong : label,
-    ChipKind.songs => l10n.aiChatChipSongs(chip.tracks.length),
+    ChipKind.songs => l10n.aiChatChipSongs(
+      int.tryParse(label) ?? chip.tracks.length,
+    ),
     ChipKind.album => l10n.aiChatChipAlbum(label),
     ChipKind.artist => l10n.aiChatChipArtist(label),
     ChipKind.genre => l10n.aiChatChipGenre(label),
