@@ -108,3 +108,8 @@ SemanticsFinder byEnabledState(String label, {required bool enabled}) =>
           data.flagsCollection.isEnabled ==
               (enabled ? Tristate.isTrue : Tristate.isFalse);
     }, describeMatch: (_) => '${enabled ? 'enabled' : 'disabled'} "$label"');
+
+/// The fade marks of a [KCappedList]: top (scrolled away from the start) and
+/// bottom (rows remain below). Each is in the tree only while its fade is on.
+Finder get cappedTopFade => find.byKey(KCappedList.topFadeKey);
+Finder get cappedBottomFade => find.byKey(KCappedList.bottomFadeKey);

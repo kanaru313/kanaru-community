@@ -30,6 +30,7 @@ export 'src/widgets/k_clock_progress.dart' show KClockProgress, KClockSegments;
 export 'src/widgets/k_context_chip.dart';
 export 'src/widgets/k_context_region.dart';
 export 'src/widgets/k_cover.dart' show KCover, KCoverPlaceholderColors;
+export 'src/widgets/k_capped_list.dart';
 export 'src/widgets/k_cover_mosaic.dart';
 export 'src/widgets/k_detail_page.dart';
 export 'src/widgets/k_detail_title.dart' show KDetailTitleHost;
