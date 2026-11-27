@@ -569,3 +569,30 @@ fn a_larger_configured_stack_is_kept() {
     });
     assert_eq!(rt.inner.stack_bytes, big);
 }
+
+#[test]
+fn response_error_keeps_unavailable_network_and_unsupported_kinds() {
+    let rt = runtime();
+    for (kind, want) in [
+        ("unavailable", ErrorKind::Unavailable),
+        ("network", ErrorKind::Network),
+        ("unsupported", ErrorKind::Unsupported),
+    ] {
+        let script =
+            format!("function execute(i){{ return Response.error('x', {{kind: '{kind}'}}); }}");
+        let r = run_script(&rt, &script, 0);
+        assert_eq!(r.status, S::ScriptError, "{kind}");
+        assert_eq!(r.error_kind, want, "{kind}");
+    }
+}
+
+#[test]
+fn response_error_unknown_or_non_string_kind_is_server() {
+    let rt = runtime();
+    for kind in ["'gone'", "42", "null", "['network']"] {
+        let script =
+            format!("function execute(i){{ return Response.error('x', {{kind: {kind}}}); }}");
+        let r = run_script(&rt, &script, 0);
+        assert_eq!(r.error_kind, ErrorKind::Server, "{kind}");
+    }
+}

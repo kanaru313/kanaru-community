@@ -82,6 +82,9 @@ void main() {
       expect(error(EngineErrorKind.auth).kind, RunErrorKind.auth);
       expect(error(EngineErrorKind.quota).kind, RunErrorKind.quota);
       expect(error(EngineErrorKind.server).kind, RunErrorKind.server);
+      expect(error(EngineErrorKind.unavailable).kind, RunErrorKind.unavailable);
+      expect(error(EngineErrorKind.network).kind, RunErrorKind.network);
+      expect(error(EngineErrorKind.unsupported).kind, RunErrorKind.unsupported);
       expect(error(EngineErrorKind.rateLimited).kind, RunErrorKind.rateLimited);
       expect(error(EngineErrorKind.none).kind, RunErrorKind.invalidResponse);
       expect(error(EngineErrorKind.auth).message, 'm');

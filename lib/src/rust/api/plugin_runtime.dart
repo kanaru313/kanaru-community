@@ -60,7 +60,17 @@ Future<PluginScriptProblem?> checkPluginScript({
 );
 
 /// Kind of a script-reported failure.
-enum PluginErrorKind { none, rateLimited, invalidResponse, server, auth, quota }
+enum PluginErrorKind {
+  none,
+  rateLimited,
+  invalidResponse,
+  server,
+  auth,
+  quota,
+  unavailable,
+  network,
+  unsupported,
+}
 
 /// The first failing `fetch` of a run, kept even when the script caught it.
 class PluginFetchFailure {

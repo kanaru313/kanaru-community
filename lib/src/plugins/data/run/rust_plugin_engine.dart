@@ -175,6 +175,9 @@ EngineResult _fromBridgeResult(rust.PluginScriptResult r) => EngineResult(
     rust.PluginErrorKind.server => EngineErrorKind.server,
     rust.PluginErrorKind.auth => EngineErrorKind.auth,
     rust.PluginErrorKind.quota => EngineErrorKind.quota,
+    rust.PluginErrorKind.unavailable => EngineErrorKind.unavailable,
+    rust.PluginErrorKind.network => EngineErrorKind.network,
+    rust.PluginErrorKind.unsupported => EngineErrorKind.unsupported,
   },
   retryAfterSec: r.retryAfterSec,
   jsError: r.jsError == null

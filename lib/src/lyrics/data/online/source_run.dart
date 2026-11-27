@@ -121,6 +121,9 @@ RunDecision decideRun(RunOutcome outcome) => switch (outcome) {
       RunErrorKind.quota => _failed(SourceFailKind.rateLimited, retryAfter),
       // A bad key is the user's to fix: shown like a server failure.
       RunErrorKind.auth ||
+      RunErrorKind.unavailable ||
+      RunErrorKind.network ||
+      RunErrorKind.unsupported ||
       RunErrorKind.server => _failed(SourceFailKind.server),
       RunErrorKind.invalidResponse => _failed(SourceFailKind.invalid),
     },

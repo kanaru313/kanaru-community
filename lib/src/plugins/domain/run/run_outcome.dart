@@ -1,6 +1,21 @@
 /// Kind of a failure a script reported itself (`Response.error`). Kept raw:
 /// the runtime's "none" is reported as [invalidResponse].
-enum RunErrorKind { rateLimited, invalidResponse, server, auth, quota }
+enum RunErrorKind {
+  rateLimited,
+  invalidResponse,
+  server,
+  auth,
+  quota,
+
+  /// The item is gone: removed, or geo-blocked for this user.
+  unavailable,
+
+  /// A network failure the plugin saw itself.
+  network,
+
+  /// Content the plugin cannot play or serve, e.g. a livestream.
+  unsupported,
+}
 
 /// Why a run failed for a reason that is not the script's own report.
 enum RunFailReason { timeout, memory, stack, outputTooLarge, internal }

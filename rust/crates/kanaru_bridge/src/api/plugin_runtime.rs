@@ -142,6 +142,9 @@ pub enum PluginErrorKind {
     Server,
     Auth,
     Quota,
+    Unavailable,
+    Network,
+    Unsupported,
 }
 
 /// A JavaScript exception.

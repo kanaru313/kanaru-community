@@ -29,7 +29,8 @@ const PRELUDE: &str = r#"
       if (options !== null && typeof options === 'object') {
         var k = options.kind;
         if (k === 'rateLimited' || k === 'invalidResponse' || k === 'server' ||
-            k === 'auth' || k === 'quota') kind = k;
+            k === 'auth' || k === 'quota' || k === 'unavailable' ||
+            k === 'network' || k === 'unsupported') kind = k;
         var r = options.retryAfterSec;
         if (typeof r === 'number' && isFinite_(r) && r >= 0) retry = min(floor(r), 4294967295);
       }
