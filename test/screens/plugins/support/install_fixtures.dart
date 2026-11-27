@@ -186,6 +186,7 @@ Future<void> pumpFlowHost(
   Size size = narrowWindow,
   List<Override> overrides = const [],
   String label = 'go',
+  Locale locale = const Locale('en'),
 
   /// False while something spins on purpose (a package that is still loading).
   bool settle = true,
@@ -212,8 +213,13 @@ Future<void> pumpFlowHost(
       ],
       child: MaterialApp(
         theme: buildKanaruTheme(brightness: Brightness.light),
-        locale: const Locale('en'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        locale: locale,
+        localizationsDelegates: locale.languageCode == 'en'
+            ? AppLocalizations.localizationsDelegates
+            : [
+                AppLocalizations.delegate,
+                ...GlobalMaterialLocalizations.delegates,
+              ],
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: Builder(
@@ -228,6 +234,10 @@ Future<void> pumpFlowHost(
       ),
     ),
   );
+  if (locale.languageCode != 'en') {
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    await tester.pump();
+  }
   await tester.tap(find.text(label));
   if (settle) {
     await tester.pumpAndSettle();

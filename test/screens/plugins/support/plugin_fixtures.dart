@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart' show Size;
+import 'package:flutter/widgets.dart' show Locale, Size;
 import 'package:material_ui/material_ui.dart' show ThemeData;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
@@ -248,6 +248,7 @@ Future<SettingsHarness> pumpPlugins(
   String location = '/settings/plugins',
   Size size = const Size(400, 900),
   double textScale = 1,
+  Locale locale = const Locale('en'),
   List<Override> overrides = const [],
   ThemeData? theme,
   bool reduceMotion = false,
@@ -258,6 +259,7 @@ Future<SettingsHarness> pumpPlugins(
     location: location,
     size: size,
     textScale: textScale,
+    locale: locale,
     theme: theme,
     reduceMotion: reduceMotion,
     scaffold: true,

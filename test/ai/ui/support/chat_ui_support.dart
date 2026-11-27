@@ -326,6 +326,21 @@ const fakeChatPlugin = ChatPluginInfo(
   readiness: ChatReady(),
 );
 
+/// The installed chat plugins of every fake conversation (default: one ready
+/// plugin). A test that cannot pass `plugins` to [chatUiOverrides] (a shell
+/// harness builds the container) sets them here.
+class FakeChatPlugins extends Notifier<List<ChatPluginInfo>> {
+  @override
+  List<ChatPluginInfo> build() => const [fakeChatPlugin];
+
+  void set(List<ChatPluginInfo> plugins) => state = plugins;
+}
+
+final fakeChatPluginsProvider =
+    NotifierProvider<FakeChatPlugins, List<ChatPluginInfo>>(
+      FakeChatPlugins.new,
+    );
+
 /// The conversations the history page lists, newest first.
 class FakeHistory extends Notifier<List<AiConversation>> {
   @override
@@ -367,8 +382,10 @@ List<Override> chatUiOverrides({
   DateTime Function()? historyClock,
 }) => [
   chatSessionProvider.overrideWith(() => session),
-  chatPluginsProvider.overrideWithValue(
-    AsyncData(plugins ?? (withPlugin ? const [fakeChatPlugin] : const [])),
+  chatPluginsProvider.overrideWith(
+    (ref) => AsyncData(
+      plugins ?? (withPlugin ? ref.watch(fakeChatPluginsProvider) : const []),
+    ),
   ),
   chatReadinessProvider.overrideWith(
     (ref, id) => AsyncData(ref.watch(fakeChatReadinessProvider)),

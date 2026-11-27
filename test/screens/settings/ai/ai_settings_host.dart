@@ -1,4 +1,4 @@
-import 'dart:ui' show Size;
+import 'dart:ui' show Locale, Size;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
@@ -52,6 +52,8 @@ Future<SettingsHarness> openAiSettings(
   Size size = const Size(400, 4000),
   String location = SettingsPaths.ai,
   ThemeData? theme,
+  double textScale = 1,
+  Locale locale = const Locale('en'),
 
   /// What the history block reads (default: 3 conversations, 1.8 MB).
   Future<AiChatStats> Function()? stats,
@@ -64,6 +66,8 @@ Future<SettingsHarness> openAiSettings(
     location: location,
     size: size,
     theme: theme,
+    textScale: textScale,
+    locale: locale,
     store: store,
     scaffold: true,
     quietPlugins: false,
