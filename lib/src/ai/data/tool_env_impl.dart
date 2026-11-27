@@ -1,5 +1,6 @@
 import '../../library/domain/history/history_ranges.dart';
 import '../../library/domain/history/history_store.dart';
+import '../../library/domain/overview/library_overview.dart';
 import '../../library/domain/playlists/playlist_store.dart';
 import '../../library/domain/search/track_hit.dart';
 import '../../library/domain/search/track_lookup.dart';
@@ -23,11 +24,13 @@ class LibraryPortImpl implements LibraryPort {
     required this.trackSearch,
     required this.trackLookup,
     required this.trackInfo,
+    required this.overviewReader,
   });
 
   final TrackSearch trackSearch;
   final TrackLookup trackLookup;
   final Future<TrackInfo?> Function(TrackId id) trackInfo;
+  final LibraryOverviewReader overviewReader;
 
   @override
   Future<({List<TrackRow> visible, List<int> absent})> visibleOf(
@@ -76,6 +79,18 @@ class LibraryPortImpl implements LibraryPort {
       );
     }
     return (found: found, absent: absent);
+  }
+
+  @override
+  Future<LibraryTotals> overview() async {
+    final o = await overviewReader.read();
+    return LibraryTotals(
+      songs: o.songs,
+      albums: o.albums,
+      artists: o.artists,
+      playlists: o.playlists,
+      totalDurationMs: o.totalDurationMs,
+    );
   }
 }
 

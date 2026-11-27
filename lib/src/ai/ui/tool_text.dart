@@ -21,6 +21,7 @@ String toolDisplayName(AppLocalizations l10n, String name) => switch (name) {
   'get_now_playing' => l10n.aiChatToolGetNowPlaying,
   'get_queue' => l10n.aiChatToolGetQueue,
   'search_library' => l10n.aiChatToolSearchLibrary,
+  'get_library_overview' => l10n.aiChatToolGetLibraryOverview,
   'get_track_info' => l10n.aiChatToolGetTrackInfo,
   _ => name,
 };
@@ -36,7 +37,7 @@ IconData toolIcon(String name) => switch (name) {
   'create_playlist' ||
   'add_to_playlist' ||
   'remove_from_playlist' => KIcons.playlists,
-  'get_listening_stats' => KIcons.stats,
+  'get_listening_stats' || 'get_library_overview' => KIcons.stats,
   _ => KIcons.advanced,
 };
 

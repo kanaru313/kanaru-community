@@ -7573,6 +7573,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get aiChatToolSearchLibrary => 'Tìm trong thư viện';
 
   @override
+  String get aiChatToolGetLibraryOverview => 'Tổng quan thư viện';
+
+  @override
   String get aiChatToolGetTrackInfo => 'Thông tin bài';
 
   @override

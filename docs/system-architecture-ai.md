@@ -86,6 +86,7 @@ Flutter) with the adapters in `ai/data/tool_env_impl.dart`.
 | `get_now_playing` | `nowPlayingProvider` (`NowPlaying`: `trackId`, `playing`, `index`, `length`, `context`), `playbackPositionProvider` (`PlaybackPosition`), title and artist from `TrackLookup.visibleOf` | `playback/state/playback_providers.dart:72`, `playback/domain/now_playing.dart:7`, `playback/state/playback_position_provider.dart:8`, `library/domain/search/track_lookup.dart:12` |
 | `get_queue` | `queueViewProvider` (`QueueView.items`: `QueueItem.entryId`, `trackId`; `current`), titles from `visibleOf` | `playback/state/queue_view_provider.dart:7`, `playback/domain/playback_views.dart:34`, `playback/domain/queue_state.dart:8` |
 | `search_library` | `TrackSearch.searchTracks(query, offset:, limit:)` via `trackSearchProvider`; returns `({rows, total})` of `TrackHit` | `library/domain/search/track_search.dart:25`, `library/state/track_search_provider.dart:14` |
+| `get_library_overview` | `LibraryOverviewReader.read()` via `libraryOverviewReaderProvider`: one SQL round trip (visible songs, albums, artists as the Albums / Artists tabs group them, user playlists as `list_playlists` lists them without Favorites, `SUM(duration_ms)` of visible songs); result `{songs, albums, artists, playlists, totalDurationSec}` | `library/domain/overview/library_overview.dart`, `library/data/library_overview_query.dart`, `library/state/library_overview_provider.dart` |
 | `get_lyrics` | `localLyricsReadProvider(id).future`, then `storedTrackLyricsProvider(id)` (never starts a lookup); `LyricsShown.lyrics.lines` (`LyricLine`), `synced` | `lyrics/state/track_lyrics_providers.dart:43`, `lyrics/state/stored_track_lyrics_provider.dart:15`, `lyrics/domain/lyrics_status.dart:34`, `lyrics/domain/lyrics.dart:36,73` |
 | `get_track_info` | `TrackLookup.visibleOf` (visible ids), then `trackInfoProvider(id).future` for genre, language, duration, year (`TrackInfo`) | `library/domain/search/track_lookup.dart:12`, `playback/state/track_info_providers.dart:11`, `media/domain/track_info.dart:22` |
 | `get_listening_stats` | `HistoryStore.top(window:, limit:)` and `overview()` via `historyStoreProvider`; window from `MostPlayedRange.days(now)`; unavailable when `historyEnabledProvider` is false | `library/domain/history/history_store.dart:22,29`, `library/state/history/history_providers.dart:23`, `library/domain/history/history_ranges.dart:20,40`, `library/domain/history/history_models.dart:106,122`, `playback/state/playback_settings_providers.dart:17` |
@@ -157,6 +158,7 @@ Gaps the adapters work around (all inside `ai/data`):
   adds `truncated: true` and `nextOffset`; a row is never cut.
 - Read tools: `get_now_playing`, `get_queue` (window of 50 around the current
   entry unless `offset` is given; items carry the entry id), `search_library`,
+  `get_library_overview` (library totals, no parameters; group Library search),
   `get_lyrics` (stored or local lyrics only, no timestamps; the result stays
   within 16 KiB of UTF-8 bytes, cut at a line, with `offset` (line) and
   `nextOffset` to page), `get_track_info` (at most 50 ids, `offset` pages over
