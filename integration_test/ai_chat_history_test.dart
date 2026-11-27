@@ -41,7 +41,7 @@ void main() {
       historyConversation(3, 'Playlist chạy bộ', at: DateTime(2026, 11, 3, 8)),
     ];
 
-    perShell('list grouped; the new-conversation button is filled', (
+    perShell('list grouped; the new-conversation button is in the header', (
       tester,
       shell,
     ) async {
@@ -52,17 +52,28 @@ void main() {
       expect(find.text('Hôm nay'), findsOneWidget);
       expect(find.text('7 ngày qua'), findsOneWidget);
       expect(find.text('Cũ hơn'), findsOneWidget);
-      final button = find.byType(KListActionButton);
-      expect(button, findsOneWidget);
-      expect(
-        find.descendant(of: button, matching: find.text('Cuộc trò chuyện mới')),
-        findsOneWidget,
+      expect(find.byType(KListActionButton), findsNothing);
+      // Desktop names the shortcut in the tooltip, the phone does not.
+      final compose = byIconButton(
+        c.isPhone
+            ? 'Cuộc trò chuyện mới'
+            : 'Cuộc trò chuyện mới (Ctrl+Shift+O)',
       );
-      // Desktop shows the shortcut, the phone none.
-      expect(
-        find.descendant(of: button, matching: find.text('Ctrl+Shift+O')),
-        c.isPhone ? findsNothing : findsOneWidget,
-      );
+      expect(compose, findsOneWidget);
+      final screenWidth =
+          tester.view.physicalSize.width / tester.view.devicePixelRatio;
+      final composeRect = tester.getRect(compose);
+      expect(composeRect.left, greaterThanOrEqualTo(0));
+      expect(composeRect.right, lessThanOrEqualTo(screenWidth));
+      if (!c.isPhone) {
+        final close = find.byWidgetPredicate(
+          (w) => w is KIconButton && w.icon == KIcons.close,
+        );
+        expect(close, findsOneWidget);
+        final closeRect = tester.getRect(close);
+        expect(composeRect.right, lessThanOrEqualTo(closeRect.left));
+        expect(closeRect.right, lessThanOrEqualTo(screenWidth));
+      }
       await c.shot('20-history');
     });
 
@@ -93,11 +104,15 @@ void main() {
       final c = await openChat(tester, shell);
       c.container.read(fakeHistoryProvider.notifier).set(conversations);
       await c.openHistory();
-      bool onButton() =>
-          FocusManager.instance.primaryFocus?.context
-              ?.findAncestorWidgetOfExactType<KListActionButton>() !=
-          null;
-      for (var i = 0; i < 8 && !onButton(); i++) {
+      bool onButton() {
+        final button = FocusManager.instance.primaryFocus?.context
+            ?.findAncestorWidgetOfExactType<KIconButton>();
+        return button != null && button.icon == KIcons.compose;
+      }
+
+      // On the phone page the header comes after the autofocused list in
+      // traversal (search, rows and their menus first), so allow a long walk.
+      for (var i = 0; i < 40 && !onButton(); i++) {
         await tester.sendKeyEvent(LogicalKeyboardKey.tab);
         await tester.pump();
       }
@@ -110,7 +125,7 @@ void main() {
       expect(c.container.read(chatViewProvider).historyOpen, isFalse);
     });
 
-    perShell('P4: the button label is not clipped at 200 % text', (
+    perShell('P4: the header buttons and title do not overflow at 200 % text', (
       tester,
       shell,
     ) async {
@@ -118,18 +133,27 @@ void main() {
       final c = await openChat(tester, shell);
       c.container.read(fakeHistoryProvider.notifier).set(conversations);
       await c.openHistory();
-      final button = find.byType(KListActionButton);
-      final label = find.descendant(
-        of: button,
-        matching: find.text('Cuộc trò chuyện mới'),
+      final compose = byIconButton(
+        c.isPhone
+            ? 'Cuộc trò chuyện mới'
+            : 'Cuộc trò chuyện mới (Ctrl+Shift+O)',
       );
-      expect(label, findsOneWidget);
-      final b = tester.getRect(button);
-      final l = tester.getRect(label);
-      expect(l.left, greaterThanOrEqualTo(b.left));
-      expect(l.right, lessThanOrEqualTo(b.right));
-      expect(l.top, greaterThanOrEqualTo(b.top));
-      expect(l.bottom, lessThanOrEqualTo(b.bottom));
+      expect(compose, findsOneWidget);
+      final screenWidth =
+          tester.view.physicalSize.width / tester.view.devicePixelRatio;
+      final composeRect = tester.getRect(compose);
+      expect(composeRect.left, greaterThanOrEqualTo(0));
+      expect(composeRect.right, lessThanOrEqualTo(screenWidth));
+      if (!c.isPhone) {
+        final close = find.byWidgetPredicate(
+          (w) => w is KIconButton && w.icon == KIcons.close,
+        );
+        expect(close, findsOneWidget);
+        final closeRect = tester.getRect(close);
+        expect(composeRect.right, lessThanOrEqualTo(closeRect.left));
+        expect(closeRect.right, lessThanOrEqualTo(screenWidth));
+      }
+      expect(find.text('Lịch sử trò chuyện'), findsOneWidget);
       expect(tester.takeException(), isNull);
       await c.shot('23-history-text-200');
     });

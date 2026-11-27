@@ -17,14 +17,17 @@ import 'history_row.dart';
 const ValueKey<String> chatHistoryPageKey = ValueKey('chat history page');
 
 /// Head of the history page, in place of the chat's head: back to the open
-/// conversation, the title, and on the desktop panel ✕ ([onClose]).
+/// conversation, the title, the new-conversation button (it opens a new
+/// conversation, the open one when still empty, and leaves the history), and
+/// on the desktop panel ✕ ([onClose]) after it.
 class ChatHistoryHeader extends ConsumerWidget {
   const ChatHistoryHeader({super.key, required this.style, this.onClose});
 
   /// Text style of the title; the panel and the phone page differ.
   final TextStyle? style;
 
-  /// Closes the panel; null on the phone page, which has no ✕ here.
+  /// Closes the panel (✕); null on the phone page, which has no ✕ here. Its
+  /// presence also marks the desktop panel, which shows keyboard hints.
   final VoidCallback? onClose;
 
   @override
@@ -52,6 +55,16 @@ class ChatHistoryHeader extends ConsumerWidget {
                 style: style,
               ),
             ),
+            KIconButton(
+              icon: KIcons.compose,
+              tooltip: onClose != null
+                  ? '${l10n.aiChatNewTitle} (Ctrl+Shift+O)'
+                  : l10n.aiChatNewTitle,
+              semanticLabel: l10n.aiChatNewTitle,
+              onPressed: () => unawaited(
+                ref.read(chatViewProvider.notifier).startNewConversation(),
+              ),
+            ),
             if (onClose != null)
               KIconButton(
                 icon: KIcons.close,
@@ -65,9 +78,9 @@ class ChatHistoryHeader extends ConsumerWidget {
   }
 }
 
-/// The list of past conversations: search, a new conversation, then the
-/// conversations in groups (today, the past 7 days, older). Esc steps back to
-/// the open conversation; the page takes focus so Esc reaches it.
+/// The list of past conversations: search, then the conversations in groups
+/// (today, the past 7 days, older). Esc steps back to the open conversation;
+/// the page takes focus so Esc reaches it.
 class ChatHistoryPage extends ConsumerStatefulWidget {
   const ChatHistoryPage({super.key = chatHistoryPageKey});
 
@@ -144,7 +157,6 @@ class _ChatHistoryPageState extends ConsumerState<ChatHistoryPage>
           onChanged: ref.read(chatHistoryQueryProvider.notifier).set,
         ),
       ),
-      const _NewConversationRow(),
       if (sections != null && sections.isEmpty && query.isNotEmpty)
         Padding(
           padding: const EdgeInsets.all(KSpace.x6),
@@ -202,25 +214,6 @@ class _ChatHistoryPageState extends ConsumerState<ChatHistoryPage>
         HistoryGroup.week => l10n.aiChatHistoryWeek,
         HistoryGroup.older => l10n.aiChatHistoryOlder,
       };
-}
-
-/// [Cuộc trò chuyện mới]: opens a new conversation (the open one when it is
-/// still empty) and leaves the history for it.
-class _NewConversationRow extends ConsumerWidget {
-  const _NewConversationRow();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final desktop = FormFactor.of(context) == FormFactor.desktop;
-    return KListActionButton(
-      label: l10n.aiChatNewTitle,
-      icon: KIcons.compose,
-      shortcutHint: desktop ? 'Ctrl+Shift+O' : null,
-      onPressed: () =>
-          unawaited(ref.read(chatViewProvider.notifier).startNewConversation()),
-    );
-  }
 }
 
 class _GroupHeading extends StatelessWidget {

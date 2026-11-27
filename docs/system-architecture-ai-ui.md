@@ -161,9 +161,11 @@ list and from the empty search field (a search with text clears first).
   one in the same call; the history stays up on it. While it runs the row is
   disabled (dimmed, taps ignored).
 - **Open:** `ChatSessionController.open(id)` (stops a running turn, Q5), then
-  the history closes. [Cuộc trò chuyện mới] is `startNewConversation()`, drawn
-  as `KListActionButton` (`kanaru_ui`: 48 dp filled `primaryContainer`, inset 8,
-  icon + bold label; the `Ctrl+Shift+O` hint only on desktop).
+  the history closes. The new-conversation button is `startNewConversation()`, an
+  icon-only `KIconButton` (`compose`) in `ChatHistoryHeader`, at the end of the
+  title (before ✕ on the desktop panel); its tooltip adds `(Ctrl+Shift+O)` on
+  desktop only, its semantic label is always "Cuộc trò chuyện mới". The list
+  itself starts with the search field.
 - **Toast:** a delete that succeeded shows "Đã xoá cuộc trò chuyện"
   (`showAppSnackBarOn` on a messenger captured before the awaits); the same
   toast follows "Xoá cuộc trò chuyện này" of the ⋮ menu. A failed delete is only
