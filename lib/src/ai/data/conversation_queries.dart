@@ -5,11 +5,15 @@ import '../domain/conversation/parts.dart';
 import '../domain/conversation/parts_codec.dart';
 import 'conversation_rows.dart';
 
-/// Count and stored bytes (JSON columns and live text, in UTF-8 bytes).
+/// Count and stored bytes (JSON columns and live text, in UTF-8 bytes). Only
+/// conversations with at least one message count: the empty one the chat
+/// keeps open is not history. (Bytes live in messages, so they already agree.)
 Future<AiChatStats> readStats(AppDatabase db) async {
   final row = await db.customSelect('''
     SELECT
-      (SELECT COUNT(*) FROM ai_conversations) AS c,
+      (SELECT COUNT(*) FROM ai_conversations c
+       WHERE EXISTS (SELECT 1 FROM ai_messages m
+                     WHERE m.conversation_id = c.id)) AS c,
       (SELECT COALESCE(SUM(
         length(CAST(parts_json AS BLOB))
         + COALESCE(length(CAST(live_text AS BLOB)), 0)

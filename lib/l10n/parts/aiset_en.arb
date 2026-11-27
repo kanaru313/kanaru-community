@@ -14,7 +14,6 @@
   },
   "aiSetServiceLastUsed": "Last used",
   "aiSetServiceNeedsKey": "Needs API key",
-  "aiSetServiceNeedsModel": "No model chosen",
   "aiSetServiceNeedsConfig": "Needs setup: {fields}",
   "@aiSetServiceNeedsConfig": {
     "placeholders": {

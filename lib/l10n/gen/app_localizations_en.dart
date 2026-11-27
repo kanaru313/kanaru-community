@@ -7866,9 +7866,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiSetServiceNeedsKey => 'Needs API key';
 
   @override
-  String get aiSetServiceNeedsModel => 'No model chosen';
-
-  @override
   String aiSetServiceNeedsConfig(String fields) {
     return 'Needs setup: $fields';
   }

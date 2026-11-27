@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/ai/domain/output/chat_readiness.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru/src/ai/domain/settings/tool_groups.dart';
+import 'package:kanaru/src/ai/state/ai_settings_providers.dart';
 import 'package:kanaru/src/screens/plugins/store/store_page.dart';
 import 'package:kanaru/src/screens/settings/settings_routes.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -55,7 +57,7 @@ void main() {
     testWidgets('services list shows needs-key in error colour', (
       tester,
     ) async {
-      final h = await openAiSettings(
+      await openAiSettings(
         tester,
         services: [service('k', readiness: const ChatNeedsKey())],
       );
@@ -64,7 +66,6 @@ void main() {
         style?.color,
         Theme.of(tester.element(find.text('Needs API key'))).colorScheme.error,
       );
-      expect(h.container, isNotNull);
     });
 
     testWidgets('other needs are told in words, in error colour', (
@@ -80,7 +81,8 @@ void main() {
           ),
         ],
       );
-      expect(find.text('No model chosen'), findsOneWidget);
+      expect(find.text('Needs setup: Model'), findsOneWidget);
+      expect(find.textContaining('No model chosen'), findsNothing);
       expect(find.text('Needs setup: Endpoint, Region'), findsOneWidget);
     });
 
@@ -133,6 +135,41 @@ void main() {
         findsOneWidget,
       );
       expect(find.textContaining('last used'), findsNothing);
+    });
+
+    testWidgets('the fallback line names the plugin the engine picks', (
+      tester,
+    ) async {
+      final store = MemorySettingsStore();
+      await store.write('ai.last_plugin', 'gone');
+      await openAiSettings(
+        tester,
+        store: store,
+        removedNames: {'gone': 'Gemini'},
+        nextPlugin: 'y',
+        services: [
+          service('x', name: 'First'),
+          service('y', name: 'Second'),
+        ],
+      );
+      expect(find.textContaining('New chats use Second'), findsOneWidget);
+    });
+
+    testWidgets('no fallback line when the engine has no answer', (
+      tester,
+    ) async {
+      final store = MemorySettingsStore();
+      await store.write('ai.last_plugin', 'gone');
+      await openAiSettings(
+        tester,
+        store: store,
+        removedNames: {'gone': 'Gemini'},
+        services: [service('x')],
+        overrides: [
+          aiChatPluginProvider.overrideWith((ref) => const AsyncData(null)),
+        ],
+      );
+      expect(find.textContaining('was removed'), findsNothing);
     });
 
     testWidgets('an installed last-used plugin has no fallback line', (
@@ -230,6 +267,46 @@ void main() {
     });
   });
 
+  group('instructions limit', () {
+    testWidgets('an edit passing 2000 code points is rejected, not cut', (
+      tester,
+    ) async {
+      final h = await openAiSettings(tester);
+      final field = find.byType(TextField);
+      await tester.enterText(field, 'a' * 1999);
+      await tester.pump();
+      final controller = tester.widget<TextField>(field).controller!;
+      // One character of two code points in the middle: 2001 code points,
+      // 2000 characters (the field lets it in).
+      await tester.enterText(field, '${'a' * 1000}👍🏽${'a' * 999}');
+      await tester.pump();
+      expect(controller.text, 'a' * 1999);
+      expect(h.store.read('ai.instructions'), 'a' * 1999);
+    });
+
+    testWidgets('pasting over the limit into an empty field is rejected', (
+      tester,
+    ) async {
+      final h = await openAiSettings(tester);
+      final field = find.byType(TextField);
+      final controller = tester.widget<TextField>(field).controller!;
+      // 2001 code points in 2000 characters: the field lets it in.
+      await tester.enterText(field, '${'a' * 1000}👍🏽${'a' * 999}');
+      await tester.pump();
+      expect(controller.text, isEmpty);
+      expect(h.store.read('ai.instructions'), anyOf(isNull, isEmpty));
+    });
+
+    testWidgets('the field is named by the section title', (tester) async {
+      final handle = tester.ensureSemantics();
+      await openAiSettings(tester);
+      final node = tester.getSemantics(find.byType(TextField));
+      expect(node.label, contains('General instructions'));
+      expect(isSemantics(isTextField: true).matches(node, {}), isTrue);
+      handle.dispose();
+    });
+  });
+
   group('tools', () {
     testWidgets('each tool switch writes its own key', (tester) async {
       final handle = tester.ensureSemantics();
@@ -288,7 +365,13 @@ void main() {
       await store.write('playback.history_enabled', false);
       await openAiSettings(tester, store: store);
       const reason = 'Turn on “Record listening history” in Playback first';
+      // The desc line stays; the locked reason is added under it.
+      expect(find.text('History, most played'), findsOneWidget);
       expect(find.text(reason), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.text('History, most played')).dy,
+        lessThan(tester.getTopLeft(find.text(reason)).dy),
+      );
       await tester.tap(find.text('Listening stats'));
       await tester.pumpAndSettle();
       expect(store.read('ai.tools.listening_stats'), isNull);

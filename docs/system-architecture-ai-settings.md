@@ -26,18 +26,17 @@ l10n part (key prefix `aiSet`).
 |---|---|---|
 | Dịch vụ AI | `ai_services_section.dart` | `chatPluginsProvider` (installed ai-chat plugins with readiness and default model), `aiLastPluginProvider` ("dùng gần nhất"). A tap opens the plugin page; "Thêm dịch vụ AI" opens the store filtered to AI. |
 | Quyền | `ai_permission_section.dart` | `aiDefaultPermissionProvider` through `LyricsChoiceRow<AiPermission>`; choosing Tự động goes through `confirmAutoMode` as the picker's `confirm:`. |
-| Hướng dẫn chung | `ai_instructions_section.dart` | `aiInstructionsProvider` through `KTextFieldRow(maxLength: 2000)`. The setting counts code points: text over the limit (a multi-code-point character) is cut to it. |
+| Hướng dẫn chung | `ai_instructions_section.dart` | `aiInstructionsProvider` through `KTextFieldRow(maxLength: 2000)`. The setting counts code points while the field counts characters: an edit that would pass 2000 code points (a multi-code-point character) is rejected, the previous text and caret stay; the end is never cut. The field has the section title as its accessible name. |
 | Công cụ | `ai_tools_section.dart` | one `KSwitchRow` per `AiToolGroup` (`aiToolGroupProvider(group)`: one key each), "Thống kê nghe" locked while the history is off (`historyEnabledProvider`), `aiVarBypassProvider` (no dialog). |
 | Prompt mẫu | `ai_prompts_section.dart` | `aiPromptsProvider` through `ReorderableToggleList<int>` (value = index in the stored list); edits go through `promptTemplateOpsProvider` (`reorder`, `toggle`, `restoreDefaults`). Unreadable items and builtins without text stay in the list but are not shown, so a shown move is converted to list indices. A body with an unknown `{{variable}}` (`analyzeTemplate`) gets a "Biến lỗi" tag and the problem line replaces the body. Row tap and "Thêm prompt" show a "Sắp có" toast until the editor ships. "Khôi phục prompt mặc định" toasts how many builtins it added back. |
-| Lịch sử trò chuyện | `ai_history_section.dart` | `aiChatStatsProvider` (reading / failed with Thử lại / "N cuộc trò chuyện · X MB"); "Xoá" is off while reading and at 0, on when reading failed. It asks, then calls `ChatSessionController.deleteAll` (stops the turn, clears the run logs of the chat plugins). The box adds "Câu trả lời đang chạy sẽ dừng." only while the turn is `streaming` or `runningTools`. |
+| Lịch sử trò chuyện | `ai_history_section.dart` | `aiChatStatsProvider` (reading / failed with Thử lại / "N cuộc trò chuyện · X MB"); "Xoá" is off while reading, while a delete runs and at 0, on when reading failed (stats count only conversations with a message, so the empty one the chat reopens is not counted). It asks, then calls `ChatSessionController.deleteAll` (stops the turn, clears the run logs of the chat plugins). The box adds "Câu trả lời đang chạy sẽ dừng." only while the turn is `streaming` or `runningTools`. |
 | Hộp xác nhận | `ai_confirm_section.dart` | Added by the page only while `aiAutoAskProvider` is false; "Bật lại" writes true (the block goes away) and toasts. |
 
 Service line (`ChatReadiness`): ready = default model, plus " · dùng gần nhất"
-for the plugin in `ai.last_plugin`; needs a key / a model / other fields = a
-red line. A loading or failing plugin list shows no rows and no empty note.
+for the plugin in `ai.last_plugin`; needs a key = "Cần API key"; needs a model or other fields = "Cần cấu hình: <fields>" (a missing model reads as the model field); all red lines. A loading or failing plugin list shows no rows and no empty note.
 When the plugin used last was removed and others are installed, a line under
 the title says which one new chats use (`resolveChatPlugin`); the removed
-plugin's name comes from its tombstone row (`aiRemovedPluginNameProvider`).
+plugin's name comes from its tombstone row (`aiRemovedPluginNameProvider`, only when `removedAt` is set) and the plugin new chats use from the engine's `aiChatPluginProvider`.
 
 ## Shared "Bật Tự động?" box (`ai/ui/auto_mode_confirm.dart`)
 

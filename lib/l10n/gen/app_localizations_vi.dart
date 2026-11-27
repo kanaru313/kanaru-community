@@ -7331,11 +7331,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get aiSetServiceNeedsKey => 'Cần API key';
 
   @override
-  String get aiSetServiceNeedsModel => 'Chưa chọn model';
-
-  @override
   String aiSetServiceNeedsConfig(String fields) {
-    return 'Cần thiết lập: $fields';
+    return 'Cần cấu hình: $fields';
   }
 
   @override

@@ -14,8 +14,7 @@
   },
   "aiSetServiceLastUsed": "Dùng gần nhất",
   "aiSetServiceNeedsKey": "Cần API key",
-  "aiSetServiceNeedsModel": "Chưa chọn model",
-  "aiSetServiceNeedsConfig": "Cần thiết lập: {fields}",
+  "aiSetServiceNeedsConfig": "Cần cấu hình: {fields}",
   "@aiSetServiceNeedsConfig": {
     "placeholders": {
       "fields": {

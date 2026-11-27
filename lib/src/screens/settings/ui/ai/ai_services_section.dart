@@ -5,7 +5,6 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../../l10n/gen/app_localizations.dart';
 import '../../../../ai/domain/output/chat_readiness.dart';
-import '../../../../ai/domain/settings/chat_plugin_choice.dart';
 import '../../../../ai/state/ai_settings_providers.dart';
 import '../../../../ai/state/chat_providers.dart';
 import '../../../../ai/ui/ai_settings_link.dart';
@@ -13,11 +12,11 @@ import '../../../../plugins/state/plugin_store_providers.dart';
 import '../../../../plugins/state/store_ops.dart';
 
 /// The name a removed plugin was installed under (its tombstone row keeps
-/// it); null when the row is gone.
+/// it); null when the row is gone or still installed.
 final aiRemovedPluginNameProvider = FutureProvider.autoDispose
     .family<String?, String>((ref, installId) async {
       final row = await ref.watch(pluginRowsProvider).byId(installId);
-      return row?.name;
+      return row != null && row.removedAt != null ? row.name : null;
     });
 
 /// "Dịch vụ AI": the installed AI chat plugins, each with its default model
@@ -66,10 +65,10 @@ class AiServicesSection extends ConsumerWidget {
     String? lastUsed,
   ) {
     if (lastUsed == null || services.isEmpty) return null;
-    final ids = [for (final s in services) s.installId];
-    if (ids.contains(lastUsed)) return null;
+    // The engine's answer: the plugin new chats really use.
+    final nextId = ref.watch(aiChatPluginProvider).value;
+    if (nextId == null || nextId == lastUsed) return null;
     final removed = ref.watch(aiRemovedPluginNameProvider(lastUsed)).value;
-    final nextId = resolveChatPlugin(stored: lastUsed, installedIds: ids);
     final next = services.where((s) => s.installId == nextId).firstOrNull;
     if (removed == null || next == null) return null;
     return Text(l10n.aiSetServicesGone(removed, next.name));
@@ -113,7 +112,11 @@ class _ServiceRow extends ConsumerWidget {
     final model = service.defaultModel;
     return switch (service.readiness) {
       ChatNeedsKey() => (text: l10n.aiSetServiceNeedsKey, problem: true),
-      ChatNeedsModel() => (text: l10n.aiSetServiceNeedsModel, problem: true),
+      // No model chosen reads as the model field still to set up.
+      ChatNeedsModel() => (
+        text: l10n.aiSetServiceNeedsConfig(l10n.lyricsTranslateModelTitle),
+        problem: true,
+      ),
       ChatNeedsConfig(:final titles) => (
         text: l10n.aiSetServiceNeedsConfig(titles.join(', ')),
         problem: true,

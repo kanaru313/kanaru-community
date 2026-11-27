@@ -101,7 +101,13 @@ class _ToolRow extends ConsumerWidget {
       leading: Icon(icon),
       title: Text(title),
       subtitle: locked
-          ? Text(l10n.aiSetToolsStatsLocked)
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (desc != null) Text(desc),
+                Text(l10n.aiSetToolsStatsLocked),
+              ],
+            )
           : (desc == null ? null : Text(desc)),
       switchLabel: title,
       lockedLabel: locked ? l10n.aiSetToolsStatsLocked : null,

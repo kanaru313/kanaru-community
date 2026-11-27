@@ -11693,12 +11693,6 @@ abstract class AppLocalizations {
   /// **'Needs API key'**
   String get aiSetServiceNeedsKey;
 
-  /// No description provided for @aiSetServiceNeedsModel.
-  ///
-  /// In en, this message translates to:
-  /// **'No model chosen'**
-  String get aiSetServiceNeedsModel;
-
   /// No description provided for @aiSetServiceNeedsConfig.
   ///
   /// In en, this message translates to:

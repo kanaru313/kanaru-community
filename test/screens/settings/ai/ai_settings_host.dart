@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/ai/data/conversation_rows.dart' show AiChatStats;
 import 'package:kanaru/src/ai/domain/output/chat_readiness.dart';
+import 'package:kanaru/src/ai/domain/settings/chat_plugin_choice.dart';
+import 'package:kanaru/src/ai/state/ai_settings_providers.dart';
 import 'package:kanaru/src/ai/state/ai_chat_stats_provider.dart';
 import 'package:kanaru/src/ai/state/chat_providers.dart';
 import 'package:kanaru/src/plugins/domain/package/chat_spec.dart';
@@ -38,11 +40,14 @@ ChatPluginInfo service(
 
 /// Settings › AI chat over a plugin fixture: [services] is the list of
 /// installed AI chat plugins (`null` = still loading), [removedNames] the
-/// tombstone names by install id.
+/// tombstone names by install id. [nextPlugin] is what the engine's
+/// `aiChatPluginProvider` answers; by default it resolves the stored last
+/// plugin over [services], as the engine does.
 Future<SettingsHarness> openAiSettings(
   WidgetTester tester, {
   List<ChatPluginInfo>? services = const [],
   Map<String, String> removedNames = const {},
+  String? nextPlugin,
   MemorySettingsStore? store,
   Size size = const Size(400, 4000),
   String location = SettingsPaths.ai,
@@ -66,6 +71,18 @@ Future<SettingsHarness> openAiSettings(
       ...fixture.overrides,
       chatPluginsProvider.overrideWithValue(
         services == null ? const AsyncLoading() : AsyncData(services),
+      ),
+      aiChatPluginProvider.overrideWith(
+        (ref) => AsyncData(
+          nextPlugin ??
+              resolveChatPlugin(
+                stored: ref.watch(aiLastPluginProvider),
+                installedIds: [
+                  for (final s in services ?? const <ChatPluginInfo>[])
+                    s.installId,
+                ],
+              ),
+        ),
       ),
       aiRemovedPluginNameProvider.overrideWith(
         (ref, id) async => removedNames[id],

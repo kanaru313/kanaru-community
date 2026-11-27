@@ -20,11 +20,20 @@ class _FakeSession extends ChatSessionController {
   final TurnState _turn;
   int deleted = 0;
 
+  /// Set to hold the delete open, or to make it throw.
+  Completer<void>? gate;
+  Object? failWith;
+
   @override
   ChatSessionState build() => ChatSessionState(turnState: _turn);
 
   @override
-  Future<void> deleteAll() async => deleted++;
+  Future<void> deleteAll() async {
+    deleted++;
+    await gate?.future;
+    final error = failWith;
+    if (error != null) throw error;
+  }
 }
 
 Future<_FakeSession> _open(
@@ -68,15 +77,18 @@ void main() {
     expect(find.textContaining('in progress'), findsNothing);
   });
 
-  testWidgets('active turn adds the stop sentence', (tester) async {
-    await _open(tester, turn: TurnState.streaming);
-    await tester.tap(_clearButton);
-    await tester.pumpAndSettle();
-    expect(
-      find.textContaining('The answer in progress will stop.'),
-      findsOneWidget,
-    );
-  });
+  for (final turn in TurnState.values) {
+    final stops = turn == TurnState.streaming || turn == TurnState.runningTools;
+    testWidgets('stop sentence with turn ${turn.name}: $stops', (tester) async {
+      await _open(tester, turn: turn);
+      await tester.tap(_clearButton);
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('The answer in progress will stop.'),
+        stops ? findsOneWidget : findsNothing,
+      );
+    });
+  }
 
   testWidgets('confirm calls deleteAll', (tester) async {
     final session = await _open(tester);
@@ -86,6 +98,33 @@ void main() {
     await tester.tap(find.text('Delete all'));
     await tester.pumpAndSettle();
     expect(session.deleted, 1);
+    expect(find.text('All conversations deleted'), findsOneWidget);
+  });
+
+  testWidgets('a failing deleteAll shows no done toast', (tester) async {
+    final session = await _open(tester);
+    session.failWith = StateError('disk');
+    await tester.tap(_clearButton);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete all'));
+    await tester.pumpAndSettle();
+    expect(session.deleted, 1);
+    expect(find.text('All conversations deleted'), findsNothing);
+    // The button is usable again.
+    expect(tester.widget<TextButton>(_clearButton).onPressed, isNotNull);
+  });
+
+  testWidgets('the button is off while deleteAll runs', (tester) async {
+    final session = await _open(tester);
+    session.gate = Completer<void>();
+    await tester.tap(_clearButton);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Delete all'));
+    await tester.pump();
+    expect(tester.widget<TextButton>(_clearButton).onPressed, isNull);
+    session.gate!.complete();
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextButton>(_clearButton).onPressed, isNotNull);
     expect(find.text('All conversations deleted'), findsOneWidget);
   });
 
