@@ -9417,7 +9417,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiSetEdPreviewHint =>
-      'Filled with sample data (the song Lạc trôi), not the playing song. When you tap the chip, Kanaru fills in the real data when sending.';
+      'Filled with sample data (the song Blinding Lights), not the playing song. When you tap the chip, Kanaru fills in the real data when sending.';
 
   @override
   String get aiSetEdPreviewEmpty => 'Type the prompt above to preview it.';
@@ -9431,19 +9431,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get aiSetEdSampleNowPlaying => 'Lạc trôi · Sơn Tùng M-TP';
+  String get aiSetEdSampleNowPlaying => 'Blinding Lights · The Weeknd';
 
   @override
-  String get aiSetEdSampleTitle => 'Lạc trôi';
+  String get aiSetEdSampleTitle => 'Blinding Lights';
 
   @override
-  String get aiSetEdSampleArtist => 'Sơn Tùng M-TP';
+  String get aiSetEdSampleArtist => 'The Weeknd';
 
   @override
-  String get aiSetEdSampleAlbum => 'm-tp M-TP';
+  String get aiSetEdSampleAlbum => 'After Hours';
 
   @override
-  String get aiSetEdSampleLyrics => '‹lyrics of Lạc trôi · 42 lines›';
+  String get aiSetEdSampleLyrics => '‹lyrics of Blinding Lights · 42 lines›';
 
   @override
   String get aiSetEdSampleQueue => '‹queue · 12 songs›';

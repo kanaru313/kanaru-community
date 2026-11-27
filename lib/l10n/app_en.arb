@@ -7452,7 +7452,7 @@
     }
   },
   "aiSetEdPreviewTitle": "Preview",
-  "aiSetEdPreviewHint": "Filled with sample data (the song Lạc trôi), not the playing song. When you tap the chip, Kanaru fills in the real data when sending.",
+  "aiSetEdPreviewHint": "Filled with sample data (the song Blinding Lights), not the playing song. When you tap the chip, Kanaru fills in the real data when sending.",
   "aiSetEdPreviewEmpty": "Type the prompt above to preview it.",
   "aiSetEdPreviewUnknown": "No such variable",
   "aiSetEdPreviewOff": "{variable} · the “{group}” tool is off",
@@ -7466,11 +7466,11 @@
       }
     }
   },
-  "aiSetEdSampleNowPlaying": "Lạc trôi · Sơn Tùng M-TP",
-  "aiSetEdSampleTitle": "Lạc trôi",
-  "aiSetEdSampleArtist": "Sơn Tùng M-TP",
-  "aiSetEdSampleAlbum": "m-tp M-TP",
-  "aiSetEdSampleLyrics": "‹lyrics of Lạc trôi · 42 lines›",
+  "aiSetEdSampleNowPlaying": "Blinding Lights · The Weeknd",
+  "aiSetEdSampleTitle": "Blinding Lights",
+  "aiSetEdSampleArtist": "The Weeknd",
+  "aiSetEdSampleAlbum": "After Hours",
+  "aiSetEdSampleLyrics": "‹lyrics of Blinding Lights · 42 lines›",
   "aiSetEdSampleQueue": "‹queue · 12 songs›",
   "aiSetEdSampleInput": "‹what you type›",
   "aiSetEdDeleteRow": "Delete prompt",

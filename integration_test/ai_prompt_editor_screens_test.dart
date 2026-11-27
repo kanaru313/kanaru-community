@@ -114,7 +114,7 @@ void main() {
         await tester.pump();
         expect(find.text(_l.aiSetEdPreviewTitle), findsOneWidget);
         expect(
-          find.textContaining('Kể về Lạc trôi của Sơn Tùng M-TP'),
+          find.textContaining('Kể về Blinding Lights của The Weeknd'),
           findsOneWidget,
         );
         expect(find.textContaining(_l.aiSetEdSampleLyrics), findsOneWidget);

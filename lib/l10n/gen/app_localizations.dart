@@ -13952,7 +13952,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiSetEdPreviewHint.
   ///
   /// In en, this message translates to:
-  /// **'Filled with sample data (the song Lạc trôi), not the playing song. When you tap the chip, Kanaru fills in the real data when sending.'**
+  /// **'Filled with sample data (the song Blinding Lights), not the playing song. When you tap the chip, Kanaru fills in the real data when sending.'**
   String get aiSetEdPreviewHint;
 
   /// No description provided for @aiSetEdPreviewEmpty.
@@ -13976,31 +13976,31 @@ abstract class AppLocalizations {
   /// No description provided for @aiSetEdSampleNowPlaying.
   ///
   /// In en, this message translates to:
-  /// **'Lạc trôi · Sơn Tùng M-TP'**
+  /// **'Blinding Lights · The Weeknd'**
   String get aiSetEdSampleNowPlaying;
 
   /// No description provided for @aiSetEdSampleTitle.
   ///
   /// In en, this message translates to:
-  /// **'Lạc trôi'**
+  /// **'Blinding Lights'**
   String get aiSetEdSampleTitle;
 
   /// No description provided for @aiSetEdSampleArtist.
   ///
   /// In en, this message translates to:
-  /// **'Sơn Tùng M-TP'**
+  /// **'The Weeknd'**
   String get aiSetEdSampleArtist;
 
   /// No description provided for @aiSetEdSampleAlbum.
   ///
   /// In en, this message translates to:
-  /// **'m-tp M-TP'**
+  /// **'After Hours'**
   String get aiSetEdSampleAlbum;
 
   /// No description provided for @aiSetEdSampleLyrics.
   ///
   /// In en, this message translates to:
-  /// **'‹lyrics of Lạc trôi · 42 lines›'**
+  /// **'‹lyrics of Blinding Lights · 42 lines›'**
   String get aiSetEdSampleLyrics;
 
   /// No description provided for @aiSetEdSampleQueue.

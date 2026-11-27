@@ -8730,7 +8730,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get aiSetEdPreviewHint =>
-      'Điền bằng dữ liệu ví dụ (bài Lạc trôi), không phải bài đang phát. Khi bấm chip, Kanaru điền dữ liệu thật lúc gửi.';
+      'Điền bằng dữ liệu ví dụ (bài Blinding Lights), không phải bài đang phát. Khi bấm chip, Kanaru điền dữ liệu thật lúc gửi.';
 
   @override
   String get aiSetEdPreviewEmpty => 'Gõ prompt ở trên để xem trước.';
@@ -8744,19 +8744,19 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get aiSetEdSampleNowPlaying => 'Lạc trôi · Sơn Tùng M-TP';
+  String get aiSetEdSampleNowPlaying => 'Blinding Lights · The Weeknd';
 
   @override
-  String get aiSetEdSampleTitle => 'Lạc trôi';
+  String get aiSetEdSampleTitle => 'Blinding Lights';
 
   @override
-  String get aiSetEdSampleArtist => 'Sơn Tùng M-TP';
+  String get aiSetEdSampleArtist => 'The Weeknd';
 
   @override
-  String get aiSetEdSampleAlbum => 'm-tp M-TP';
+  String get aiSetEdSampleAlbum => 'After Hours';
 
   @override
-  String get aiSetEdSampleLyrics => '‹lời bài Lạc trôi · 42 dòng›';
+  String get aiSetEdSampleLyrics => '‹lời bài Blinding Lights · 42 dòng›';
 
   @override
   String get aiSetEdSampleQueue => '‹hàng đợi · 12 bài›';

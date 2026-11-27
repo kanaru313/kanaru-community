@@ -82,7 +82,7 @@ void main() {
     await _open(tester, SettingsPaths.aiPromptNew);
     await tester.enterText(_bodyField, 'Tell me about {{title}}');
     await tester.pump();
-    expect(find.textContaining('Tell me about Lạc trôi'), findsOneWidget);
+    expect(find.textContaining('Tell me about Blinding Lights'), findsOneWidget);
   });
 
   testWidgets('save writes the prompt and leaves with a toast', (tester) async {

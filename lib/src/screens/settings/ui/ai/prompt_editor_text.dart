@@ -4,7 +4,7 @@ import '../../../../ai/domain/variables/template_analysis.dart';
 import '../../../../ai/domain/variables/variable_catalog.dart';
 import 'ai_catalog_labels.dart';
 
-/// The sample value a variable shows in the preview (the song Lạc trôi, never
+/// The sample value a variable shows in the preview (the song Blinding Lights, never
 /// the playing song). Long data is a short tag, not pasted.
 String promptSampleText(AppLocalizations l10n, AiVariable variable) =>
     switch (variable) {
