@@ -1,0 +1,9 @@
+{
+  "url": "https://creatornode.audius.co/tracks/cidstream/baeaaaiqsedfbhhdbuzdxnxy5ahtcpsgx2w7qftsgathqxkah7ir7cskmudvfo?fixture=1",
+  "headers": {
+    "User-Agent": "Kanaru/0.1.0 (+https://github.com/hieu313/kanaru)"
+  },
+  "mimeType": "audio/mpeg",
+  "bitrate": 320000,
+  "expiresAtMs": 1795811749110
+}

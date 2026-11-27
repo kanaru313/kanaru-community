@@ -256,6 +256,16 @@ void main() {
       ..addFlushHook(b);
     expect(r.flushHooks, [a, b]);
   });
+
+  test('live flush hooks are kept apart from the flush hooks', () {
+    Future<void> a(ProviderContainer _) async {}
+    Future<void> b(ProviderContainer _) async {}
+    final r = ExtensionRegistry()
+      ..addFlushHook(a)
+      ..addLiveFlushHook(b);
+    expect(r.flushHooks, [a]);
+    expect(r.liveFlushHooks, [b]);
+  });
 }
 
 class _Granted implements LicenseService {

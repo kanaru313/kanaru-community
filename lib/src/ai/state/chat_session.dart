@@ -161,7 +161,7 @@ class ChatSessionController extends Notifier<ChatSessionState> {
       );
       if (prepared.failure != null) return prepared.failure!;
 
-      final first = await _store.latestSeq(id) == 0;
+      final first = !await _store.hasUserMessage(id);
       final start = await driver.send(prepared.parts);
       switch (start) {
         case DriverStarted(:final done, :final userMessageId):
@@ -182,6 +182,9 @@ class ChatSessionController extends Notifier<ChatSessionState> {
       }
     } on Object catch (e, s) {
       _log.warning('send failed: ${e.runtimeType}', e, s);
+      // The full text can hold chat text or request details: never printed
+      // in release (only the type is), kept for debug logs.
+      _log.fine('send failed, detail: $e', e, s);
       return const SendFailed();
     }
   }

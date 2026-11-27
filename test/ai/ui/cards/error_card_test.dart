@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/ai/domain/conversation/ai_message.dart';
+import 'package:kanaru/src/ai/domain/conversation/parts.dart';
 import 'package:kanaru/src/ai/domain/loop/driver_results.dart';
 import 'package:kanaru/src/ai/domain/output/ai_error_code.dart';
 import 'package:kanaru/src/ai/domain/output/chat_outcome.dart';
@@ -314,6 +315,25 @@ void main() {
       await tester.tap(find.text('Thử lại'));
       await settle(tester);
       expect(_retries(setup), 1);
+    });
+
+    testWidgets('the cut-off card does not point at text that is not there', (
+      tester,
+    ) async {
+      final row = AiMessage(
+        id: 2,
+        conversationId: 1,
+        seq: 2,
+        role: AiMessageRole.assistant,
+        parts: const [ErrorPart(code: 'cutOffByClose', kind: 'closed')],
+        state: AiMessageState.stopped,
+        createdAt: DateTime(2026, 11, 27, 14, 32),
+        installId: cardPluginId,
+      );
+      await pumpCard(tester, row, messages: [userRow(1), row]);
+      expect(find.textContaining('Phần đã nhận'), findsNothing);
+      expect(find.textContaining('chưa nhận được chữ nào'), findsOneWidget);
+      expect(find.text('Thử lại'), findsOneWidget);
     });
 
     testWidgets('Mở cài đặt plugin opens the plugin page', (tester) async {

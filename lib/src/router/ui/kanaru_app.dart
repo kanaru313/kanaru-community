@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:ui' show AppExitResponse;
 
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
@@ -72,15 +74,24 @@ class _KanaruAppState extends ConsumerState<KanaruApp>
   }
 
   void _onState(AppLifecycleState state) {
-    if (state == AppLifecycleState.hidden ||
-        state == AppLifecycleState.paused) {
-      final container = ProviderScope.containerOf(context, listen: false);
-      unawaited(
-        _flusher.flush(container).catchError((Object error, StackTrace stack) {
-          _log.warning('flush on pause failed', error, stack);
-        }),
-      );
+    final container = ProviderScope.containerOf(context, listen: false);
+    final Future<void> work;
+    switch (lifecycleFlush(
+      state,
+      android: defaultTargetPlatform == TargetPlatform.android,
+    )) {
+      case LifecycleFlush.none:
+        return;
+      case LifecycleFlush.live:
+        work = flushLive(container);
+      case LifecycleFlush.all:
+        work = _flusher.flush(container);
     }
+    unawaited(
+      work.catchError((Object error, StackTrace stack) {
+        _log.warning('flush on pause failed', error, stack);
+      }),
+    );
   }
 
   Future<AppExitResponse> _onExitRequested() async {

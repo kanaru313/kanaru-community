@@ -4,6 +4,8 @@ export '../../packages/kanaru_ui/test/support/finders.dart'
         bySemanticsSelected,
         byToggledState,
         byCheckState,
+        cappedBottomFade,
+        cappedTopFade,
         bySelected,
         byToggled,
         byEnabledState;

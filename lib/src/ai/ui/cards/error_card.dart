@@ -15,6 +15,7 @@ import '../../state/chat_session.dart';
 import '../../state/chat_view/card_view.dart';
 import '../../state/chat_view/chat_view_state.dart';
 import '../../state/chat_view/composer_inputs.dart';
+import '../../state/chat_view/message_view.dart';
 import '../../state/chat_view/time_format.dart';
 import '../../state/stored_error_card.dart';
 import '../chat_host.dart';
@@ -148,6 +149,7 @@ class _ErrorCardState extends ConsumerState<ErrorCard> {
         code: AiErrorCode.parse('ai:${part?.code ?? 'server'}').wire,
       ),
       countdown: counting,
+      hasText: displayText(message).isNotEmpty,
     );
     if (spec == null) return const SizedBox.shrink();
 

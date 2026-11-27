@@ -115,6 +115,9 @@ class _ComposerBoxState extends ConsumerState<_ComposerBox> {
       );
     } on Object catch (e, s) {
       _log.warning('send failed: ${e.runtimeType}', e, s);
+      // The full text can hold chat text or request details: never printed
+      // in release (only the type is), kept for debug logs.
+      _log.fine('send failed, detail: $e', e, s);
       notice.set(const NoticeSendFailed());
       return;
     }

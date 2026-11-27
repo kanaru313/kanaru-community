@@ -30,7 +30,11 @@ class ChatLine {
       kind == ChatLineKind.bullet || kind == ChatLineKind.ordered;
 }
 
-final _trackRe = RegExp(r'^\s*\[\[t:([^\]\s]{1,64})\]\]\s*$');
+// A track line may carry a list marker (`- `, `* `, `+ `, `1. `, `1) `): a
+// model often writes one citation per list item, and the row replaces the item.
+final _trackRe = RegExp(
+  r'^\s{0,3}(?:(?:[-*+]|\d{1,9}[.)])\s+)?\[\[t:([^\]\s]{1,64})\]\]\s*$',
+);
 final _bulletRe = RegExp(r'^\s{0,3}[-*+]\s+(.*)$');
 final _orderedRe = RegExp(r'^\s{0,3}(\d{1,9})[.)]\s+(.*)$');
 final _contRe = RegExp(r'^\s{2,}\S');
@@ -82,6 +86,7 @@ List<ChatBlock> assembleBlocks(List<ChatLine> lines) {
   final out = <ChatBlock>[];
   List<List<ChatSpan>>? para;
   List<List<ChatSpan>>? items;
+  List<String>? run;
   var ordered = false;
   var start = 1;
 
@@ -94,11 +99,25 @@ List<ChatBlock> assembleBlocks(List<ChatLine> lines) {
     items = null;
   }
 
+  // A run of song lines: a long one is a single block, a short one stays a
+  // block per line.
+  void flushRun() {
+    final ids = run;
+    if (ids == null) return;
+    if (ids.length > chatListMaxRows) {
+      out.add(ChatTrackList(ids));
+    } else {
+      out.addAll(ids.map(ChatTrack.new));
+    }
+    run = null;
+  }
+
   for (final line in lines) {
+    if (line.kind != ChatLineKind.track) flushRun();
     switch (line.kind) {
       case ChatLineKind.track:
         flush();
-        out.add(ChatTrack(line.id));
+        (run ??= []).add(line.id);
       case ChatLineKind.text:
         if (items != null) flush();
         (para ??= []).add(line.spans);
@@ -125,5 +144,6 @@ List<ChatBlock> assembleBlocks(List<ChatLine> lines) {
     }
   }
   flush();
+  flushRun();
   return out;
 }

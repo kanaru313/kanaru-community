@@ -1,6 +1,8 @@
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../l10n/gen/app_localizations.dart';
+import 'chat_row_extent.dart';
 import 'markdown/chat_markdown_model.dart';
 import 'track_row.dart';
 
@@ -30,8 +32,35 @@ class ChatBlockView extends StatelessWidget {
       ),
       ChatList() => _ListView(list: block as ChatList, style: style),
       ChatTrack(:final id) => ChatTrackRow(id: id, style: style),
+      ChatTrackList(:final ids) => _TrackBox(ids: ids, style: style),
     };
   }
+}
+
+/// A long run of song lines: a box eight rows tall with its own scroll, rows
+/// built as they come into view.
+class _TrackBox extends StatelessWidget {
+  const _TrackBox({required this.ids, required this.style});
+
+  final List<String> ids;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) => KCappedList(
+    itemCount: ids.length,
+    maxVisible: chatListMaxRows,
+    gap: chatListGap,
+    rowExtent: chatSongRowExtent(
+      context,
+      cover: chatTrackCover,
+      vertical: KSpace.x1 + 2,
+    ),
+    semanticLabel: AppLocalizations.of(context).aiChatCardTrackList(ids.length),
+    itemBuilder: (context, i) => Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: ChatTrackRow(id: ids[i], style: style),
+    ),
+  );
 }
 
 class _ListView extends StatelessWidget {

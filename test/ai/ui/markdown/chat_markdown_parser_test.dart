@@ -88,12 +88,12 @@ void main() {
       expect(parseBlocks('see [[t:12]] now'), [
         _para(['see [[t:12]] now']),
       ]);
-      expect(parseBlocks('- [[t:12]]'), [
+      expect(parseBlocks('- [[t:12]] extra'), [
         ChatList(
           ordered: false,
           start: 1,
           items: [
-            [const ChatText('[[t:12]]')],
+            [const ChatText('[[t:12]] extra')],
           ],
         ),
       ]);
@@ -102,6 +102,67 @@ void main() {
       ]);
       expect(parseBlocks('[[t:a b]]'), [
         _para(['[[t:a b]]']),
+      ]);
+    });
+
+    test('a list item that is only a track ref is a track row', () {
+      for (final line in [
+        '- [[t:853]]',
+        '* [[t:853]]',
+        '+ [[t:853]]',
+        '1. [[t:853]]',
+        '2) [[t:853]]',
+        '  - [[t:853]]  ',
+      ]) {
+        expect(parseBlocks(line), [const ChatTrack('853')], reason: line);
+      }
+      expect(parseBlocks('- [[t:1]]\n- [[t:2]]\n3. [[t:3]]'), [
+        const ChatTrack('1'),
+        const ChatTrack('2'),
+        const ChatTrack('3'),
+      ]);
+    });
+
+    test('more than eight song lines in a row are one list, eight are not', () {
+      String lines(int n) =>
+          [for (var i = 1; i <= n; i++) '[[t:$i]]'].join('\n');
+      expect(parseBlocks(lines(8)), [
+        for (var i = 1; i <= 8; i++) ChatTrack('$i'),
+      ]);
+      expect(parseBlocks(lines(9)), [
+        ChatTrackList([for (var i = 1; i <= 9; i++) '$i']),
+      ]);
+    });
+
+    test('a text line or a blank line splits song runs', () {
+      String run(int from, int n) =>
+          [for (var i = from; i < from + n; i++) '[[t:$i]]'].join('\n');
+      final blocks = parseBlocks(
+        '${run(1, 9)}\ntext\n${run(20, 9)}\n\n${run(40, 9)}',
+      );
+      expect(blocks.map((b) => b.runtimeType.toString()).toList(), [
+        'ChatTrackList',
+        'ChatParagraph',
+        'ChatTrackList',
+        'ChatTrackList',
+      ]);
+      expect((blocks[2] as ChatTrackList).ids.first, '20');
+      expect((blocks[3] as ChatTrackList).ids.first, '40');
+    });
+
+    test('a mixed list keeps its text items as bullets', () {
+      ChatList bullets(List<String> t) => ChatList(
+        ordered: false,
+        start: 1,
+        items: [
+          for (final s in t) [ChatText(s)],
+        ],
+      );
+      expect(parseBlocks('- intro\n- [[t:1]]\n- [[t:2]]\n- outro'), [
+        bullets(['intro']),
+        const ChatTrack('1'),
+        const ChatTrack('2'),
+        bullets(['outro']),
       ]);
     });
 

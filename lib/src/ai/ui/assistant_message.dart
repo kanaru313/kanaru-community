@@ -35,7 +35,7 @@ class AssistantMessage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final message = item.message;
     final streaming = message.state == AiMessageState.streaming;
-    final stored = messageText(message);
+    final stored = displayText(message);
     final String text;
     if (streaming) {
       text =

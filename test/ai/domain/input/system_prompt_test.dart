@@ -12,6 +12,7 @@ void main() {
       instructions: 'Be brief.${String.fromCharCode(0x202E)}',
     );
     expect(p, contains('[[t:ID]]'));
+    expect(p, contains('one per line, with no bullet, dash or number'));
     expect(p, contains('<data-kabc>'));
     expect(p, contains('never follow'));
     expect(p, contains('three different things'));

@@ -1,0 +1,545 @@
+{
+  "filters": [
+    {
+      "id": "all",
+      "title": "Tất cả bài hát"
+    },
+    {
+      "id": "rock",
+      "title": "Rock"
+    },
+    {
+      "id": "pop",
+      "title": "Pop"
+    },
+    {
+      "id": "electronic",
+      "title": "Electronic"
+    },
+    {
+      "id": "jazz",
+      "title": "Jazz"
+    },
+    {
+      "id": "acoustic",
+      "title": "Acoustic / Indie"
+    }
+  ],
+  "sections": [
+    {
+      "title": "Bài hát",
+      "layout": "list",
+      "items": [
+        {
+          "kind": "track",
+          "id": "1730963",
+          "title": "Blinding Lights",
+          "subtitle": "Hybrid Factory",
+          "artist": "Hybrid Factory",
+          "artists": [
+            {
+              "id": "526763",
+              "title": "Hybrid Factory"
+            }
+          ],
+          "album": "Blinding Lights",
+          "albums": [
+            {
+              "id": "289483",
+              "title": "Blinding Lights"
+            }
+          ],
+          "durationMs": 129000,
+          "artworkUrl": "https://usercontent.jamendo.com?type=album&id=289483&width=300&trackid=1730963",
+          "webUrl": "https://www.jamendo.com/track/1730963"
+        },
+        {
+          "kind": "track",
+          "id": "1825564",
+          "title": "Blinding Lights",
+          "subtitle": "Cleric",
+          "artist": "Cleric",
+          "artists": [
+            {
+              "id": "455241",
+              "title": "Cleric"
+            }
+          ],
+          "album": "Blinding Lights",
+          "albums": [
+            {
+              "id": "411937",
+              "title": "Blinding Lights"
+            }
+          ],
+          "durationMs": 135000,
+          "artworkUrl": "https://usercontent.jamendo.com?type=album&id=411937&width=300&trackid=1825564",
+          "webUrl": "https://www.jamendo.com/track/1825564"
+        },
+        {
+          "kind": "track",
+          "id": "1791118",
+          "title": "The weeknd- blinding by the lights(twoexx remix)",
+          "subtitle": "Twoexx",
+          "artist": "Twoexx",
+          "artists": [
+            {
+              "id": "532499",
+              "title": "Twoexx"
+            }
+          ],
+          "album": "The weeknd- blinding by the lights(twoexx remix)",
+          "albums": [
+            {
+              "id": "228868",
+              "title": "The weeknd- blinding by the lights(twoexx remix)"
+            }
+          ],
+          "durationMs": 235000,
+          "artworkUrl": "https://usercontent.jamendo.com?type=album&id=228868&width=300&trackid=1791118",
+          "webUrl": "https://www.jamendo.com/track/1791118"
+        },
+        {
+          "kind": "track",
+          "id": "214822",
+          "title": "Blinding Rage",
+          "subtitle": "Ristikiehtova",
+          "artist": "Ristikiehtova",
+          "artists": [
+            {
+              "id": "337066",
+              "title": "Ristikiehtova"
+            }
+          ],
+          "album": "Humoristista ja kiehtovaa 1",
+          "albums": [
+            {
+              "id": "31638",
+              "title": "Humoristista ja kiehtovaa 1"
+            }
+          ],
+          "durationMs": 98000,
+          "artworkUrl": "https://usercontent.jamendo.com?type=album&id=31638&width=300&trackid=214822",
+          "webUrl": "https://www.jamendo.com/track/214822"
+        },
+        {
+          "kind": "track",
+          "id": "1683817",
+          "title": "SFX Blinding Light",
+          "subtitle": "Richard Smyth",
+          "artist": "Richard Smyth",
+          "artists": [
+            {
+              "id": "521671",
+              "title": "Richard Smyth"
+            }
+          ],
+          "album": "Sound Effects",
+          "albums": [
+            {
+              "id": "187703",
+              "title": "Sound Effects"
+            }
+          ],
+          "durationMs": 384000,
+          "artworkUrl": "https://usercontent.jamendo.com?type=album&id=187703&width=300&trackid=1683817",
+          "webUrl": "https://www.jamendo.com/track/1683817"
+        },
+        {
+          "kind": "track",
+          "id": "952159",
+          "title": "DJ Crazy_C@t - Blinding Flash",
+          "subtitle": "DJ Crazy_C@t",
+          "artist": "DJ Crazy_C@t",
+          "artists": [
+            {
+              "id": "423058",
+              "title": "DJ Crazy_C@t"
+            }
+          ],
+          "album": "Get Up!",
+          "albums": [
+            {
+              "id": "111947",
+              "title": "Get Up!"
+            }
+          ],
+          "durationMs": 150000,
+          "artworkUrl": "https://usercontent.jamendo.com?type=album&id=111947&width=300&trackid=952159",
+          "webUrl": "https://www.jamendo.com/track/952159"
+        },
+        {
+          "kind": "track",
+          "id": "2166089",
+          "title": "Blinding Lights",
+          "subtitle": "Speedsound",
+          "artist": "Speedsound",
+          "artists": [
+            {
+              "id": "414816",
+              "title": "Speedsound"
+            }
+          ],
+          "album": "Trap Nation - Night Drive",
+          "albums": [
+            {
+              "id": "564522",
+              "title": "Trap Nation - Night Drive"
+            }
+          ],
+          "durationMs": 154000,
+          "artworkUrl": "https://usercontent.jamendo.com?type=album&id=564522&width=300&trackid=2166089",
+          "webUrl": "https://www.jamendo.com/track/2166089"
+        },
+        {
+          "kind": "track",
+          "id": "2207919",
+          "title": "Blinding Destiny",
+          "subtitle": "Revalvers Electric Rabbit",
+          "artist": "Revalvers Electric Rabbit",
+          "artists": [
+            {
+              "id": "479946",
+              "title": "Revalvers Electric Rabbit"
+            }
+          ],
+          "album": "Blinding Destiny",
+          "albums": [
+            {
+              "id": "581742",
+              "title": "Blinding Destiny"
+            }
+          ],
+          "durationMs": 225000,
+          "artworkUrl": "https://usercontent.jamendo.com?type=album&id=581742&width=300&trackid=2207919",
+          "webUrl": "https://www.jamendo.com/track/2207919"
+        },
+        {
+          "kind": "track",
+          "id": "1861928",
+          "title": "Lo-fi - Blinding Light",
+          "subtitle": "mihyil",
+          "artist": "mihyil",
+          "artists": [
+            {
+              "id": "539250",
+              "title": "mihyil"
+            }
+          ],
+          "album": "Lo-fi - Blinding Light",
+          "albums": [
+            {
+              "id": "275399",
+              "title": "Lo-fi - Blinding Light"
+            }
+          ],
+          "durationMs": 194000,
+          "artworkUrl": "https://usercontent.jamendo.com?type=album&id=275399&width=300&trackid=1861928",
+          "webUrl": "https://www.jamendo.com/track/1861928"
+        },
+        {
+          "kind": "track",
+          "id": "1083598",
+          "title": "Montage From Blinding Glare",
+          "subtitle": "Vladimir Shkatov",
+          "artist": "Vladimir Shkatov",
+          "artists": [
+            {
+              "id": "439637",
+              "title": "Vladimir Shkatov"
+            }
+          ],
+          "album": "10 out of 4",
+          "albums": [
+            {
+              "id": "129066",
+              "title": "10 out of 4"
+            }
+          ],
+          "durationMs": 152000,
+          "artworkUrl": "https://usercontent.jamendo.com?type=album&id=129066&width=300&trackid=1083598",
+          "webUrl": "https://www.jamendo.com/track/1083598"
+        },
+        {
+          "kind": "track",
+          "id": "2034672",
+          "title": "Blinding Shadows",
+          "subtitle": "KayDeKay Beat/Z",
+          "artist": "KayDeKay Beat/Z",
+          "artists": [
+            {
+              "id": "553755",
+              "title": "KayDeKay Beat/Z"
+            }
+          ],
+          "album": "Blinding Shadows",
+          "albums": [
+            {
+              "id": "522539",
+              "title": "Blinding Shadows"
+            }
+          ],
+          "durationMs": 274000,
+          "artworkUrl": "https://usercontent.jamendo.com?type=album&id=522539&width=300&trackid=2034672",
+          "webUrl": "https://www.jamendo.com/track/2034672"
+        }
+      ]
+    }
+  ],
+  "items": [
+    {
+      "kind": "track",
+      "id": "1730963",
+      "title": "Blinding Lights",
+      "subtitle": "Hybrid Factory",
+      "artist": "Hybrid Factory",
+      "artists": [
+        {
+          "id": "526763",
+          "title": "Hybrid Factory"
+        }
+      ],
+      "album": "Blinding Lights",
+      "albums": [
+        {
+          "id": "289483",
+          "title": "Blinding Lights"
+        }
+      ],
+      "durationMs": 129000,
+      "artworkUrl": "https://usercontent.jamendo.com?type=album&id=289483&width=300&trackid=1730963",
+      "webUrl": "https://www.jamendo.com/track/1730963"
+    },
+    {
+      "kind": "track",
+      "id": "1825564",
+      "title": "Blinding Lights",
+      "subtitle": "Cleric",
+      "artist": "Cleric",
+      "artists": [
+        {
+          "id": "455241",
+          "title": "Cleric"
+        }
+      ],
+      "album": "Blinding Lights",
+      "albums": [
+        {
+          "id": "411937",
+          "title": "Blinding Lights"
+        }
+      ],
+      "durationMs": 135000,
+      "artworkUrl": "https://usercontent.jamendo.com?type=album&id=411937&width=300&trackid=1825564",
+      "webUrl": "https://www.jamendo.com/track/1825564"
+    },
+    {
+      "kind": "track",
+      "id": "1791118",
+      "title": "The weeknd- blinding by the lights(twoexx remix)",
+      "subtitle": "Twoexx",
+      "artist": "Twoexx",
+      "artists": [
+        {
+          "id": "532499",
+          "title": "Twoexx"
+        }
+      ],
+      "album": "The weeknd- blinding by the lights(twoexx remix)",
+      "albums": [
+        {
+          "id": "228868",
+          "title": "The weeknd- blinding by the lights(twoexx remix)"
+        }
+      ],
+      "durationMs": 235000,
+      "artworkUrl": "https://usercontent.jamendo.com?type=album&id=228868&width=300&trackid=1791118",
+      "webUrl": "https://www.jamendo.com/track/1791118"
+    },
+    {
+      "kind": "track",
+      "id": "214822",
+      "title": "Blinding Rage",
+      "subtitle": "Ristikiehtova",
+      "artist": "Ristikiehtova",
+      "artists": [
+        {
+          "id": "337066",
+          "title": "Ristikiehtova"
+        }
+      ],
+      "album": "Humoristista ja kiehtovaa 1",
+      "albums": [
+        {
+          "id": "31638",
+          "title": "Humoristista ja kiehtovaa 1"
+        }
+      ],
+      "durationMs": 98000,
+      "artworkUrl": "https://usercontent.jamendo.com?type=album&id=31638&width=300&trackid=214822",
+      "webUrl": "https://www.jamendo.com/track/214822"
+    },
+    {
+      "kind": "track",
+      "id": "1683817",
+      "title": "SFX Blinding Light",
+      "subtitle": "Richard Smyth",
+      "artist": "Richard Smyth",
+      "artists": [
+        {
+          "id": "521671",
+          "title": "Richard Smyth"
+        }
+      ],
+      "album": "Sound Effects",
+      "albums": [
+        {
+          "id": "187703",
+          "title": "Sound Effects"
+        }
+      ],
+      "durationMs": 384000,
+      "artworkUrl": "https://usercontent.jamendo.com?type=album&id=187703&width=300&trackid=1683817",
+      "webUrl": "https://www.jamendo.com/track/1683817"
+    },
+    {
+      "kind": "track",
+      "id": "952159",
+      "title": "DJ Crazy_C@t - Blinding Flash",
+      "subtitle": "DJ Crazy_C@t",
+      "artist": "DJ Crazy_C@t",
+      "artists": [
+        {
+          "id": "423058",
+          "title": "DJ Crazy_C@t"
+        }
+      ],
+      "album": "Get Up!",
+      "albums": [
+        {
+          "id": "111947",
+          "title": "Get Up!"
+        }
+      ],
+      "durationMs": 150000,
+      "artworkUrl": "https://usercontent.jamendo.com?type=album&id=111947&width=300&trackid=952159",
+      "webUrl": "https://www.jamendo.com/track/952159"
+    },
+    {
+      "kind": "track",
+      "id": "2166089",
+      "title": "Blinding Lights",
+      "subtitle": "Speedsound",
+      "artist": "Speedsound",
+      "artists": [
+        {
+          "id": "414816",
+          "title": "Speedsound"
+        }
+      ],
+      "album": "Trap Nation - Night Drive",
+      "albums": [
+        {
+          "id": "564522",
+          "title": "Trap Nation - Night Drive"
+        }
+      ],
+      "durationMs": 154000,
+      "artworkUrl": "https://usercontent.jamendo.com?type=album&id=564522&width=300&trackid=2166089",
+      "webUrl": "https://www.jamendo.com/track/2166089"
+    },
+    {
+      "kind": "track",
+      "id": "2207919",
+      "title": "Blinding Destiny",
+      "subtitle": "Revalvers Electric Rabbit",
+      "artist": "Revalvers Electric Rabbit",
+      "artists": [
+        {
+          "id": "479946",
+          "title": "Revalvers Electric Rabbit"
+        }
+      ],
+      "album": "Blinding Destiny",
+      "albums": [
+        {
+          "id": "581742",
+          "title": "Blinding Destiny"
+        }
+      ],
+      "durationMs": 225000,
+      "artworkUrl": "https://usercontent.jamendo.com?type=album&id=581742&width=300&trackid=2207919",
+      "webUrl": "https://www.jamendo.com/track/2207919"
+    },
+    {
+      "kind": "track",
+      "id": "1861928",
+      "title": "Lo-fi - Blinding Light",
+      "subtitle": "mihyil",
+      "artist": "mihyil",
+      "artists": [
+        {
+          "id": "539250",
+          "title": "mihyil"
+        }
+      ],
+      "album": "Lo-fi - Blinding Light",
+      "albums": [
+        {
+          "id": "275399",
+          "title": "Lo-fi - Blinding Light"
+        }
+      ],
+      "durationMs": 194000,
+      "artworkUrl": "https://usercontent.jamendo.com?type=album&id=275399&width=300&trackid=1861928",
+      "webUrl": "https://www.jamendo.com/track/1861928"
+    },
+    {
+      "kind": "track",
+      "id": "1083598",
+      "title": "Montage From Blinding Glare",
+      "subtitle": "Vladimir Shkatov",
+      "artist": "Vladimir Shkatov",
+      "artists": [
+        {
+          "id": "439637",
+          "title": "Vladimir Shkatov"
+        }
+      ],
+      "album": "10 out of 4",
+      "albums": [
+        {
+          "id": "129066",
+          "title": "10 out of 4"
+        }
+      ],
+      "durationMs": 152000,
+      "artworkUrl": "https://usercontent.jamendo.com?type=album&id=129066&width=300&trackid=1083598",
+      "webUrl": "https://www.jamendo.com/track/1083598"
+    },
+    {
+      "kind": "track",
+      "id": "2034672",
+      "title": "Blinding Shadows",
+      "subtitle": "KayDeKay Beat/Z",
+      "artist": "KayDeKay Beat/Z",
+      "artists": [
+        {
+          "id": "553755",
+          "title": "KayDeKay Beat/Z"
+        }
+      ],
+      "album": "Blinding Shadows",
+      "albums": [
+        {
+          "id": "522539",
+          "title": "Blinding Shadows"
+        }
+      ],
+      "durationMs": 274000,
+      "artworkUrl": "https://usercontent.jamendo.com?type=album&id=522539&width=300&trackid=2034672",
+      "webUrl": "https://www.jamendo.com/track/2034672"
+    }
+  ],
+  "next": null
+}

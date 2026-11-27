@@ -6327,6 +6327,82 @@
   "@aiChatToolGetQueue": {
     "description": "Name of the get_queue tool on a tool card."
   },
+  "aiChatToolSummaryList": "{shown} / {total} songs",
+  "@aiChatToolSummaryList": {
+    "description": "Header of a tool card whose result is a list: rows shown out of the total.",
+    "placeholders": {
+      "shown": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "total": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "aiChatToolSummaryListMore": "{shown} / {total} songs · the AI can look further",
+  "@aiChatToolSummaryListMore": {
+    "description": "Same, when more rows exist than were returned.",
+    "placeholders": {
+      "shown": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "total": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "aiChatToolSummaryCount": "{n, plural, =1{1 song} other{{n} songs}}",
+  "@aiChatToolSummaryCount": {
+    "description": "Header of a tool card whose list result has no total.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "aiChatToolSummaryItems": "{shown} / {total} items",
+  "@aiChatToolSummaryItems": {
+    "description": "Header of a tool card whose list result is not songs (playlists, for one): rows shown out of the total.",
+    "placeholders": {
+      "shown": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "total": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "aiChatToolSummaryItemsMore": "{shown} / {total} items · the AI can look further",
+  "@aiChatToolSummaryItemsMore": {
+    "description": "Same, when more rows exist than were returned.",
+    "placeholders": {
+      "shown": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "total": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "aiChatToolSummaryItemsCount": "{n, plural, =1{1 item} other{{n} items}}",
+  "@aiChatToolSummaryItemsCount": {
+    "description": "Header of a tool card whose list result is not songs and has no total.",
+    "placeholders": {
+      "n": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
   "aiChatToolSearchLibrary": "Search the library",
   "@aiChatToolSearchLibrary": {
     "description": "Name of the search_library tool on a tool card."
@@ -7405,6 +7481,7 @@
   },
   "aiChatErrCutOffTitle": "The answer was cut off when Kanaru closed",
   "aiChatErrCutOffBody": "What was received stays above. Kanaru does not resend when it opens; tap Try again to let the AI go on.",
+  "aiChatErrCutOffBodyEmpty": "Nothing of the answer had arrived when Kanaru closed. Kanaru does not resend when it opens; tap Try again to let the AI answer.",
   "aiChatActionOpenPlugin": "Open plugin",
   "@aiChatActionOpenPlugin": {
     "description": "Button of the broken-plugin error card."

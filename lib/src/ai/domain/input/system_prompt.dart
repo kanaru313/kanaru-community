@@ -52,7 +52,8 @@ String buildChatSystemPrompt({
     'Never say a change was made before its tool result confirms it. If a '
         'tool fails, say so plainly.',
     'When you mention a track from the library, put a citation on its own '
-        'line as `[[t:ID]]`, only with ids that appeared in this '
+        'line as `[[t:ID]]`: one per line, with no bullet, dash or number '
+        'before it and no other text on that line, and only with ids that appeared in this '
         'conversation\'s tool results.',
     if (cut.isNotEmpty) 'The user\'s general instructions:\n$cut',
   ].join('\n\n');
