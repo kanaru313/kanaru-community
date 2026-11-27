@@ -14,7 +14,19 @@ TrackRow fakeTrack(int id, {String? title}) => TrackRow(
 /// Fakes for the tool ports: a small library where ids 1..[trackCount] are
 /// visible and every other id is absent.
 class FakeLibrary implements LibraryPort {
-  FakeLibrary({this.trackCount = 10, this.titles = const {}});
+  FakeLibrary({
+    this.trackCount = 10,
+    this.titles = const {},
+    this.totals = const LibraryTotals(
+      songs: 1284,
+      albums: 97,
+      artists: 210,
+      playlists: 5,
+      totalDurationMs: 312345678,
+    ),
+  });
+
+  final LibraryTotals totals;
 
   final int trackCount;
   final Map<int, String> titles;
@@ -49,6 +61,9 @@ class FakeLibrary implements LibraryPort {
     final all = [for (var i = 1; i <= trackCount; i++) _t(i)];
     return (rows: all.skip(offset).take(limit).toList(), total: all.length);
   }
+
+  @override
+  Future<LibraryTotals> overview() async => totals;
 
   @override
   Future<({List<TrackDetail> found, List<int> absent})> details(

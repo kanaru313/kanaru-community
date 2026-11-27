@@ -210,6 +210,10 @@
   "@aiChatToolSearchLibrary": {
     "description": "Name of the search_library tool on a tool card."
   },
+  "aiChatToolGetLibraryOverview": "Tổng quan thư viện",
+  "@aiChatToolGetLibraryOverview": {
+    "description": "Name of the get_library_overview tool on a tool card."
+  },
   "aiChatToolGetTrackInfo": "Thông tin bài",
   "@aiChatToolGetTrackInfo": {
     "description": "Name of the get_track_info tool on a tool card."

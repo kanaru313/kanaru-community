@@ -4,20 +4,23 @@ import '../settings/tool_groups.dart';
 import '../text/text_sanitizer.dart';
 import 'ai_tool.dart';
 import 'ai_tool_registry.dart';
+import 'library_overview_tool.dart';
 import 'lyrics_stats_tools.dart';
 import 'playlist_read_tools.dart';
 import 'tool_args.dart';
 import 'tool_env.dart';
 import 'tool_rows.dart';
 
+export 'library_overview_tool.dart';
 export 'lyrics_stats_tools.dart';
 export 'playlist_read_tools.dart';
 
-/// The eight read tools.
+/// The nine read tools.
 final AiToolProvider readToolProvider = BuiltinToolProvider(const [
   GetNowPlayingTool(),
   GetQueueTool(),
   SearchLibraryTool(),
+  GetLibraryOverviewTool(),
   GetLyricsTool(),
   GetTrackInfoTool(),
   GetListeningStatsTool(),

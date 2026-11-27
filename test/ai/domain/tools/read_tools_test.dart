@@ -24,6 +24,7 @@ void main() {
       'get_now_playing': AiToolGroup.nowPlaying,
       'get_queue': AiToolGroup.queue,
       'search_library': AiToolGroup.librarySearch,
+      'get_library_overview': AiToolGroup.librarySearch,
       'get_lyrics': AiToolGroup.lyrics,
       'get_track_info': AiToolGroup.trackInfo,
       'get_listening_stats': AiToolGroup.listeningStats,
@@ -51,6 +52,24 @@ void main() {
       expect((wire['description'] as String), isNotEmpty);
       expect((wire['parameters'] as Map)['type'], 'object');
     }
+  });
+
+  group('get_library_overview', () {
+    test('returns the totals, length in whole seconds', () async {
+      final r = _decode(await tool('get_library_overview').run({}, fakeEnv()));
+      expect(r, {
+        'songs': 1284,
+        'albums': 97,
+        'artists': 210,
+        'playlists': 5,
+        'totalDurationSec': 312345,
+      });
+    });
+
+    test('takes no parameters', () {
+      final schema = tool('get_library_overview').parameters;
+      expect(schema['properties'], isEmpty);
+    });
   });
 
   group('get_now_playing', () {

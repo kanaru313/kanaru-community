@@ -7,6 +7,7 @@ import 'package:kanaru/src/ai/domain/tools/ai_tool_registry.dart';
 import 'package:kanaru/src/ai/domain/tools/tool_env.dart';
 import 'package:kanaru/src/ai/domain/tools/write_tools.dart';
 import 'package:kanaru/src/database/database.dart';
+import 'package:kanaru/src/library/data/library_overview_query.dart';
 import 'package:kanaru/src/library/data/playlists/playlist_repository.dart';
 import 'package:kanaru/src/library/data/search/track_lookup_query.dart';
 import 'package:kanaru/src/library/data/search/track_search_query.dart';
@@ -39,6 +40,7 @@ void main() {
           trackSearch: TrackSearchQuery(db),
           trackLookup: lookup,
           trackInfo: (id) => watchTrackInfo(db, id).first,
+          overviewReader: LibraryOverviewQuery(db),
         ),
         playback: FakePlayback(),
         lyrics: FakeLyrics(const LyricsAbsent('none')),

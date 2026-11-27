@@ -41,6 +41,25 @@ class TrackDetail {
   final int? durationMs;
 }
 
+/// Totals of the visible library.
+class LibraryTotals {
+  const LibraryTotals({
+    required this.songs,
+    required this.albums,
+    required this.artists,
+    required this.playlists,
+    required this.totalDurationMs,
+  });
+
+  final int songs;
+  final int albums;
+  final int artists;
+
+  /// User playlists (Favorites, saved queues and mood playlists not counted).
+  final int playlists;
+  final int totalDurationMs;
+}
+
 /// Track lookups and search over the library.
 abstract interface class LibraryPort {
   /// Splits [ids] into visible tracks and absent ids, in input order, each id
@@ -57,6 +76,9 @@ abstract interface class LibraryPort {
   /// Detail of the visible tracks among [ids] (genre, language, duration) and
   /// the absent ids.
   Future<({List<TrackDetail> found, List<int> absent})> details(List<int> ids);
+
+  /// Totals of the whole visible library.
+  Future<LibraryTotals> overview();
 }
 
 /// What is loaded in the player.

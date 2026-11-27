@@ -13,20 +13,27 @@ class LibraryCounts {
   final int artists;
 }
 
-/// Counts the visible library: present tracks, distinct albums (album artist
-/// key and album title key both set) and distinct artists of those tracks.
-Future<LibraryCounts> countsForFinished(AppDatabase db) async {
+/// SQL select list (no `SELECT`, no trailing comma) of the visible library
+/// counts `tracks`, `albums` and `artists`: present tracks, distinct albums
+/// (album artist key and album title key both set; the Albums tab groups the
+/// same way) and distinct artists of those tracks (the Artists tab's rows).
+/// Shared by the scan summary and the library overview so both count alike.
+String visibleCountsSelect() {
   final visible = visibleTrackWhere('t');
+  return '(SELECT COUNT(*) FROM tracks t WHERE $visible) AS tracks, '
+      '(SELECT COUNT(*) FROM (SELECT DISTINCT t.album_artist_key, '
+      't.album_title_key FROM tracks t WHERE $visible '
+      'AND t.album_artist_key IS NOT NULL '
+      'AND t.album_title_key IS NOT NULL)) AS albums, '
+      '(SELECT COUNT(DISTINCT a.artist_key) FROM track_artists a '
+      'JOIN tracks t ON t.id = a.track_id WHERE $visible) AS artists';
+}
+
+/// Counts the visible library.
+Future<LibraryCounts> countsForFinished(AppDatabase db) async {
   final row = await db
       .customSelect(
-        'SELECT '
-        '(SELECT COUNT(*) FROM tracks t WHERE $visible) AS tracks, '
-        '(SELECT COUNT(*) FROM (SELECT DISTINCT t.album_artist_key, '
-        't.album_title_key FROM tracks t WHERE $visible '
-        'AND t.album_artist_key IS NOT NULL '
-        'AND t.album_title_key IS NOT NULL)) AS albums, '
-        '(SELECT COUNT(DISTINCT a.artist_key) FROM track_artists a '
-        'JOIN tracks t ON t.id = a.track_id WHERE $visible) AS artists',
+        'SELECT ${visibleCountsSelect()}',
         readsFrom: {db.tracks, db.trackArtists},
       )
       .getSingle();

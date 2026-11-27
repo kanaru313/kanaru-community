@@ -12081,6 +12081,12 @@ abstract class AppLocalizations {
   /// **'Search the library'**
   String get aiChatToolSearchLibrary;
 
+  /// Name of the get_library_overview tool on a tool card.
+  ///
+  /// In en, this message translates to:
+  /// **'Library overview'**
+  String get aiChatToolGetLibraryOverview;
+
   /// Name of the get_track_info tool on a tool card.
   ///
   /// In en, this message translates to:

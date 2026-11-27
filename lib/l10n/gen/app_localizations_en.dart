@@ -8110,6 +8110,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiChatToolSearchLibrary => 'Search the library';
 
   @override
+  String get aiChatToolGetLibraryOverview => 'Library overview';
+
+  @override
   String get aiChatToolGetTrackInfo => 'Song info';
 
   @override

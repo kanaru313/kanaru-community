@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../library/state/history/history_providers.dart';
+import '../../library/state/library_overview_provider.dart';
 import '../../library/state/playlists/playlist_providers.dart';
 import '../../library/state/track_search_provider.dart';
 import '../../lyrics/state/stored_track_lyrics_provider.dart';
@@ -37,6 +38,7 @@ ToolEnv buildToolEnv(Ref ref) {
       trackSearch: ref.read(trackSearchProvider),
       trackLookup: lookup,
       trackInfo: (id) => ref.read(trackInfoProvider(id).future),
+      overviewReader: ref.read(libraryOverviewReaderProvider),
     ),
     playback: PlaybackPortImpl(
       readNowPlaying: () => ref.read(nowPlayingProvider.future),

@@ -8,9 +8,11 @@ import 'package:kanaru/src/ai/domain/tools/read_tools.dart';
 import 'package:kanaru/src/ai/domain/tools/tool_env.dart';
 import 'package:kanaru/src/database/database.dart';
 import 'package:kanaru/src/library/data/history/history_repository.dart';
+import 'package:kanaru/src/library/data/library_overview_query.dart';
 import 'package:kanaru/src/library/data/playlists/playlist_repository.dart';
 import 'package:kanaru/src/library/data/search/track_lookup_query.dart';
 import 'package:kanaru/src/library/data/search/track_search_query.dart';
+import 'package:kanaru/src/library/domain/overview/library_overview.dart';
 import 'package:kanaru/src/library/domain/playlists/playlist_models.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
 import 'package:kanaru/src/playback/data/track_info_rows.dart';
@@ -18,6 +20,17 @@ import 'package:kanaru/src/playback/data/track_info_rows.dart';
 import '../../database/support/test_db.dart';
 import '../../library/search/search_test_support.dart';
 import '../domain/tools/fake_tool_env.dart';
+
+class _FixedOverview implements LibraryOverviewReader {
+  @override
+  Future<LibraryOverview> read() async => const LibraryOverview(
+    songs: 11,
+    albums: 22,
+    artists: 33,
+    playlists: 44,
+    totalDurationMs: 55000,
+  );
+}
 
 void main() {
   late AppDatabase db;
@@ -40,6 +53,7 @@ void main() {
         trackSearch: TrackSearchQuery(db),
         trackLookup: lookup,
         trackInfo: (id) => watchTrackInfo(db, id).first,
+        overviewReader: LibraryOverviewQuery(db),
       ),
       playback: FakePlayback(),
       lyrics: FakeLyrics(const LyricsAbsent('none')),
@@ -77,6 +91,21 @@ void main() {
     expect(o.isError, isFalse, reason: o.text);
     return jsonDecode(o.text) as Map<String, Object?>;
   }
+
+  test('LibraryPortImpl.overview maps every total to its own field', () async {
+    final port = LibraryPortImpl(
+      trackSearch: TrackSearchQuery(db),
+      trackLookup: TrackLookupQuery(db),
+      trackInfo: (id) => watchTrackInfo(db, id).first,
+      overviewReader: _FixedOverview(),
+    );
+    final t = await port.overview();
+    expect(t.songs, 11);
+    expect(t.albums, 22);
+    expect(t.artists, 33);
+    expect(t.playlists, 44);
+    expect(t.totalDurationMs, 55000);
+  });
 
   test('get_track_info of a hidden track returns not found', () async {
     final shown = await track('Shown', artist: 'Ann');
