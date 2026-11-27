@@ -4281,7 +4281,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsRootAiDesc.
   ///
   /// In en, this message translates to:
-  /// **'AI services, permissions, tools, skills, history'**
+  /// **'AI services, permissions, tools, prompts, history'**
   String get settingsRootAiDesc;
 
   /// No description provided for @settingsRootIntegrations.
@@ -11650,6 +11650,720 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'AI assistant'**
   String get aiChatPlayContextLabel;
+
+  /// No description provided for @aiSetServicesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI services'**
+  String get aiSetServicesTitle;
+
+  /// No description provided for @aiSetServicesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap a service to open its plugin settings (API key, default model). New chats use the service you picked last in the chat.'**
+  String get aiSetServicesHint;
+
+  /// No description provided for @aiSetServicesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No AI service installed. AI chat needs an AI plugin (for example Gemini or OpenAI-compatible) and your own API key.'**
+  String get aiSetServicesEmpty;
+
+  /// No description provided for @aiSetServiceAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add AI service'**
+  String get aiSetServiceAdd;
+
+  /// No description provided for @aiSetServiceModelLastUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'{model} · last used'**
+  String aiSetServiceModelLastUsed(String model);
+
+  /// No description provided for @aiSetServiceLastUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Last used'**
+  String get aiSetServiceLastUsed;
+
+  /// No description provided for @aiSetServiceNeedsKey.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs API key'**
+  String get aiSetServiceNeedsKey;
+
+  /// No description provided for @aiSetServiceNeedsConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs setup: {fields}'**
+  String aiSetServiceNeedsConfig(String fields);
+
+  /// No description provided for @aiSetServicesGone.
+  ///
+  /// In en, this message translates to:
+  /// **'The service you used last ({removed}) was removed. New chats use {next} until you pick another service in the chat.'**
+  String aiSetServicesGone(String removed, String next);
+
+  /// No description provided for @aiSetPermTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission'**
+  String get aiSetPermTitle;
+
+  /// No description provided for @aiSetPermRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Default permission for new chats'**
+  String get aiSetPermRow;
+
+  /// No description provided for @aiSetPermCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Each chat keeps its own permission and you can change it at once in the input box.'**
+  String get aiSetPermCaption;
+
+  /// No description provided for @aiSetPermReadOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Read only'**
+  String get aiSetPermReadOnly;
+
+  /// No description provided for @aiSetPermReadOnlyDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Reads and suggests, never changes data'**
+  String get aiSetPermReadOnlyDesc;
+
+  /// No description provided for @aiSetPermAsk.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask first'**
+  String get aiSetPermAsk;
+
+  /// No description provided for @aiSetPermAskDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Asks before changing anything · default'**
+  String get aiSetPermAskDesc;
+
+  /// No description provided for @aiSetPermAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get aiSetPermAuto;
+
+  /// No description provided for @aiSetPermAutoDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Makes changes without asking'**
+  String get aiSetPermAutoDesc;
+
+  /// No description provided for @aiSetInstructionsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'General instructions'**
+  String get aiSetInstructionsTitle;
+
+  /// No description provided for @aiSetInstructionsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent with every chat, to every AI service.'**
+  String get aiSetInstructionsHint;
+
+  /// No description provided for @aiSetInstructionsPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'For example: answer in English, keep it short'**
+  String get aiSetInstructionsPlaceholder;
+
+  /// No description provided for @aiSetToolsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tools'**
+  String get aiSetToolsTitle;
+
+  /// No description provided for @aiSetToolsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI fetches data through the tools that are on. With a tool off, it does not fetch that data by itself.'**
+  String get aiSetToolsHint;
+
+  /// No description provided for @aiSetToolsGroupRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Read'**
+  String get aiSetToolsGroupRead;
+
+  /// No description provided for @aiSetToolsGroupWrite.
+  ///
+  /// In en, this message translates to:
+  /// **'Changes · follow the chat permission'**
+  String get aiSetToolsGroupWrite;
+
+  /// No description provided for @aiSetToolsStatsLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on “Record listening history” in Playback first'**
+  String get aiSetToolsStatsLocked;
+
+  /// No description provided for @aiSetToolNowPlaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Now playing'**
+  String get aiSetToolNowPlaying;
+
+  /// No description provided for @aiSetToolNowPlayingDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Title, artist, album · variables {variables}'**
+  String aiSetToolNowPlayingDesc(String variables);
+
+  /// No description provided for @aiSetToolQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue'**
+  String get aiSetToolQueue;
+
+  /// No description provided for @aiSetToolQueueDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to 50 songs around the playing one · variable {variables}'**
+  String aiSetToolQueueDesc(String variables);
+
+  /// No description provided for @aiSetToolLibrarySearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search the library'**
+  String get aiSetToolLibrarySearch;
+
+  /// No description provided for @aiSetToolLibrarySearchDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to 50 results at a time, the AI can ask for more'**
+  String get aiSetToolLibrarySearchDesc;
+
+  /// No description provided for @aiSetToolLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics'**
+  String get aiSetToolLyrics;
+
+  /// No description provided for @aiSetToolLyricsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Plain text, no timestamps · variable {variables}'**
+  String aiSetToolLyricsDesc(String variables);
+
+  /// No description provided for @aiSetToolTrackInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Song info'**
+  String get aiSetToolTrackInfo;
+
+  /// No description provided for @aiSetToolTrackInfoDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Song tags, album, the selected songs · Album and N selected songs cards'**
+  String get aiSetToolTrackInfoDesc;
+
+  /// No description provided for @aiSetToolListeningStats.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening stats'**
+  String get aiSetToolListeningStats;
+
+  /// No description provided for @aiSetToolListeningStatsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'History, most played'**
+  String get aiSetToolListeningStatsDesc;
+
+  /// No description provided for @aiSetToolPlaylists.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist list'**
+  String get aiSetToolPlaylists;
+
+  /// No description provided for @aiSetToolPlaylistsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Names, song counts and the songs in each playlist'**
+  String get aiSetToolPlaylistsDesc;
+
+  /// No description provided for @aiSetToolPlayControl.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback control'**
+  String get aiSetToolPlayControl;
+
+  /// No description provided for @aiSetToolPlayControlDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Play a song'**
+  String get aiSetToolPlayControlDesc;
+
+  /// No description provided for @aiSetToolQueueEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit queue'**
+  String get aiSetToolQueueEdit;
+
+  /// No description provided for @aiSetToolQueueEditDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Add, remove'**
+  String get aiSetToolQueueEditDesc;
+
+  /// No description provided for @aiSetToolPlaylistCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create playlist'**
+  String get aiSetToolPlaylistCreate;
+
+  /// No description provided for @aiSetToolPlaylistEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit playlist'**
+  String get aiSetToolPlaylistEdit;
+
+  /// No description provided for @aiSetToolPlaylistEditDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Add, remove songs'**
+  String get aiSetToolPlaylistEditDesc;
+
+  /// No description provided for @aiSetVarBypassTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send variables even when a tool is off'**
+  String get aiSetVarBypassTitle;
+
+  /// No description provided for @aiSetVarBypassDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Variables and context cards you send yourself still insert data (lyrics, queue, now playing…) even if its tool is off. A tool that is off then only stops the AI from fetching the data by itself.'**
+  String get aiSetVarBypassDesc;
+
+  /// No description provided for @aiSetAutoTitleDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on Automatic for new chats?'**
+  String get aiSetAutoTitleDefault;
+
+  /// No description provided for @aiSetAutoTitleConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on Automatic for this chat?'**
+  String get aiSetAutoTitleConversation;
+
+  /// No description provided for @aiSetAutoBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI will create and edit playlists, edit the queue and control playback without asking again. Every change still shows as a “Done” card. There is no undo.'**
+  String get aiSetAutoBody;
+
+  /// No description provided for @aiSetAutoShowAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Show this again next time'**
+  String get aiSetAutoShowAgain;
+
+  /// No description provided for @aiSetAutoConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on Automatic'**
+  String get aiSetAutoConfirm;
+
+  /// No description provided for @aiSetAutoToastDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'New chats: Automatic'**
+  String get aiSetAutoToastDefault;
+
+  /// No description provided for @aiSetAutoToastConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'This chat: Automatic'**
+  String get aiSetAutoToastConversation;
+
+  /// No description provided for @aiSetAutoToastDefaultQuiet.
+  ///
+  /// In en, this message translates to:
+  /// **'New chats: Automatic · will not ask next time (turn it back on in the Confirmation box block)'**
+  String get aiSetAutoToastDefaultQuiet;
+
+  /// No description provided for @aiSetAutoToastConversationQuiet.
+  ///
+  /// In en, this message translates to:
+  /// **'This chat: Automatic · will not ask next time (turn it back on in Settings › AI chat)'**
+  String get aiSetAutoToastConversationQuiet;
+
+  /// No description provided for @aiSetTemplateExplainLyricsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Explain the lyrics'**
+  String get aiSetTemplateExplainLyricsLabel;
+
+  /// No description provided for @aiSetTemplateExplainLyricsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Explain the lyrics of {nowPlaying}: {lyrics}'**
+  String aiSetTemplateExplainLyricsBody(String lyrics, String nowPlaying);
+
+  /// No description provided for @aiSetTemplateSimilarSongsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Similar songs in my library'**
+  String get aiSetTemplateSimilarSongsLabel;
+
+  /// No description provided for @aiSetTemplateSimilarSongsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Find songs in my library like {nowPlaying}'**
+  String aiSetTemplateSimilarSongsBody(String nowPlaying);
+
+  /// No description provided for @aiSetTemplateMoodPlaylistLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist for a mood'**
+  String get aiSetTemplateMoodPlaylistLabel;
+
+  /// No description provided for @aiSetTemplateMoodPlaylistBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a playlist for this mood: {input}'**
+  String aiSetTemplateMoodPlaylistBody(String input);
+
+  /// No description provided for @aiSetTemplateSongStoryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'About this song'**
+  String get aiSetTemplateSongStoryLabel;
+
+  /// No description provided for @aiSetTemplateSongStoryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell me about {nowPlaying}'**
+  String aiSetTemplateSongStoryBody(String nowPlaying);
+
+  /// No description provided for @aiSetTemplateTranslateLyricsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate the lyrics'**
+  String get aiSetTemplateTranslateLyricsLabel;
+
+  /// No description provided for @aiSetTemplateTranslateLyricsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate the lyrics of {nowPlaying} into English: {lyrics}'**
+  String aiSetTemplateTranslateLyricsBody(String lyrics, String nowPlaying);
+
+  /// No description provided for @aiSetTemplateTasteSummaryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Summarise my listening'**
+  String get aiSetTemplateTasteSummaryLabel;
+
+  /// No description provided for @aiSetTemplateTasteSummaryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Summarise my listening habits this month'**
+  String get aiSetTemplateTasteSummaryBody;
+
+  /// No description provided for @aiSetVarNowPlaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Now playing: title and artist'**
+  String get aiSetVarNowPlaying;
+
+  /// No description provided for @aiSetVarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Title of the playing song'**
+  String get aiSetVarTitle;
+
+  /// No description provided for @aiSetVarArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Artist of the playing song'**
+  String get aiSetVarArtist;
+
+  /// No description provided for @aiSetVarAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Album of the playing song'**
+  String get aiSetVarAlbum;
+
+  /// No description provided for @aiSetVarLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics of the playing song, plain text'**
+  String get aiSetVarLyrics;
+
+  /// No description provided for @aiSetVarQueue.
+  ///
+  /// In en, this message translates to:
+  /// **'The queue, up to 50 songs around the playing one'**
+  String get aiSetVarQueue;
+
+  /// No description provided for @aiSetVarInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Where you type next: tapping the chip only fills the prompt into the box, with the cursor here'**
+  String get aiSetVarInput;
+
+  /// No description provided for @aiSetPromptsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompt templates'**
+  String get aiSetPromptsTitle;
+
+  /// No description provided for @aiSetPromptsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown as chips on the input, in this order. Tap a row to edit.'**
+  String get aiSetPromptsHint;
+
+  /// No description provided for @aiSetPromptDrag.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to reorder'**
+  String get aiSetPromptDrag;
+
+  /// No description provided for @aiSetPromptSwitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Show “{label}” on the input'**
+  String aiSetPromptSwitch(String label);
+
+  /// No description provided for @aiSetPromptTap.
+  ///
+  /// In en, this message translates to:
+  /// **'{label}, open to edit'**
+  String aiSetPromptTap(String label);
+
+  /// No description provided for @aiSetPromptBad.
+  ///
+  /// In en, this message translates to:
+  /// **'Broken variable'**
+  String get aiSetPromptBad;
+
+  /// No description provided for @aiSetPromptBadLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Variable {variable} no longer exists · tap to edit'**
+  String aiSetPromptBadLine(String variable);
+
+  /// No description provided for @aiSetPromptsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No prompts yet: the chat input has no prompt chips. Add a prompt, or restore the built-in ones.'**
+  String get aiSetPromptsEmpty;
+
+  /// No description provided for @aiSetPromptAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add prompt'**
+  String get aiSetPromptAdd;
+
+  /// No description provided for @aiSetPromptRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore default prompts'**
+  String get aiSetPromptRestore;
+
+  /// No description provided for @aiSetPromptRestoreDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Only adds back built-in prompts you deleted; edited and your own prompts stay'**
+  String get aiSetPromptRestoreDesc;
+
+  /// No description provided for @aiSetPromptRestored.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{Added back {count} built-in prompt} other{Added back {count} built-in prompts}}'**
+  String aiSetPromptRestored(int count);
+
+  /// No description provided for @aiSetPromptRestoredNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No built-in prompt was deleted'**
+  String get aiSetPromptRestoredNone;
+
+  /// No description provided for @aiSetHistTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat history'**
+  String get aiSetHistTitle;
+
+  /// No description provided for @aiSetHistLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading chat history…'**
+  String get aiSetHistLoading;
+
+  /// No description provided for @aiSetHistErrorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read chat history'**
+  String get aiSetHistErrorTitle;
+
+  /// No description provided for @aiSetHistErrorDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'The count and size are not available. Delete all still works.'**
+  String get aiSetHistErrorDesc;
+
+  /// No description provided for @aiSetHistRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get aiSetHistRetry;
+
+  /// No description provided for @aiSetHistCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} conversation · {size} MB} other{{count} conversations · {size} MB}}'**
+  String aiSetHistCount(int count, String size);
+
+  /// No description provided for @aiSetHistNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No conversations yet'**
+  String get aiSetHistNone;
+
+  /// No description provided for @aiSetHistWhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Stored on this device'**
+  String get aiSetHistWhere;
+
+  /// No description provided for @aiSetHistClearTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all conversations'**
+  String get aiSetHistClearTitle;
+
+  /// No description provided for @aiSetHistClearDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Prompt templates and settings stay. Cannot be undone'**
+  String get aiSetHistClearDesc;
+
+  /// No description provided for @aiSetHistClearButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get aiSetHistClearButton;
+
+  /// No description provided for @aiSetHistDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all conversations?'**
+  String get aiSetHistDialogTitle;
+
+  /// No description provided for @aiSetHistDialogWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} AI conversation} other{{count} AI conversations}}'**
+  String aiSetHistDialogWhat(int count);
+
+  /// No description provided for @aiSetHistDialogWhatAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Every AI conversation'**
+  String get aiSetHistDialogWhatAll;
+
+  /// No description provided for @aiSetHistDialogRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'{what} will be deleted from this device.'**
+  String aiSetHistDialogRemoved(String what);
+
+  /// No description provided for @aiSetHistDialogStop.
+  ///
+  /// In en, this message translates to:
+  /// **'The answer in progress will stop.'**
+  String get aiSetHistDialogStop;
+
+  /// No description provided for @aiSetHistDialogLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'The run logs of the AI services are deleted too. Prompt templates and settings stay.'**
+  String get aiSetHistDialogLogs;
+
+  /// No description provided for @aiSetHistDialogUndo.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot be undone.'**
+  String get aiSetHistDialogUndo;
+
+  /// No description provided for @aiSetHistDialogConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all'**
+  String get aiSetHistDialogConfirm;
+
+  /// No description provided for @aiSetHistCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'All conversations deleted'**
+  String get aiSetHistCleared;
+
+  /// No description provided for @aiSetConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmation box'**
+  String get aiSetConfirmTitle;
+
+  /// No description provided for @aiSetConfirmRow.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask before turning on Automatic'**
+  String get aiSetConfirmRow;
+
+  /// No description provided for @aiSetConfirmDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'You turned this box off in the chat: choosing Automatic turns it on at once, without asking. Turn it back on to be asked every time.'**
+  String get aiSetConfirmDesc;
+
+  /// No description provided for @aiSetConfirmOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on'**
+  String get aiSetConfirmOn;
+
+  /// No description provided for @aiSetConfirmToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Choosing Automatic in the chat will ask again'**
+  String get aiSetConfirmToast;
+
+  /// No description provided for @aiSetPluginUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Use in AI chat'**
+  String get aiSetPluginUse;
+
+  /// No description provided for @aiSetPluginUseDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick it in the chat input; new chats use the service picked last.'**
+  String get aiSetPluginUseDesc;
+
+  /// No description provided for @aiSetPluginUseAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Change in Settings › AI chat'**
+  String get aiSetPluginUseAt;
+
+  /// No description provided for @aiSetRemoveKeepChats.
+  ///
+  /// In en, this message translates to:
+  /// **'Chats that used this plugin (readable; pick another plugin to continue)'**
+  String get aiSetRemoveKeepChats;
 }
 
 class _AppLocalizationsDelegate

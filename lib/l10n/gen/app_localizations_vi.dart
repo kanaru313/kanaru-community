@@ -2617,7 +2617,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsRootAi => 'Trò chuyện AI';
 
   @override
-  String get settingsRootAiDesc => 'Dịch vụ AI, quyền, công cụ, skill, lịch sử';
+  String get settingsRootAiDesc =>
+      'Dịch vụ AI, quyền, công cụ, prompt, lịch sử';
 
   @override
   String get settingsRootIntegrations => 'Tích hợp';
@@ -7303,4 +7304,438 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get aiChatPlayContextLabel => 'Trợ lý AI';
+
+  @override
+  String get aiSetServicesTitle => 'Dịch vụ AI';
+
+  @override
+  String get aiSetServicesHint =>
+      'Bấm một dịch vụ để mở cài đặt của plugin (API key, model mặc định). Cuộc mới dùng dịch vụ bạn chọn gần nhất trong chat.';
+
+  @override
+  String get aiSetServicesEmpty =>
+      'Chưa cài dịch vụ AI nào. Trò chuyện AI cần một plugin AI (vd. Gemini, OpenAI-compatible) và API key của bạn.';
+
+  @override
+  String get aiSetServiceAdd => 'Thêm dịch vụ AI';
+
+  @override
+  String aiSetServiceModelLastUsed(String model) {
+    return '$model · dùng gần nhất';
+  }
+
+  @override
+  String get aiSetServiceLastUsed => 'Dùng gần nhất';
+
+  @override
+  String get aiSetServiceNeedsKey => 'Cần API key';
+
+  @override
+  String aiSetServiceNeedsConfig(String fields) {
+    return 'Cần cấu hình: $fields';
+  }
+
+  @override
+  String aiSetServicesGone(String removed, String next) {
+    return 'Dịch vụ bạn dùng gần nhất ($removed) đã bị gỡ. Cuộc mới dùng $next tới khi bạn chọn dịch vụ khác trong chat.';
+  }
+
+  @override
+  String get aiSetPermTitle => 'Quyền';
+
+  @override
+  String get aiSetPermRow => 'Quyền mặc định cho cuộc mới';
+
+  @override
+  String get aiSetPermCaption =>
+      'Mỗi cuộc trò chuyện giữ quyền riêng và đổi được ngay ở ô nhập.';
+
+  @override
+  String get aiSetPermReadOnly => 'Chỉ đọc';
+
+  @override
+  String get aiSetPermReadOnlyDesc =>
+      'Chỉ đọc và gợi ý, không bao giờ thay đổi dữ liệu';
+
+  @override
+  String get aiSetPermAsk => 'Hỏi trước';
+
+  @override
+  String get aiSetPermAskDesc =>
+      'Hỏi trước khi thay đổi bất cứ điều gì · mặc định';
+
+  @override
+  String get aiSetPermAuto => 'Tự động';
+
+  @override
+  String get aiSetPermAutoDesc => 'Thực hiện thay đổi mà không cần hỏi';
+
+  @override
+  String get aiSetInstructionsTitle => 'Hướng dẫn chung';
+
+  @override
+  String get aiSetInstructionsHint =>
+      'Gửi kèm mọi cuộc trò chuyện, cho mọi dịch vụ AI.';
+
+  @override
+  String get aiSetInstructionsPlaceholder =>
+      'Ví dụ: trả lời bằng tiếng Việt, ngắn gọn';
+
+  @override
+  String get aiSetToolsTitle => 'Công cụ';
+
+  @override
+  String get aiSetToolsHint =>
+      'AI tự lấy dữ liệu qua các công cụ đang bật. Công cụ tắt thì AI không tự lấy dữ liệu đó.';
+
+  @override
+  String get aiSetToolsGroupRead => 'Đọc';
+
+  @override
+  String get aiSetToolsGroupWrite => 'Thay đổi · theo quyền của cuộc';
+
+  @override
+  String get aiSetToolsStatsLocked =>
+      'Cần bật “Ghi lịch sử nghe” trong Phát nhạc';
+
+  @override
+  String get aiSetToolNowPlaying => 'Bài đang phát';
+
+  @override
+  String aiSetToolNowPlayingDesc(String variables) {
+    return 'Tên, nghệ sĩ, album · biến $variables';
+  }
+
+  @override
+  String get aiSetToolQueue => 'Hàng đợi';
+
+  @override
+  String aiSetToolQueueDesc(String variables) {
+    return 'Tối đa 50 bài quanh bài đang phát · biến $variables';
+  }
+
+  @override
+  String get aiSetToolLibrarySearch => 'Tìm trong thư viện';
+
+  @override
+  String get aiSetToolLibrarySearchDesc =>
+      'Tối đa 50 kết quả mỗi lần, AI xem tiếp được';
+
+  @override
+  String get aiSetToolLyrics => 'Lời bài hát';
+
+  @override
+  String aiSetToolLyricsDesc(String variables) {
+    return 'Chữ trơn, bỏ thời gian · biến $variables';
+  }
+
+  @override
+  String get aiSetToolTrackInfo => 'Thông tin bài';
+
+  @override
+  String get aiSetToolTrackInfoDesc =>
+      'Tag của bài, album, các bài đã chọn · thẻ Album, N bài đã chọn';
+
+  @override
+  String get aiSetToolListeningStats => 'Thống kê nghe';
+
+  @override
+  String get aiSetToolListeningStatsDesc => 'Lịch sử, phát nhiều nhất';
+
+  @override
+  String get aiSetToolPlaylists => 'Danh sách playlist';
+
+  @override
+  String get aiSetToolPlaylistsDesc => 'Tên, số bài và các bài trong playlist';
+
+  @override
+  String get aiSetToolPlayControl => 'Điều khiển phát';
+
+  @override
+  String get aiSetToolPlayControlDesc => 'Phát bài';
+
+  @override
+  String get aiSetToolQueueEdit => 'Sửa hàng đợi';
+
+  @override
+  String get aiSetToolQueueEditDesc => 'Thêm, bỏ';
+
+  @override
+  String get aiSetToolPlaylistCreate => 'Tạo playlist';
+
+  @override
+  String get aiSetToolPlaylistEdit => 'Sửa playlist';
+
+  @override
+  String get aiSetToolPlaylistEditDesc => 'Thêm, bỏ bài';
+
+  @override
+  String get aiSetVarBypassTitle => 'Biến vẫn gửi khi công cụ tắt';
+
+  @override
+  String get aiSetVarBypassDesc =>
+      'Biến và thẻ ngữ cảnh bạn chủ động gửi vẫn chèn dữ liệu (lời bài, hàng đợi, bài đang phát…) dù công cụ của nó đã tắt. Công cụ tắt khi đó chỉ chặn AI tự lấy dữ liệu.';
+
+  @override
+  String get aiSetAutoTitleDefault => 'Bật Tự động cho cuộc mới?';
+
+  @override
+  String get aiSetAutoTitleConversation => 'Bật Tự động cho cuộc này?';
+
+  @override
+  String get aiSetAutoBody =>
+      'AI sẽ tạo, sửa playlist, sửa hàng đợi và điều khiển phát mà không hỏi lại. Mỗi thay đổi vẫn hiện thành thẻ “Đã làm”. Không có hoàn tác.';
+
+  @override
+  String get aiSetAutoShowAgain => 'Hiện lại lần sau';
+
+  @override
+  String get aiSetAutoConfirm => 'Bật Tự động';
+
+  @override
+  String get aiSetAutoToastDefault => 'Cuộc mới: Tự động';
+
+  @override
+  String get aiSetAutoToastConversation => 'Cuộc này: Tự động';
+
+  @override
+  String get aiSetAutoToastDefaultQuiet =>
+      'Cuộc mới: Tự động · lần sau không hỏi (bật lại ở khối Hộp xác nhận)';
+
+  @override
+  String get aiSetAutoToastConversationQuiet =>
+      'Cuộc này: Tự động · lần sau không hỏi (bật lại trong Cài đặt › Trò chuyện AI)';
+
+  @override
+  String get aiSetTemplateExplainLyricsLabel => 'Giải nghĩa lời';
+
+  @override
+  String aiSetTemplateExplainLyricsBody(String lyrics, String nowPlaying) {
+    return 'Giải nghĩa lời bài $nowPlaying: $lyrics';
+  }
+
+  @override
+  String get aiSetTemplateSimilarSongsLabel => 'Bài tương tự trong thư viện';
+
+  @override
+  String aiSetTemplateSimilarSongsBody(String nowPlaying) {
+    return 'Tìm trong thư viện các bài giống $nowPlaying';
+  }
+
+  @override
+  String get aiSetTemplateMoodPlaylistLabel => 'Playlist theo mood';
+
+  @override
+  String aiSetTemplateMoodPlaylistBody(String input) {
+    return 'Tạo playlist cho tâm trạng: $input';
+  }
+
+  @override
+  String get aiSetTemplateSongStoryLabel => 'Về bài này';
+
+  @override
+  String aiSetTemplateSongStoryBody(String nowPlaying) {
+    return 'Kể cho mình về bài $nowPlaying';
+  }
+
+  @override
+  String get aiSetTemplateTranslateLyricsLabel => 'Dịch lời';
+
+  @override
+  String aiSetTemplateTranslateLyricsBody(String lyrics, String nowPlaying) {
+    return 'Dịch lời bài $nowPlaying sang tiếng Việt: $lyrics';
+  }
+
+  @override
+  String get aiSetTemplateTasteSummaryLabel => 'Tóm tắt thói quen nghe';
+
+  @override
+  String get aiSetTemplateTasteSummaryBody =>
+      'Tóm tắt thói quen nghe nhạc của mình tháng này';
+
+  @override
+  String get aiSetVarNowPlaying => 'Bài đang phát: tên và nghệ sĩ';
+
+  @override
+  String get aiSetVarTitle => 'Tên bài đang phát';
+
+  @override
+  String get aiSetVarArtist => 'Nghệ sĩ của bài đang phát';
+
+  @override
+  String get aiSetVarAlbum => 'Album của bài đang phát';
+
+  @override
+  String get aiSetVarLyrics => 'Lời bài đang phát, chữ trơn';
+
+  @override
+  String get aiSetVarQueue => 'Hàng đợi, tối đa 50 bài quanh bài đang phát';
+
+  @override
+  String get aiSetVarInput =>
+      'Chỗ bạn gõ tiếp: bấm chip chỉ điền prompt vào ô, con trỏ ở đây';
+
+  @override
+  String get aiSetPromptsTitle => 'Prompt mẫu';
+
+  @override
+  String get aiSetPromptsHint =>
+      'Hiện thành chip trên ô nhập, theo thứ tự này. Bấm một dòng để sửa.';
+
+  @override
+  String get aiSetPromptDrag => 'Kéo để sắp xếp';
+
+  @override
+  String aiSetPromptSwitch(String label) {
+    return 'Hiện “$label” trên ô nhập';
+  }
+
+  @override
+  String aiSetPromptTap(String label) {
+    return '$label, bấm để sửa';
+  }
+
+  @override
+  String get aiSetPromptBad => 'Biến lỗi';
+
+  @override
+  String aiSetPromptBadLine(String variable) {
+    return 'Biến $variable không còn tồn tại · bấm để sửa';
+  }
+
+  @override
+  String get aiSetPromptsEmpty =>
+      'Chưa có prompt nào: ô nhập chat không có chip prompt. Thêm prompt, hoặc khôi phục các prompt có sẵn.';
+
+  @override
+  String get aiSetPromptAdd => 'Thêm prompt';
+
+  @override
+  String get aiSetPromptRestore => 'Khôi phục prompt mặc định';
+
+  @override
+  String get aiSetPromptRestoreDesc =>
+      'Chỉ thêm lại prompt có sẵn đã xoá; prompt đã sửa và của bạn giữ nguyên';
+
+  @override
+  String aiSetPromptRestored(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Đã thêm lại $count prompt có sẵn',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get aiSetPromptRestoredNone => 'Không có prompt có sẵn nào bị xoá';
+
+  @override
+  String get aiSetHistTitle => 'Lịch sử trò chuyện';
+
+  @override
+  String get aiSetHistLoading => 'Đang đọc lịch sử trò chuyện…';
+
+  @override
+  String get aiSetHistErrorTitle => 'Không đọc được lịch sử trò chuyện';
+
+  @override
+  String get aiSetHistErrorDesc =>
+      'Số cuộc và dung lượng chưa có. Xoá tất cả vẫn dùng được.';
+
+  @override
+  String get aiSetHistRetry => 'Thử lại';
+
+  @override
+  String aiSetHistCount(int count, String size) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count cuộc trò chuyện · $size MB',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get aiSetHistNone => 'Chưa có cuộc trò chuyện nào';
+
+  @override
+  String get aiSetHistWhere => 'Lưu trên máy này';
+
+  @override
+  String get aiSetHistClearTitle => 'Xoá tất cả cuộc trò chuyện';
+
+  @override
+  String get aiSetHistClearDesc =>
+      'Prompt mẫu và cài đặt giữ nguyên. Không hoàn tác được';
+
+  @override
+  String get aiSetHistClearButton => 'Xoá';
+
+  @override
+  String get aiSetHistDialogTitle => 'Xoá tất cả cuộc trò chuyện?';
+
+  @override
+  String aiSetHistDialogWhat(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count cuộc trò chuyện AI',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get aiSetHistDialogWhatAll => 'Mọi cuộc trò chuyện AI';
+
+  @override
+  String aiSetHistDialogRemoved(String what) {
+    return '$what bị xoá khỏi máy.';
+  }
+
+  @override
+  String get aiSetHistDialogStop => 'Câu trả lời đang chạy sẽ dừng.';
+
+  @override
+  String get aiSetHistDialogLogs =>
+      'Nhật ký chạy của các dịch vụ AI cũng bị xoá. Prompt mẫu và cài đặt giữ nguyên.';
+
+  @override
+  String get aiSetHistDialogUndo => 'Không hoàn tác được.';
+
+  @override
+  String get aiSetHistDialogConfirm => 'Xoá tất cả';
+
+  @override
+  String get aiSetHistCleared => 'Đã xoá mọi cuộc trò chuyện';
+
+  @override
+  String get aiSetConfirmTitle => 'Hộp xác nhận';
+
+  @override
+  String get aiSetConfirmRow => 'Hỏi trước khi bật Tự động';
+
+  @override
+  String get aiSetConfirmDesc =>
+      'Bạn đã tắt hộp này trong chat: chọn Tự động thì bật ngay, không hỏi. Bật lại để được hỏi mỗi lần.';
+
+  @override
+  String get aiSetConfirmOn => 'Bật lại';
+
+  @override
+  String get aiSetConfirmToast => 'Chọn Tự động trong chat sẽ hỏi lại';
+
+  @override
+  String get aiSetPluginUse => 'Dùng trong Trò chuyện AI';
+
+  @override
+  String get aiSetPluginUseDesc =>
+      'Chọn ở ô nhập của chat; cuộc mới dùng dịch vụ chọn gần nhất.';
+
+  @override
+  String get aiSetPluginUseAt => 'Đổi ở Cài đặt › Trò chuyện AI';
+
+  @override
+  String get aiSetRemoveKeepChats =>
+      'Các cuộc trò chuyện đã dùng plugin này (đọc được, chọn plugin khác để tiếp tục)';
 }

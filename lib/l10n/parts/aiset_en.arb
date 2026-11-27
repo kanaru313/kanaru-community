@@ -1,3 +1,260 @@
 {
-  "@@locale": "en"
+  "@@locale": "en",
+  "aiSetServicesTitle": "AI services",
+  "aiSetServicesHint": "Tap a service to open its plugin settings (API key, default model). New chats use the service you picked last in the chat.",
+  "aiSetServicesEmpty": "No AI service installed. AI chat needs an AI plugin (for example Gemini or OpenAI-compatible) and your own API key.",
+  "aiSetServiceAdd": "Add AI service",
+  "aiSetServiceModelLastUsed": "{model} · last used",
+  "@aiSetServiceModelLastUsed": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetServiceLastUsed": "Last used",
+  "aiSetServiceNeedsKey": "Needs API key",
+  "aiSetServiceNeedsConfig": "Needs setup: {fields}",
+  "@aiSetServiceNeedsConfig": {
+    "placeholders": {
+      "fields": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetServicesGone": "The service you used last ({removed}) was removed. New chats use {next} until you pick another service in the chat.",
+  "@aiSetServicesGone": {
+    "placeholders": {
+      "removed": {
+        "type": "String"
+      },
+      "next": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetPermTitle": "Permission",
+  "aiSetPermRow": "Default permission for new chats",
+  "aiSetPermCaption": "Each chat keeps its own permission and you can change it at once in the input box.",
+  "aiSetPermReadOnly": "Read only",
+  "aiSetPermReadOnlyDesc": "Reads and suggests, never changes data",
+  "aiSetPermAsk": "Ask first",
+  "aiSetPermAskDesc": "Asks before changing anything · default",
+  "aiSetPermAuto": "Automatic",
+  "aiSetPermAutoDesc": "Makes changes without asking",
+  "aiSetInstructionsTitle": "General instructions",
+  "aiSetInstructionsHint": "Sent with every chat, to every AI service.",
+  "aiSetInstructionsPlaceholder": "For example: answer in English, keep it short",
+  "aiSetToolsTitle": "Tools",
+  "aiSetToolsHint": "The AI fetches data through the tools that are on. With a tool off, it does not fetch that data by itself.",
+  "aiSetToolsGroupRead": "Read",
+  "aiSetToolsGroupWrite": "Changes · follow the chat permission",
+  "aiSetToolsStatsLocked": "Turn on “Record listening history” in Playback first",
+  "aiSetToolNowPlaying": "Now playing",
+  "aiSetToolNowPlayingDesc": "Title, artist, album · variables {variables}",
+  "@aiSetToolNowPlayingDesc": {
+    "placeholders": {
+      "variables": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetToolQueue": "Queue",
+  "aiSetToolQueueDesc": "Up to 50 songs around the playing one · variable {variables}",
+  "@aiSetToolQueueDesc": {
+    "placeholders": {
+      "variables": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetToolLibrarySearch": "Search the library",
+  "aiSetToolLibrarySearchDesc": "Up to 50 results at a time, the AI can ask for more",
+  "aiSetToolLyrics": "Lyrics",
+  "aiSetToolLyricsDesc": "Plain text, no timestamps · variable {variables}",
+  "@aiSetToolLyricsDesc": {
+    "placeholders": {
+      "variables": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetToolTrackInfo": "Song info",
+  "aiSetToolTrackInfoDesc": "Song tags, album, the selected songs · Album and N selected songs cards",
+  "aiSetToolListeningStats": "Listening stats",
+  "aiSetToolListeningStatsDesc": "History, most played",
+  "aiSetToolPlaylists": "Playlist list",
+  "aiSetToolPlaylistsDesc": "Names, song counts and the songs in each playlist",
+  "aiSetToolPlayControl": "Playback control",
+  "aiSetToolPlayControlDesc": "Play a song",
+  "aiSetToolQueueEdit": "Edit queue",
+  "aiSetToolQueueEditDesc": "Add, remove",
+  "aiSetToolPlaylistCreate": "Create playlist",
+  "aiSetToolPlaylistEdit": "Edit playlist",
+  "aiSetToolPlaylistEditDesc": "Add, remove songs",
+  "aiSetVarBypassTitle": "Send variables even when a tool is off",
+  "aiSetVarBypassDesc": "Variables and context cards you send yourself still insert data (lyrics, queue, now playing…) even if its tool is off. A tool that is off then only stops the AI from fetching the data by itself.",
+  "aiSetAutoTitleDefault": "Turn on Automatic for new chats?",
+  "aiSetAutoTitleConversation": "Turn on Automatic for this chat?",
+  "aiSetAutoBody": "The AI will create and edit playlists, edit the queue and control playback without asking again. Every change still shows as a “Done” card. There is no undo.",
+  "aiSetAutoShowAgain": "Show this again next time",
+  "aiSetAutoConfirm": "Turn on Automatic",
+  "aiSetAutoToastDefault": "New chats: Automatic",
+  "aiSetAutoToastConversation": "This chat: Automatic",
+  "aiSetAutoToastDefaultQuiet": "New chats: Automatic · will not ask next time (turn it back on in the Confirmation box block)",
+  "aiSetAutoToastConversationQuiet": "This chat: Automatic · will not ask next time (turn it back on in Settings › AI chat)",
+  "aiSetTemplateExplainLyricsLabel": "Explain the lyrics",
+  "aiSetTemplateExplainLyricsBody": "Explain the lyrics of {nowPlaying}: {lyrics}",
+  "@aiSetTemplateExplainLyricsBody": {
+    "placeholders": {
+      "lyrics": {
+        "type": "String"
+      },
+      "nowPlaying": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetTemplateSimilarSongsLabel": "Similar songs in my library",
+  "aiSetTemplateSimilarSongsBody": "Find songs in my library like {nowPlaying}",
+  "@aiSetTemplateSimilarSongsBody": {
+    "placeholders": {
+      "nowPlaying": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetTemplateMoodPlaylistLabel": "Playlist for a mood",
+  "aiSetTemplateMoodPlaylistBody": "Create a playlist for this mood: {input}",
+  "@aiSetTemplateMoodPlaylistBody": {
+    "placeholders": {
+      "input": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetTemplateSongStoryLabel": "About this song",
+  "aiSetTemplateSongStoryBody": "Tell me about {nowPlaying}",
+  "@aiSetTemplateSongStoryBody": {
+    "placeholders": {
+      "nowPlaying": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetTemplateTranslateLyricsLabel": "Translate the lyrics",
+  "aiSetTemplateTranslateLyricsBody": "Translate the lyrics of {nowPlaying} into English: {lyrics}",
+  "@aiSetTemplateTranslateLyricsBody": {
+    "placeholders": {
+      "lyrics": {
+        "type": "String"
+      },
+      "nowPlaying": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetTemplateTasteSummaryLabel": "Summarise my listening",
+  "aiSetTemplateTasteSummaryBody": "Summarise my listening habits this month",
+  "aiSetVarNowPlaying": "Now playing: title and artist",
+  "aiSetVarTitle": "Title of the playing song",
+  "aiSetVarArtist": "Artist of the playing song",
+  "aiSetVarAlbum": "Album of the playing song",
+  "aiSetVarLyrics": "Lyrics of the playing song, plain text",
+  "aiSetVarQueue": "The queue, up to 50 songs around the playing one",
+  "aiSetVarInput": "Where you type next: tapping the chip only fills the prompt into the box, with the cursor here",
+  "aiSetPromptsTitle": "Prompt templates",
+  "aiSetPromptsHint": "Shown as chips on the input, in this order. Tap a row to edit.",
+  "aiSetPromptDrag": "Drag to reorder",
+  "aiSetPromptSwitch": "Show “{label}” on the input",
+  "@aiSetPromptSwitch": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetPromptTap": "{label}, open to edit",
+  "@aiSetPromptTap": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetPromptBad": "Broken variable",
+  "aiSetPromptBadLine": "Variable {variable} no longer exists · tap to edit",
+  "@aiSetPromptBadLine": {
+    "placeholders": {
+      "variable": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetPromptsEmpty": "No prompts yet: the chat input has no prompt chips. Add a prompt, or restore the built-in ones.",
+  "aiSetPromptAdd": "Add prompt",
+  "aiSetPromptRestore": "Restore default prompts",
+  "aiSetPromptRestoreDesc": "Only adds back built-in prompts you deleted; edited and your own prompts stay",
+  "aiSetPromptRestored": "{count, plural, one{Added back {count} built-in prompt} other{Added back {count} built-in prompts}}",
+  "@aiSetPromptRestored": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiSetPromptRestoredNone": "No built-in prompt was deleted",
+  "aiSetHistTitle": "Chat history",
+  "aiSetHistLoading": "Reading chat history…",
+  "aiSetHistErrorTitle": "Could not read chat history",
+  "aiSetHistErrorDesc": "The count and size are not available. Delete all still works.",
+  "aiSetHistRetry": "Retry",
+  "aiSetHistCount": "{count, plural, one{{count} conversation · {size} MB} other{{count} conversations · {size} MB}}",
+  "@aiSetHistCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetHistNone": "No conversations yet",
+  "aiSetHistWhere": "Stored on this device",
+  "aiSetHistClearTitle": "Delete all conversations",
+  "aiSetHistClearDesc": "Prompt templates and settings stay. Cannot be undone",
+  "aiSetHistClearButton": "Delete",
+  "aiSetHistDialogTitle": "Delete all conversations?",
+  "aiSetHistDialogWhat": "{count, plural, one{{count} AI conversation} other{{count} AI conversations}}",
+  "@aiSetHistDialogWhat": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiSetHistDialogWhatAll": "Every AI conversation",
+  "aiSetHistDialogRemoved": "{what} will be deleted from this device.",
+  "@aiSetHistDialogRemoved": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetHistDialogStop": "The answer in progress will stop.",
+  "aiSetHistDialogLogs": "The run logs of the AI services are deleted too. Prompt templates and settings stay.",
+  "aiSetHistDialogUndo": "Cannot be undone.",
+  "aiSetHistDialogConfirm": "Delete all",
+  "aiSetHistCleared": "All conversations deleted",
+  "aiSetConfirmTitle": "Confirmation box",
+  "aiSetConfirmRow": "Ask before turning on Automatic",
+  "aiSetConfirmDesc": "You turned this box off in the chat: choosing Automatic turns it on at once, without asking. Turn it back on to be asked every time.",
+  "aiSetConfirmOn": "Turn on",
+  "aiSetConfirmToast": "Choosing Automatic in the chat will ask again",
+  "aiSetPluginUse": "Use in AI chat",
+  "aiSetPluginUseDesc": "Pick it in the chat input; new chats use the service picked last.",
+  "aiSetPluginUseAt": "Change in Settings › AI chat",
+  "aiSetRemoveKeepChats": "Chats that used this plugin (readable; pick another plugin to continue)"
 }

@@ -2913,7 +2913,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsRootAiDesc =>
-      'AI services, permissions, tools, skills, history';
+      'AI services, permissions, tools, prompts, history';
 
   @override
   String get settingsRootIntegrations => 'Integrations';
@@ -7839,4 +7839,442 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiChatPlayContextLabel => 'AI assistant';
+
+  @override
+  String get aiSetServicesTitle => 'AI services';
+
+  @override
+  String get aiSetServicesHint =>
+      'Tap a service to open its plugin settings (API key, default model). New chats use the service you picked last in the chat.';
+
+  @override
+  String get aiSetServicesEmpty =>
+      'No AI service installed. AI chat needs an AI plugin (for example Gemini or OpenAI-compatible) and your own API key.';
+
+  @override
+  String get aiSetServiceAdd => 'Add AI service';
+
+  @override
+  String aiSetServiceModelLastUsed(String model) {
+    return '$model · last used';
+  }
+
+  @override
+  String get aiSetServiceLastUsed => 'Last used';
+
+  @override
+  String get aiSetServiceNeedsKey => 'Needs API key';
+
+  @override
+  String aiSetServiceNeedsConfig(String fields) {
+    return 'Needs setup: $fields';
+  }
+
+  @override
+  String aiSetServicesGone(String removed, String next) {
+    return 'The service you used last ($removed) was removed. New chats use $next until you pick another service in the chat.';
+  }
+
+  @override
+  String get aiSetPermTitle => 'Permission';
+
+  @override
+  String get aiSetPermRow => 'Default permission for new chats';
+
+  @override
+  String get aiSetPermCaption =>
+      'Each chat keeps its own permission and you can change it at once in the input box.';
+
+  @override
+  String get aiSetPermReadOnly => 'Read only';
+
+  @override
+  String get aiSetPermReadOnlyDesc => 'Reads and suggests, never changes data';
+
+  @override
+  String get aiSetPermAsk => 'Ask first';
+
+  @override
+  String get aiSetPermAskDesc => 'Asks before changing anything · default';
+
+  @override
+  String get aiSetPermAuto => 'Automatic';
+
+  @override
+  String get aiSetPermAutoDesc => 'Makes changes without asking';
+
+  @override
+  String get aiSetInstructionsTitle => 'General instructions';
+
+  @override
+  String get aiSetInstructionsHint =>
+      'Sent with every chat, to every AI service.';
+
+  @override
+  String get aiSetInstructionsPlaceholder =>
+      'For example: answer in English, keep it short';
+
+  @override
+  String get aiSetToolsTitle => 'Tools';
+
+  @override
+  String get aiSetToolsHint =>
+      'The AI fetches data through the tools that are on. With a tool off, it does not fetch that data by itself.';
+
+  @override
+  String get aiSetToolsGroupRead => 'Read';
+
+  @override
+  String get aiSetToolsGroupWrite => 'Changes · follow the chat permission';
+
+  @override
+  String get aiSetToolsStatsLocked =>
+      'Turn on “Record listening history” in Playback first';
+
+  @override
+  String get aiSetToolNowPlaying => 'Now playing';
+
+  @override
+  String aiSetToolNowPlayingDesc(String variables) {
+    return 'Title, artist, album · variables $variables';
+  }
+
+  @override
+  String get aiSetToolQueue => 'Queue';
+
+  @override
+  String aiSetToolQueueDesc(String variables) {
+    return 'Up to 50 songs around the playing one · variable $variables';
+  }
+
+  @override
+  String get aiSetToolLibrarySearch => 'Search the library';
+
+  @override
+  String get aiSetToolLibrarySearchDesc =>
+      'Up to 50 results at a time, the AI can ask for more';
+
+  @override
+  String get aiSetToolLyrics => 'Lyrics';
+
+  @override
+  String aiSetToolLyricsDesc(String variables) {
+    return 'Plain text, no timestamps · variable $variables';
+  }
+
+  @override
+  String get aiSetToolTrackInfo => 'Song info';
+
+  @override
+  String get aiSetToolTrackInfoDesc =>
+      'Song tags, album, the selected songs · Album and N selected songs cards';
+
+  @override
+  String get aiSetToolListeningStats => 'Listening stats';
+
+  @override
+  String get aiSetToolListeningStatsDesc => 'History, most played';
+
+  @override
+  String get aiSetToolPlaylists => 'Playlist list';
+
+  @override
+  String get aiSetToolPlaylistsDesc =>
+      'Names, song counts and the songs in each playlist';
+
+  @override
+  String get aiSetToolPlayControl => 'Playback control';
+
+  @override
+  String get aiSetToolPlayControlDesc => 'Play a song';
+
+  @override
+  String get aiSetToolQueueEdit => 'Edit queue';
+
+  @override
+  String get aiSetToolQueueEditDesc => 'Add, remove';
+
+  @override
+  String get aiSetToolPlaylistCreate => 'Create playlist';
+
+  @override
+  String get aiSetToolPlaylistEdit => 'Edit playlist';
+
+  @override
+  String get aiSetToolPlaylistEditDesc => 'Add, remove songs';
+
+  @override
+  String get aiSetVarBypassTitle => 'Send variables even when a tool is off';
+
+  @override
+  String get aiSetVarBypassDesc =>
+      'Variables and context cards you send yourself still insert data (lyrics, queue, now playing…) even if its tool is off. A tool that is off then only stops the AI from fetching the data by itself.';
+
+  @override
+  String get aiSetAutoTitleDefault => 'Turn on Automatic for new chats?';
+
+  @override
+  String get aiSetAutoTitleConversation => 'Turn on Automatic for this chat?';
+
+  @override
+  String get aiSetAutoBody =>
+      'The AI will create and edit playlists, edit the queue and control playback without asking again. Every change still shows as a “Done” card. There is no undo.';
+
+  @override
+  String get aiSetAutoShowAgain => 'Show this again next time';
+
+  @override
+  String get aiSetAutoConfirm => 'Turn on Automatic';
+
+  @override
+  String get aiSetAutoToastDefault => 'New chats: Automatic';
+
+  @override
+  String get aiSetAutoToastConversation => 'This chat: Automatic';
+
+  @override
+  String get aiSetAutoToastDefaultQuiet =>
+      'New chats: Automatic · will not ask next time (turn it back on in the Confirmation box block)';
+
+  @override
+  String get aiSetAutoToastConversationQuiet =>
+      'This chat: Automatic · will not ask next time (turn it back on in Settings › AI chat)';
+
+  @override
+  String get aiSetTemplateExplainLyricsLabel => 'Explain the lyrics';
+
+  @override
+  String aiSetTemplateExplainLyricsBody(String lyrics, String nowPlaying) {
+    return 'Explain the lyrics of $nowPlaying: $lyrics';
+  }
+
+  @override
+  String get aiSetTemplateSimilarSongsLabel => 'Similar songs in my library';
+
+  @override
+  String aiSetTemplateSimilarSongsBody(String nowPlaying) {
+    return 'Find songs in my library like $nowPlaying';
+  }
+
+  @override
+  String get aiSetTemplateMoodPlaylistLabel => 'Playlist for a mood';
+
+  @override
+  String aiSetTemplateMoodPlaylistBody(String input) {
+    return 'Create a playlist for this mood: $input';
+  }
+
+  @override
+  String get aiSetTemplateSongStoryLabel => 'About this song';
+
+  @override
+  String aiSetTemplateSongStoryBody(String nowPlaying) {
+    return 'Tell me about $nowPlaying';
+  }
+
+  @override
+  String get aiSetTemplateTranslateLyricsLabel => 'Translate the lyrics';
+
+  @override
+  String aiSetTemplateTranslateLyricsBody(String lyrics, String nowPlaying) {
+    return 'Translate the lyrics of $nowPlaying into English: $lyrics';
+  }
+
+  @override
+  String get aiSetTemplateTasteSummaryLabel => 'Summarise my listening';
+
+  @override
+  String get aiSetTemplateTasteSummaryBody =>
+      'Summarise my listening habits this month';
+
+  @override
+  String get aiSetVarNowPlaying => 'Now playing: title and artist';
+
+  @override
+  String get aiSetVarTitle => 'Title of the playing song';
+
+  @override
+  String get aiSetVarArtist => 'Artist of the playing song';
+
+  @override
+  String get aiSetVarAlbum => 'Album of the playing song';
+
+  @override
+  String get aiSetVarLyrics => 'Lyrics of the playing song, plain text';
+
+  @override
+  String get aiSetVarQueue =>
+      'The queue, up to 50 songs around the playing one';
+
+  @override
+  String get aiSetVarInput =>
+      'Where you type next: tapping the chip only fills the prompt into the box, with the cursor here';
+
+  @override
+  String get aiSetPromptsTitle => 'Prompt templates';
+
+  @override
+  String get aiSetPromptsHint =>
+      'Shown as chips on the input, in this order. Tap a row to edit.';
+
+  @override
+  String get aiSetPromptDrag => 'Drag to reorder';
+
+  @override
+  String aiSetPromptSwitch(String label) {
+    return 'Show “$label” on the input';
+  }
+
+  @override
+  String aiSetPromptTap(String label) {
+    return '$label, open to edit';
+  }
+
+  @override
+  String get aiSetPromptBad => 'Broken variable';
+
+  @override
+  String aiSetPromptBadLine(String variable) {
+    return 'Variable $variable no longer exists · tap to edit';
+  }
+
+  @override
+  String get aiSetPromptsEmpty =>
+      'No prompts yet: the chat input has no prompt chips. Add a prompt, or restore the built-in ones.';
+
+  @override
+  String get aiSetPromptAdd => 'Add prompt';
+
+  @override
+  String get aiSetPromptRestore => 'Restore default prompts';
+
+  @override
+  String get aiSetPromptRestoreDesc =>
+      'Only adds back built-in prompts you deleted; edited and your own prompts stay';
+
+  @override
+  String aiSetPromptRestored(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Added back $count built-in prompts',
+      one: 'Added back $count built-in prompt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get aiSetPromptRestoredNone => 'No built-in prompt was deleted';
+
+  @override
+  String get aiSetHistTitle => 'Chat history';
+
+  @override
+  String get aiSetHistLoading => 'Reading chat history…';
+
+  @override
+  String get aiSetHistErrorTitle => 'Could not read chat history';
+
+  @override
+  String get aiSetHistErrorDesc =>
+      'The count and size are not available. Delete all still works.';
+
+  @override
+  String get aiSetHistRetry => 'Retry';
+
+  @override
+  String aiSetHistCount(int count, String size) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count conversations · $size MB',
+      one: '$count conversation · $size MB',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get aiSetHistNone => 'No conversations yet';
+
+  @override
+  String get aiSetHistWhere => 'Stored on this device';
+
+  @override
+  String get aiSetHistClearTitle => 'Delete all conversations';
+
+  @override
+  String get aiSetHistClearDesc =>
+      'Prompt templates and settings stay. Cannot be undone';
+
+  @override
+  String get aiSetHistClearButton => 'Delete';
+
+  @override
+  String get aiSetHistDialogTitle => 'Delete all conversations?';
+
+  @override
+  String aiSetHistDialogWhat(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count AI conversations',
+      one: '$count AI conversation',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get aiSetHistDialogWhatAll => 'Every AI conversation';
+
+  @override
+  String aiSetHistDialogRemoved(String what) {
+    return '$what will be deleted from this device.';
+  }
+
+  @override
+  String get aiSetHistDialogStop => 'The answer in progress will stop.';
+
+  @override
+  String get aiSetHistDialogLogs =>
+      'The run logs of the AI services are deleted too. Prompt templates and settings stay.';
+
+  @override
+  String get aiSetHistDialogUndo => 'Cannot be undone.';
+
+  @override
+  String get aiSetHistDialogConfirm => 'Delete all';
+
+  @override
+  String get aiSetHistCleared => 'All conversations deleted';
+
+  @override
+  String get aiSetConfirmTitle => 'Confirmation box';
+
+  @override
+  String get aiSetConfirmRow => 'Ask before turning on Automatic';
+
+  @override
+  String get aiSetConfirmDesc =>
+      'You turned this box off in the chat: choosing Automatic turns it on at once, without asking. Turn it back on to be asked every time.';
+
+  @override
+  String get aiSetConfirmOn => 'Turn on';
+
+  @override
+  String get aiSetConfirmToast =>
+      'Choosing Automatic in the chat will ask again';
+
+  @override
+  String get aiSetPluginUse => 'Use in AI chat';
+
+  @override
+  String get aiSetPluginUseDesc =>
+      'Pick it in the chat input; new chats use the service picked last.';
+
+  @override
+  String get aiSetPluginUseAt => 'Change in Settings › AI chat';
+
+  @override
+  String get aiSetRemoveKeepChats =>
+      'Chats that used this plugin (readable; pick another plugin to continue)';
 }

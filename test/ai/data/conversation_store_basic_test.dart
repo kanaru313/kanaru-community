@@ -163,4 +163,15 @@ void main() {
     stats = await container.read(aiChatStatsProvider.future);
     expect((stats.conversations, stats.bytes), (0, 0));
   });
+
+  test('stats ignore the empty conversation the chat reopens', () async {
+    final a = await newChat(store);
+    await addUser(store, a.id);
+    expect((await store.stats()).conversations, 1);
+    // What the session does after deleteAll: reopen an empty conversation.
+    await store.deleteAll();
+    await newChat(store);
+    final stats = await store.stats();
+    expect((stats.conversations, stats.bytes), (0, 0));
+  });
 }

@@ -64,6 +64,7 @@ class InstalledRow extends StatelessWidget {
     final remove = actions.onRemove;
     return StoreRowFrame(
       row: row,
+      showSetupStatus: true,
       onTap: actions.onOpenPlugin == null
           ? null
           : () => actions.onOpenPlugin!(context, row),

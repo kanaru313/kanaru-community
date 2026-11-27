@@ -2007,7 +2007,7 @@
   "settingsRootPlugins": "Plugin",
   "settingsRootPluginsDesc": "Plugin đã cài, kho plugin, cập nhật",
   "settingsRootAi": "Trò chuyện AI",
-  "settingsRootAiDesc": "Dịch vụ AI, quyền, công cụ, skill, lịch sử",
+  "settingsRootAiDesc": "Dịch vụ AI, quyền, công cụ, prompt, lịch sử",
   "settingsRootIntegrations": "Tích hợp",
   "settingsRootIntegrationsDescDesktop": "Máy chủ MCP, web server trong mạng LAN",
   "settingsRootIntegrationsDescMobile": "Web server trong mạng LAN",
@@ -5710,5 +5710,210 @@
   "aiChatPlayContextLabel": "Trợ lý AI",
   "@aiChatPlayContextLabel": {
     "description": "Tên ngữ cảnh phát khi trợ lý AI bắt đầu một hàng đợi."
-  }
+  },
+  "aiSetServicesTitle": "Dịch vụ AI",
+  "aiSetServicesHint": "Bấm một dịch vụ để mở cài đặt của plugin (API key, model mặc định). Cuộc mới dùng dịch vụ bạn chọn gần nhất trong chat.",
+  "aiSetServicesEmpty": "Chưa cài dịch vụ AI nào. Trò chuyện AI cần một plugin AI (vd. Gemini, OpenAI-compatible) và API key của bạn.",
+  "aiSetServiceAdd": "Thêm dịch vụ AI",
+  "aiSetServiceModelLastUsed": "{model} · dùng gần nhất",
+  "@aiSetServiceModelLastUsed": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetServiceLastUsed": "Dùng gần nhất",
+  "aiSetServiceNeedsKey": "Cần API key",
+  "aiSetServiceNeedsConfig": "Cần cấu hình: {fields}",
+  "@aiSetServiceNeedsConfig": {
+    "placeholders": {
+      "fields": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetServicesGone": "Dịch vụ bạn dùng gần nhất ({removed}) đã bị gỡ. Cuộc mới dùng {next} tới khi bạn chọn dịch vụ khác trong chat.",
+  "@aiSetServicesGone": {
+    "placeholders": {
+      "removed": {
+        "type": "String"
+      },
+      "next": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetPermTitle": "Quyền",
+  "aiSetPermRow": "Quyền mặc định cho cuộc mới",
+  "aiSetPermCaption": "Mỗi cuộc trò chuyện giữ quyền riêng và đổi được ngay ở ô nhập.",
+  "aiSetPermReadOnly": "Chỉ đọc",
+  "aiSetPermReadOnlyDesc": "Chỉ đọc và gợi ý, không bao giờ thay đổi dữ liệu",
+  "aiSetPermAsk": "Hỏi trước",
+  "aiSetPermAskDesc": "Hỏi trước khi thay đổi bất cứ điều gì · mặc định",
+  "aiSetPermAuto": "Tự động",
+  "aiSetPermAutoDesc": "Thực hiện thay đổi mà không cần hỏi",
+  "aiSetInstructionsTitle": "Hướng dẫn chung",
+  "aiSetInstructionsHint": "Gửi kèm mọi cuộc trò chuyện, cho mọi dịch vụ AI.",
+  "aiSetInstructionsPlaceholder": "Ví dụ: trả lời bằng tiếng Việt, ngắn gọn",
+  "aiSetToolsTitle": "Công cụ",
+  "aiSetToolsHint": "AI tự lấy dữ liệu qua các công cụ đang bật. Công cụ tắt thì AI không tự lấy dữ liệu đó.",
+  "aiSetToolsGroupRead": "Đọc",
+  "aiSetToolsGroupWrite": "Thay đổi · theo quyền của cuộc",
+  "aiSetToolsStatsLocked": "Cần bật “Ghi lịch sử nghe” trong Phát nhạc",
+  "aiSetToolNowPlaying": "Bài đang phát",
+  "aiSetToolNowPlayingDesc": "Tên, nghệ sĩ, album · biến {variables}",
+  "@aiSetToolNowPlayingDesc": {
+    "placeholders": {
+      "variables": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetToolQueue": "Hàng đợi",
+  "aiSetToolQueueDesc": "Tối đa 50 bài quanh bài đang phát · biến {variables}",
+  "@aiSetToolQueueDesc": {
+    "placeholders": {
+      "variables": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetToolLibrarySearch": "Tìm trong thư viện",
+  "aiSetToolLibrarySearchDesc": "Tối đa 50 kết quả mỗi lần, AI xem tiếp được",
+  "aiSetToolLyrics": "Lời bài hát",
+  "aiSetToolLyricsDesc": "Chữ trơn, bỏ thời gian · biến {variables}",
+  "@aiSetToolLyricsDesc": {
+    "placeholders": {
+      "variables": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetToolTrackInfo": "Thông tin bài",
+  "aiSetToolTrackInfoDesc": "Tag của bài, album, các bài đã chọn · thẻ Album, N bài đã chọn",
+  "aiSetToolListeningStats": "Thống kê nghe",
+  "aiSetToolListeningStatsDesc": "Lịch sử, phát nhiều nhất",
+  "aiSetToolPlaylists": "Danh sách playlist",
+  "aiSetToolPlaylistsDesc": "Tên, số bài và các bài trong playlist",
+  "aiSetToolPlayControl": "Điều khiển phát",
+  "aiSetToolPlayControlDesc": "Phát bài",
+  "aiSetToolQueueEdit": "Sửa hàng đợi",
+  "aiSetToolQueueEditDesc": "Thêm, bỏ",
+  "aiSetToolPlaylistCreate": "Tạo playlist",
+  "aiSetToolPlaylistEdit": "Sửa playlist",
+  "aiSetToolPlaylistEditDesc": "Thêm, bỏ bài",
+  "aiSetVarBypassTitle": "Biến vẫn gửi khi công cụ tắt",
+  "aiSetVarBypassDesc": "Biến và thẻ ngữ cảnh bạn chủ động gửi vẫn chèn dữ liệu (lời bài, hàng đợi, bài đang phát…) dù công cụ của nó đã tắt. Công cụ tắt khi đó chỉ chặn AI tự lấy dữ liệu.",
+  "aiSetAutoTitleDefault": "Bật Tự động cho cuộc mới?",
+  "aiSetAutoTitleConversation": "Bật Tự động cho cuộc này?",
+  "aiSetAutoBody": "AI sẽ tạo, sửa playlist, sửa hàng đợi và điều khiển phát mà không hỏi lại. Mỗi thay đổi vẫn hiện thành thẻ “Đã làm”. Không có hoàn tác.",
+  "aiSetAutoShowAgain": "Hiện lại lần sau",
+  "aiSetAutoConfirm": "Bật Tự động",
+  "aiSetAutoToastDefault": "Cuộc mới: Tự động",
+  "aiSetAutoToastConversation": "Cuộc này: Tự động",
+  "aiSetAutoToastDefaultQuiet": "Cuộc mới: Tự động · lần sau không hỏi (bật lại ở khối Hộp xác nhận)",
+  "aiSetAutoToastConversationQuiet": "Cuộc này: Tự động · lần sau không hỏi (bật lại trong Cài đặt › Trò chuyện AI)",
+  "aiSetTemplateExplainLyricsLabel": "Giải nghĩa lời",
+  "aiSetTemplateExplainLyricsBody": "Giải nghĩa lời bài {nowPlaying}: {lyrics}",
+  "@aiSetTemplateExplainLyricsBody": {
+    "placeholders": {
+      "lyrics": {
+        "type": "String"
+      },
+      "nowPlaying": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetTemplateSimilarSongsLabel": "Bài tương tự trong thư viện",
+  "aiSetTemplateSimilarSongsBody": "Tìm trong thư viện các bài giống {nowPlaying}",
+  "@aiSetTemplateSimilarSongsBody": {
+    "placeholders": {
+      "nowPlaying": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetTemplateMoodPlaylistLabel": "Playlist theo mood",
+  "aiSetTemplateMoodPlaylistBody": "Tạo playlist cho tâm trạng: {input}",
+  "@aiSetTemplateMoodPlaylistBody": {
+    "placeholders": {
+      "input": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetTemplateSongStoryLabel": "Về bài này",
+  "aiSetTemplateSongStoryBody": "Kể cho mình về bài {nowPlaying}",
+  "@aiSetTemplateSongStoryBody": {
+    "placeholders": {
+      "nowPlaying": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetTemplateTranslateLyricsLabel": "Dịch lời",
+  "aiSetTemplateTranslateLyricsBody": "Dịch lời bài {nowPlaying} sang tiếng Việt: {lyrics}",
+  "@aiSetTemplateTranslateLyricsBody": {
+    "placeholders": {
+      "lyrics": {
+        "type": "String"
+      },
+      "nowPlaying": {
+        "type": "String"
+      }
+    }
+  },
+  "aiSetTemplateTasteSummaryLabel": "Tóm tắt thói quen nghe",
+  "aiSetTemplateTasteSummaryBody": "Tóm tắt thói quen nghe nhạc của mình tháng này",
+  "aiSetVarNowPlaying": "Bài đang phát: tên và nghệ sĩ",
+  "aiSetVarTitle": "Tên bài đang phát",
+  "aiSetVarArtist": "Nghệ sĩ của bài đang phát",
+  "aiSetVarAlbum": "Album của bài đang phát",
+  "aiSetVarLyrics": "Lời bài đang phát, chữ trơn",
+  "aiSetVarQueue": "Hàng đợi, tối đa 50 bài quanh bài đang phát",
+  "aiSetVarInput": "Chỗ bạn gõ tiếp: bấm chip chỉ điền prompt vào ô, con trỏ ở đây",
+  "aiSetPromptsTitle": "Prompt mẫu",
+  "aiSetPromptsHint": "Hiện thành chip trên ô nhập, theo thứ tự này. Bấm một dòng để sửa.",
+  "aiSetPromptDrag": "Kéo để sắp xếp",
+  "aiSetPromptSwitch": "Hiện “{label}” trên ô nhập",
+  "aiSetPromptTap": "{label}, bấm để sửa",
+  "aiSetPromptBad": "Biến lỗi",
+  "aiSetPromptBadLine": "Biến {variable} không còn tồn tại · bấm để sửa",
+  "aiSetPromptsEmpty": "Chưa có prompt nào: ô nhập chat không có chip prompt. Thêm prompt, hoặc khôi phục các prompt có sẵn.",
+  "aiSetPromptAdd": "Thêm prompt",
+  "aiSetPromptRestore": "Khôi phục prompt mặc định",
+  "aiSetPromptRestoreDesc": "Chỉ thêm lại prompt có sẵn đã xoá; prompt đã sửa và của bạn giữ nguyên",
+  "aiSetPromptRestored": "{count, plural, other{Đã thêm lại {count} prompt có sẵn}}",
+  "aiSetPromptRestoredNone": "Không có prompt có sẵn nào bị xoá",
+  "aiSetHistTitle": "Lịch sử trò chuyện",
+  "aiSetHistLoading": "Đang đọc lịch sử trò chuyện…",
+  "aiSetHistErrorTitle": "Không đọc được lịch sử trò chuyện",
+  "aiSetHistErrorDesc": "Số cuộc và dung lượng chưa có. Xoá tất cả vẫn dùng được.",
+  "aiSetHistRetry": "Thử lại",
+  "aiSetHistCount": "{count, plural, other{{count} cuộc trò chuyện · {size} MB}}",
+  "aiSetHistNone": "Chưa có cuộc trò chuyện nào",
+  "aiSetHistWhere": "Lưu trên máy này",
+  "aiSetHistClearTitle": "Xoá tất cả cuộc trò chuyện",
+  "aiSetHistClearDesc": "Prompt mẫu và cài đặt giữ nguyên. Không hoàn tác được",
+  "aiSetHistClearButton": "Xoá",
+  "aiSetHistDialogTitle": "Xoá tất cả cuộc trò chuyện?",
+  "aiSetHistDialogWhat": "{count, plural, other{{count} cuộc trò chuyện AI}}",
+  "aiSetHistDialogWhatAll": "Mọi cuộc trò chuyện AI",
+  "aiSetHistDialogRemoved": "{what} bị xoá khỏi máy.",
+  "aiSetHistDialogStop": "Câu trả lời đang chạy sẽ dừng.",
+  "aiSetHistDialogLogs": "Nhật ký chạy của các dịch vụ AI cũng bị xoá. Prompt mẫu và cài đặt giữ nguyên.",
+  "aiSetHistDialogUndo": "Không hoàn tác được.",
+  "aiSetHistDialogConfirm": "Xoá tất cả",
+  "aiSetHistCleared": "Đã xoá mọi cuộc trò chuyện",
+  "aiSetConfirmTitle": "Hộp xác nhận",
+  "aiSetConfirmRow": "Hỏi trước khi bật Tự động",
+  "aiSetConfirmDesc": "Bạn đã tắt hộp này trong chat: chọn Tự động thì bật ngay, không hỏi. Bật lại để được hỏi mỗi lần.",
+  "aiSetConfirmOn": "Bật lại",
+  "aiSetConfirmToast": "Chọn Tự động trong chat sẽ hỏi lại",
+  "aiSetPluginUse": "Dùng trong Trò chuyện AI",
+  "aiSetPluginUseDesc": "Chọn ở ô nhập của chat; cuộc mới dùng dịch vụ chọn gần nhất.",
+  "aiSetPluginUseAt": "Đổi ở Cài đặt › Trò chuyện AI",
+  "aiSetRemoveKeepChats": "Các cuộc trò chuyện đã dùng plugin này (đọc được, chọn plugin khác để tiếp tục)"
 }

@@ -2,9 +2,11 @@ import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 
+import '../../ai/ui/ai_settings_link.dart';
 import '../../lyrics/ui/lyrics_settings_link.dart';
 import '../plugins/plugin_routes.dart';
 import 'ui/about/about_settings_page.dart';
+import 'ui/ai/ai_settings_page.dart';
 import 'ui/appearance/appearance_settings_page.dart';
 import 'ui/appearance/fonts/fonts_settings_page.dart';
 import 'ui/appearance/seek_bar_style_page.dart';
@@ -26,6 +28,7 @@ abstract final class SettingsPaths {
   static const artistSplit = '/settings/library/artist-split';
   static const playback = '/settings/playback';
   static const lyrics = lyricsSettingsLocation;
+  static const ai = aiSettingsLocation;
   static const about = '/settings/about';
 }
 
@@ -65,6 +68,10 @@ GoRoute buildSettingsRoute() => GoRoute(
     GoRoute(
       path: 'lyrics',
       pageBuilder: (_, s) => _page(s, const LyricsSettingsPage()),
+    ),
+    GoRoute(
+      path: 'ai',
+      pageBuilder: (_, s) => _page(s, const AiSettingsPage()),
     ),
     GoRoute(
       path: 'about',

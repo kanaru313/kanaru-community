@@ -61,6 +61,12 @@ class RemovePluginDialog extends StatelessWidget {
                   l10n.pluginsRemoveKeepLrc,
                 ],
               ),
+            if (preview.kind == PluginKind.aiChat)
+              ReasonBox(
+                error: false,
+                title: l10n.pluginsRemoveKeep,
+                lines: [l10n.aiSetRemoveKeepChats],
+              ),
             if (preview.kind == PluginKind.translate ||
                 preview.kind == PluginKind.aiTranslate)
               ReasonBox(

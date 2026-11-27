@@ -91,10 +91,11 @@ class SettingsRootPage extends ConsumerWidget {
               alertLabel: l10n.pluginsRootAlertLabel,
               onTap: () => context.push(PluginPaths.store),
             ),
-            SoonRow(
+            SetupValueRow(
               icon: KIcons.ai,
               title: Text(l10n.settingsRootAi),
-              desc: l10n.settingsRootAiDesc,
+              value: Text(l10n.settingsRootAiDesc),
+              onTap: () => context.push(SettingsPaths.ai),
             ),
             SoonRow(
               icon: KIcons.integrations,
@@ -141,13 +142,12 @@ class SettingsRootPage extends ConsumerWidget {
     return switch (edition) {
       AppEdition.free => SoonRow(
         icon: KIcons.proEdition,
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Flexible(child: Text(l10n.settingsRootPro)),
-            const KGap(KSpace.x2),
-            const ProBadge(),
-          ],
+        // Wraps instead of overflowing when the "Coming soon" label takes
+        // most of the row (large text scale).
+        title: Wrap(
+          spacing: KSpace.x2,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [Text(l10n.settingsRootPro), const ProBadge()],
         ),
         desc: l10n.settingsRootProFreeDesc,
       ),
