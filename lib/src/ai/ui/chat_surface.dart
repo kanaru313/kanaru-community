@@ -9,9 +9,11 @@ import '../state/chat_session.dart';
 import '../state/chat_view/chat_view_state.dart';
 import 'chat_history_slot.dart';
 import 'empty_states.dart';
+import 'messages_error.dart';
+import 'message_list.dart';
 
 /// The chat below its header, the same on the desktop panel and the phone
-/// page: the body (history, the no-plugin guide, the empty greeting, later the
+/// page: the body (history, the no-plugin guide, the empty greeting or the
 /// message list) over the composer.
 ///
 /// It keeps no state of its own that must outlive it: the draft, the scroll
@@ -63,12 +65,22 @@ class _ChatSurfaceState extends ConsumerState<ChatSurface> {
   Widget _body() {
     final id = ref.watch(chatSessionProvider.select((s) => s.conversationId));
     if (id == null) return const SizedBox.shrink();
-    final messages = ref.watch(chatMessagesProvider(id)).value;
-    // Loading or failed read: nothing to say yet.
-    if (messages == null) return const SizedBox.shrink();
+    final read = ref.watch(chatMessagesProvider(id));
+    final messages = read.value;
+    if (messages == null) {
+      // Still loading: nothing to say yet. A failed read says so.
+      return read.hasError
+          ? ChatMessagesError(
+              onRetry: () => ref.invalidate(chatMessagesProvider(id)),
+            )
+          : const SizedBox.shrink();
+    }
     if (messages.messages.isNotEmpty) {
-      // The message list goes here.
-      return const SizedBox.shrink();
+      return ChatMessageList(
+        key: ValueKey(id),
+        conversationId: id,
+        messages: messages,
+      );
     }
     final plugins = ref.watch(chatPluginsProvider).value;
     if (plugins != null && plugins.isEmpty) return const ChatNoPluginGuide();

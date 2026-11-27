@@ -1,12 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:kanaru/src/ai/domain/conversation/ai_conversation.dart';
+import 'package:kanaru/src/ai/domain/conversation/ai_message.dart';
+import 'package:kanaru/src/ai/domain/conversation/parts.dart';
+import 'package:kanaru/src/ai/domain/loop/loop_state.dart';
 import 'package:kanaru/src/ai/domain/output/chat_readiness.dart';
 import 'package:kanaru/src/ai/domain/permission.dart';
 import 'package:kanaru/src/ai/state/chat_conversation_providers.dart';
 import 'package:kanaru/src/ai/state/chat_messages_provider.dart';
 import 'package:kanaru/src/ai/state/chat_providers.dart';
 import 'package:kanaru/src/ai/state/chat_session.dart';
+import 'package:kanaru/src/ai/state/live_text_provider.dart';
 import 'package:kanaru/src/ai/ui/chat_host.dart';
 import 'package:kanaru/src/plugins/domain/package/chat_spec.dart';
 
@@ -44,6 +48,12 @@ class FakeChatSession extends ChatSessionController {
     return _next;
   }
 
+  /// Moves the turn to [turn] (the dots follow it).
+  void setTurn(TurnState turn) => state = ChatSessionState(
+    conversationId: state.conversationId,
+    turnState: turn,
+  );
+
   /// Conversations that already hold a message.
   final used = <int>{};
 
@@ -69,12 +79,78 @@ class FakeChatSession extends ChatSessionController {
   }
 }
 
-class _NoMessages extends ChatMessagesNotifier {
-  _NoMessages(super.conversationId);
+/// The messages every fake conversation shows; tests set them and the list
+/// follows, like the real notifier after a store change.
+class FakeChatMessagesData extends Notifier<ChatMessages> {
+  @override
+  ChatMessages build() => const ChatMessages([], hasMore: false);
+
+  /// How often the list asked for an older page.
+  int olderRequests = 0;
+
+  void set(List<AiMessage> messages, {bool hasMore = false}) =>
+      state = ChatMessages(messages, hasMore: hasMore);
+}
+
+final fakeChatMessagesProvider =
+    NotifierProvider<FakeChatMessagesData, ChatMessages>(
+      FakeChatMessagesData.new,
+    );
+
+/// Makes reading the messages fail.
+final fakeMessagesFailProvider = Provider<bool>((ref) => false);
+
+class _FakeMessages extends ChatMessagesNotifier {
+  _FakeMessages(super.conversationId);
 
   @override
-  Future<ChatMessages> build() async => const ChatMessages([], hasMore: false);
+  Future<ChatMessages> build() async {
+    if (ref.watch(fakeMessagesFailProvider)) throw StateError('store failed');
+    return ref.watch(fakeChatMessagesProvider);
+  }
+
+  @override
+  Future<void> loadOlder() async =>
+      ref.read(fakeChatMessagesProvider.notifier).olderRequests++;
 }
+
+/// The text streamed into the live message, as the controller publishes it.
+class FakeLiveText extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  void set(String? text) => state = text;
+}
+
+final fakeLiveTextProvider = NotifierProvider<FakeLiveText, String?>(
+  FakeLiveText.new,
+);
+
+class _FakeLive extends LiveTextNotifier {
+  _FakeLive(super.messageId);
+
+  @override
+  String? build() => ref.watch(fakeLiveTextProvider);
+}
+
+/// A stored message for the list tests.
+AiMessage chatMessage(
+  int id, {
+  AiMessageRole role = AiMessageRole.assistant,
+  List<AiPart> parts = const [],
+  AiMessageState state = AiMessageState.complete,
+  String? model,
+  DateTime? at,
+}) => AiMessage(
+  id: id,
+  conversationId: 1,
+  seq: id,
+  role: role,
+  parts: parts,
+  state: state,
+  model: model,
+  createdAt: at ?? DateTime(2026, 11, 27, 14, 32),
+);
 
 /// One installed, ready chat plugin.
 const fakeChatPlugin = ChatPluginInfo(
@@ -97,7 +173,8 @@ List<Override> chatUiOverrides({
   chatPluginsProvider.overrideWithValue(
     AsyncData(withPlugin ? const [fakeChatPlugin] : const []),
   ),
-  chatMessagesProvider.overrideWith2(_NoMessages.new),
+  chatMessagesProvider.overrideWith2(_FakeMessages.new),
+  liveTextProvider.overrideWith2(_FakeLive.new),
   chatConversationProvider.overrideWith((ref, id) {
     final title = ref.watch(fakeChatTitlesProvider)[id] ?? '';
     final at = DateTime.utc(2026, 11, 27);

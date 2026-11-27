@@ -87,5 +87,127 @@
   "aiChatGuideFoot": "Installing a plugin lets it send data to the addresses it declares. The chat does not ask again.",
   "@aiChatGuideFoot": {
     "description": "Consent line at the foot of the no-plugin guide."
+  },
+  "aiChatCopy": "Copy",
+  "@aiChatCopy": {
+    "description": "Tooltip of the copy button under a message."
+  },
+  "aiChatStopped": "Stopped",
+  "@aiChatStopped": {
+    "description": "Line under an answer that was stopped."
+  },
+  "aiChatAnswering": "Answering",
+  "@aiChatAnswering": {
+    "description": "Screen-reader status of the three dots shown while an answer streams."
+  },
+  "aiChatToolRunning": "Running: {name}",
+  "@aiChatToolRunning": {
+    "description": "Title of a tool card while the tool runs. {name} is the tool's name.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatToolParams": "Parameters",
+  "@aiChatToolParams": {
+    "description": "Heading of the arguments in an open tool card."
+  },
+  "aiChatToolResult": "Result",
+  "@aiChatToolResult": {
+    "description": "Heading of the result in an open tool card."
+  },
+  "aiChatPluginSwitch": "From here on: {plugin} · {model}",
+  "@aiChatPluginSwitch": {
+    "description": "Divider written when the conversation moves to another plugin and model.",
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      },
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatPluginSwitchNoModel": "From here on: {plugin}",
+  "@aiChatPluginSwitchNoModel": {
+    "description": "Divider written when the conversation moves to another plugin and no model is known.",
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatJumpToEnd": "Jump to the end",
+  "@aiChatJumpToEnd": {
+    "description": "Tooltip of the round button that scrolls the chat to the newest message."
+  },
+  "aiChatMessagesError": "Could not load this conversation.",
+  "@aiChatMessagesError": {
+    "description": "Notice shown in place of the messages when reading them failed."
+  },
+  "aiChatMessagesRetry": "Try again",
+  "@aiChatMessagesRetry": {
+    "description": "Action of the notice shown when the messages could not be read."
+  },
+  "aiChatTrackMenu": "Song menu",
+  "@aiChatTrackMenu": {
+    "description": "Tooltip of the ⋮ button of a song row in an answer."
+  },
+  "aiChatToolPlayTracks": "Play songs",
+  "@aiChatToolPlayTracks": {
+    "description": "Name of the play_tracks tool on a tool card."
+  },
+  "aiChatToolQueueTracks": "Add to queue",
+  "@aiChatToolQueueTracks": {
+    "description": "Name of the queue_tracks tool on a tool card."
+  },
+  "aiChatToolRemoveFromQueue": "Remove from queue",
+  "@aiChatToolRemoveFromQueue": {
+    "description": "Name of the remove_from_queue tool on a tool card."
+  },
+  "aiChatToolListPlaylists": "List playlists",
+  "@aiChatToolListPlaylists": {
+    "description": "Name of the list_playlists tool on a tool card."
+  },
+  "aiChatToolGetPlaylistTracks": "Playlist songs",
+  "@aiChatToolGetPlaylistTracks": {
+    "description": "Name of the get_playlist_tracks tool on a tool card."
+  },
+  "aiChatToolGetLyrics": "Lyrics",
+  "@aiChatToolGetLyrics": {
+    "description": "Name of the get_lyrics tool on a tool card."
+  },
+  "aiChatToolGetListeningStats": "Listening stats",
+  "@aiChatToolGetListeningStats": {
+    "description": "Name of the get_listening_stats tool on a tool card."
+  },
+  "aiChatToolCreatePlaylist": "Create playlist",
+  "@aiChatToolCreatePlaylist": {
+    "description": "Name of the create_playlist tool on a tool card."
+  },
+  "aiChatToolAddToPlaylist": "Add to playlist",
+  "@aiChatToolAddToPlaylist": {
+    "description": "Name of the add_to_playlist tool on a tool card."
+  },
+  "aiChatToolRemoveFromPlaylist": "Remove from playlist",
+  "@aiChatToolRemoveFromPlaylist": {
+    "description": "Name of the remove_from_playlist tool on a tool card."
+  },
+  "aiChatToolGetNowPlaying": "Now playing",
+  "@aiChatToolGetNowPlaying": {
+    "description": "Name of the get_now_playing tool on a tool card."
+  },
+  "aiChatToolGetQueue": "Queue",
+  "@aiChatToolGetQueue": {
+    "description": "Name of the get_queue tool on a tool card."
+  },
+  "aiChatToolSearchLibrary": "Search the library",
+  "@aiChatToolSearchLibrary": {
+    "description": "Name of the search_library tool on a tool card."
+  },
+  "aiChatToolGetTrackInfo": "Song info",
+  "@aiChatToolGetTrackInfo": {
+    "description": "Name of the get_track_info tool on a tool card."
   }
 }

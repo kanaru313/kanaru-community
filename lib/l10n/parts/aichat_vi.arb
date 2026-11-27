@@ -87,5 +87,127 @@
   "aiChatGuideFoot": "Cài plugin là đồng ý cho nó gửi dữ liệu tới các địa chỉ nó khai. Chat không hỏi thêm.",
   "@aiChatGuideFoot": {
     "description": "Consent line at the foot of the no-plugin guide."
+  },
+  "aiChatCopy": "Sao chép",
+  "@aiChatCopy": {
+    "description": "Tooltip of the copy button under a message."
+  },
+  "aiChatStopped": "Đã dừng",
+  "@aiChatStopped": {
+    "description": "Line under an answer that was stopped."
+  },
+  "aiChatAnswering": "Đang trả lời",
+  "@aiChatAnswering": {
+    "description": "Screen-reader status of the three dots shown while an answer streams."
+  },
+  "aiChatToolRunning": "Đang chạy: {name}",
+  "@aiChatToolRunning": {
+    "description": "Title of a tool card while the tool runs. {name} is the tool's name.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatToolParams": "Tham số",
+  "@aiChatToolParams": {
+    "description": "Heading of the arguments in an open tool card."
+  },
+  "aiChatToolResult": "Kết quả",
+  "@aiChatToolResult": {
+    "description": "Heading of the result in an open tool card."
+  },
+  "aiChatPluginSwitch": "Từ đây dùng {plugin} · {model}",
+  "@aiChatPluginSwitch": {
+    "description": "Divider written when the conversation moves to another plugin and model.",
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      },
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatPluginSwitchNoModel": "Từ đây dùng {plugin}",
+  "@aiChatPluginSwitchNoModel": {
+    "description": "Divider written when the conversation moves to another plugin and no model is known.",
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatJumpToEnd": "Xuống cuối",
+  "@aiChatJumpToEnd": {
+    "description": "Tooltip of the round button that scrolls the chat to the newest message."
+  },
+  "aiChatMessagesError": "Không tải được cuộc trò chuyện.",
+  "@aiChatMessagesError": {
+    "description": "Notice shown in place of the messages when reading them failed."
+  },
+  "aiChatMessagesRetry": "Thử lại",
+  "@aiChatMessagesRetry": {
+    "description": "Action of the notice shown when the messages could not be read."
+  },
+  "aiChatTrackMenu": "Menu bài",
+  "@aiChatTrackMenu": {
+    "description": "Tooltip of the ⋮ button of a song row in an answer."
+  },
+  "aiChatToolPlayTracks": "Phát bài",
+  "@aiChatToolPlayTracks": {
+    "description": "Name of the play_tracks tool on a tool card."
+  },
+  "aiChatToolQueueTracks": "Thêm vào hàng đợi",
+  "@aiChatToolQueueTracks": {
+    "description": "Name of the queue_tracks tool on a tool card."
+  },
+  "aiChatToolRemoveFromQueue": "Bỏ khỏi hàng đợi",
+  "@aiChatToolRemoveFromQueue": {
+    "description": "Name of the remove_from_queue tool on a tool card."
+  },
+  "aiChatToolListPlaylists": "Danh sách playlist",
+  "@aiChatToolListPlaylists": {
+    "description": "Name of the list_playlists tool on a tool card."
+  },
+  "aiChatToolGetPlaylistTracks": "Bài trong playlist",
+  "@aiChatToolGetPlaylistTracks": {
+    "description": "Name of the get_playlist_tracks tool on a tool card."
+  },
+  "aiChatToolGetLyrics": "Lời bài hát",
+  "@aiChatToolGetLyrics": {
+    "description": "Name of the get_lyrics tool on a tool card."
+  },
+  "aiChatToolGetListeningStats": "Thống kê nghe",
+  "@aiChatToolGetListeningStats": {
+    "description": "Name of the get_listening_stats tool on a tool card."
+  },
+  "aiChatToolCreatePlaylist": "Tạo playlist",
+  "@aiChatToolCreatePlaylist": {
+    "description": "Name of the create_playlist tool on a tool card."
+  },
+  "aiChatToolAddToPlaylist": "Thêm vào playlist",
+  "@aiChatToolAddToPlaylist": {
+    "description": "Name of the add_to_playlist tool on a tool card."
+  },
+  "aiChatToolRemoveFromPlaylist": "Bỏ khỏi playlist",
+  "@aiChatToolRemoveFromPlaylist": {
+    "description": "Name of the remove_from_playlist tool on a tool card."
+  },
+  "aiChatToolGetNowPlaying": "Bài đang phát",
+  "@aiChatToolGetNowPlaying": {
+    "description": "Name of the get_now_playing tool on a tool card."
+  },
+  "aiChatToolGetQueue": "Hàng đợi",
+  "@aiChatToolGetQueue": {
+    "description": "Name of the get_queue tool on a tool card."
+  },
+  "aiChatToolSearchLibrary": "Tìm trong thư viện",
+  "@aiChatToolSearchLibrary": {
+    "description": "Name of the search_library tool on a tool card."
+  },
+  "aiChatToolGetTrackInfo": "Thông tin bài",
+  "@aiChatToolGetTrackInfo": {
+    "description": "Name of the get_track_info tool on a tool card."
   }
 }

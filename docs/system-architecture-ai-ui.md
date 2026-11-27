@@ -108,12 +108,51 @@ place of ⋮ while renaming.
 `ChatSurface` opens a conversation on first build (`ensureConversation`) and
 ends a rename when another conversation opens. Body, in order: the history area
 (`ChatHistorySlot`, empty until the history page) when the flag is set; nothing
-while the messages load; the message list (not built yet) when there are
-messages; with none: the no-plugin guide (`ChatNoPluginGuide`: cloud option
+while the messages load; the message list (`ChatMessageList`) when there are
+messages (a failed read shows `ChatMessagesError` with a retry); with none: the no-plugin guide (`ChatNoPluginGuide`: cloud option
 [Mở kho plugin AI] → `host.openSettings(aiPluginStoreLocation)`, consent line;
 no MCP option until MCP exists) when no `ai-chat` plugin is installed, else the
 greeting (`ChatEmptyGreeting`, with a slot for the prompt chips). The removed
 and reinstalled plugin states are notices above the composer, not bodies.
+
+## Message list and answer renderer
+
+Files in `lib/src/ai/ui/`: `message_list`, `message_bubble` (user bubble),
+`assistant_message`, `assistant_blocks`, `chat_markdown` (`ChatBlockView`),
+`track_row`, `track_actions`, `tool_card`, `tool_text`, `message_time`,
+`chat_jump_button`, `chat_card_slot`, `messages_error`; the parser in
+`markdown/` (pure Dart, no Flutter); view mapping in
+`state/chat_view/{message_view,time_format}.dart`.
+
+- **List:** a `CustomScrollView` with a centre (the first message loaded, or the
+  saved scroll anchor): older pages are added above it (`loadOlder` within 600 px
+  of the top), new text grows below, so neither moves what the reader sees.
+  Within one viewport of the end it follows new text; further up it keeps its
+  place and shows "Xuống cuối" (`ChatJumpButton`). The top message is saved in
+  `chatScrollAnchorProvider` when scrolling ends.
+- **Streaming:** only `AssistantMessage` of a streaming message watches
+  `liveTextProvider(id)`. `AssistantBlocks` feeds a `ChatMarkdownStream`: closed
+  blocks are parsed once and their widgets are reused (grouped by 40), only the
+  open tail is parsed and rebuilt per delta. Dots (`KStreamingDots`) only while
+  `turnState == streaming`; "Đã dừng" after Stop.
+- **Grammar (own parser, no `markdown` package):** paragraphs (single newline =
+  line break), flat bullet / numbered lists, `**bold**`, `` `code` ``, `[[t:ID]]`
+  line. Everything else is literal text as typed (links, images, HTML,
+  headings, quotes, fences); `*x*` loses its markers, `_` is never a marker. No
+  model field holds a URL, so nothing in a block is tappable except a song row.
+  Streamed output equals the full parse (property test).
+- **Song row:** a `[[t:ID]]` line is a 36 dp row only when the id is in
+  `ChatKnownTracks` (ids from this conversation's tool results); else the text.
+  Tap plays through `playerControllerProvider` with the AI play context; the ⋮
+  (desktop) or long press (phone) opens the library song menu. `ai` imports
+  `library/ui` (the DAG allows `ai -> library`), so no `ChatHost` method is
+  needed; `ChatTrackActions` is the test seam.
+- **Tool card:** folded by default; "Đang chạy: ..." and a spinner while running.
+  Confirm / done / error cards are not built here: `chatCardBuilderProvider`
+  is the slot they plug into.
+- **Time:** footer time expands on tap / hover to "HH:mm · dd/MM/yyyy"; the
+  copy button puts the text on the clipboard. A plugin switch shows the divider
+  "Từ đây dùng <plugin> · <model>".
 
 ## Play context label
 
