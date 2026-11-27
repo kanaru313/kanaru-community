@@ -33,6 +33,7 @@ const Map<String, String?> arbParts = {
   'fonts': 'fonts',
   'aichat': 'aiChat',
   'aiset': 'aiSet',
+  'online': 'online',
 };
 
 /// Locale whose key set every other locale must match.

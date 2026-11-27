@@ -1322,6 +1322,112 @@ abstract class AppLocalizations {
   /// **'The queue is empty'**
   String get playbackQueueEmpty;
 
+  /// No description provided for @playbackNoticeRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get playbackNoticeRetry;
+
+  /// No description provided for @playbackNoticeOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get playbackNoticeOpenSettings;
+
+  /// No description provided for @playbackNoticeFailedLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not play “{title}”: {source} returned no stream link ({code})'**
+  String playbackNoticeFailedLink(String title, String source, String code);
+
+  /// No description provided for @playbackNoticeFailedFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not play “{title}”: Kanaru cannot play {source}\'s format yet'**
+  String playbackNoticeFailedFormat(String title, String source);
+
+  /// No description provided for @playbackNoticeFailedGone.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped “{title}”: no longer on {source}'**
+  String playbackNoticeFailedGone(String title, String source);
+
+  /// No description provided for @playbackNoticeFailedCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not play “{title}” ({code})'**
+  String playbackNoticeFailedCode(String title, String code);
+
+  /// No description provided for @playbackNoticePausedOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'No network: online tracks cannot play'**
+  String get playbackNoticePausedOffline;
+
+  /// No description provided for @playbackNoticePausedRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'{source} paused for {length} (429). Playback can resume in {time}.'**
+  String playbackNoticePausedRateLimited(
+    String source,
+    String length,
+    String time,
+  );
+
+  /// No description provided for @playbackNoticePauseEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'{source} is no longer paused.'**
+  String playbackNoticePauseEnded(String source);
+
+  /// No description provided for @playbackNoticePauseMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 minute} other{{n} minutes}}'**
+  String playbackNoticePauseMinutes(int n);
+
+  /// No description provided for @playbackNoticePauseSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 second} other{{n} seconds}}'**
+  String playbackNoticePauseSeconds(int n);
+
+  /// No description provided for @playbackNoticePausedNeedsConfig.
+  ///
+  /// In en, this message translates to:
+  /// **'{source} needs setting up before it can play.'**
+  String playbackNoticePausedNeedsConfig(String source);
+
+  /// No description provided for @playbackNoticePausedBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'{source} is not answering: paused at this track.'**
+  String playbackNoticePausedBusy(String source);
+
+  /// No description provided for @playbackNoticeSkippedRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped “{title}”: its plugin was removed'**
+  String playbackNoticeSkippedRemoved(String title);
+
+  /// No description provided for @playbackNoticeSkippedRemovedMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped “{title}” and {others} more: their plugin was removed'**
+  String playbackNoticeSkippedRemovedMany(String title, String others);
+
+  /// No description provided for @playbackNoticeSkippedLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped “{title}”: needs Kanaru Pro'**
+  String playbackNoticeSkippedLocked(String title);
+
+  /// No description provided for @playbackNoticeSkippedLockedMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped “{title}” and {others} more: need Kanaru Pro'**
+  String playbackNoticeSkippedLockedMany(String title, String others);
+
   /// No description provided for @libraryTabSongs.
   ///
   /// In en, this message translates to:
@@ -14122,6 +14228,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Discard'**
   String get aiSetEdDiscardConfirm;
+
+  /// No description provided for @onlineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get onlineTitle;
+
+  /// No description provided for @onlineSearchTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Search {source} or paste a link'**
+  String onlineSearchTooltip(String source);
+
+  /// No description provided for @onlineNoSourceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No online sources yet.'**
+  String get onlineNoSourceTitle;
+
+  /// No description provided for @onlineNoSourceMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Install a music source plugin (Audius, ZingMP3, Radio Browser…) to search and play music online.'**
+  String get onlineNoSourceMessage;
+
+  /// No description provided for @onlineAddSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a music source'**
+  String get onlineAddSource;
+
+  /// No description provided for @onlineOfflineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No network.'**
+  String get onlineOfflineTitle;
+
+  /// No description provided for @onlineOfflineMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Online needs a network. Music on this device still plays from Library.'**
+  String get onlineOfflineMessage;
+
+  /// No description provided for @onlineRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get onlineRetry;
+
+  /// No description provided for @onlineRetryIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry in {time}'**
+  String onlineRetryIn(String time);
+
+  /// No description provided for @onlineServerDownTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach {source}.'**
+  String onlineServerDownTitle(String source);
+
+  /// No description provided for @onlineServerDownMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The source\'s server is not answering. Try again in a few minutes.'**
+  String get onlineServerDownMessage;
+
+  /// No description provided for @onlineNeedsConfigTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs setting up: {field}'**
+  String onlineNeedsConfigTitle(String field);
+
+  /// No description provided for @onlineNeedsConfigMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'{source} needs this field before it can load anything.'**
+  String onlineNeedsConfigMessage(String source);
+
+  /// No description provided for @onlineOpenPluginSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open plugin settings'**
+  String get onlineOpenPluginSettings;
+
+  /// No description provided for @onlineRateLimitedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Paused for {length}: the server reported too many requests (429)'**
+  String onlineRateLimitedTitle(String length);
+
+  /// No description provided for @onlineRateLimitedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing what was loaded before.'**
+  String get onlineRateLimitedMessage;
+
+  /// No description provided for @onlineInvalidDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{source} returned data Kanaru cannot read'**
+  String onlineInvalidDataTitle(String source);
+
+  /// No description provided for @onlineInvalidDataMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The source\'s site may have changed. A plugin update usually fixes this.'**
+  String get onlineInvalidDataMessage;
+
+  /// No description provided for @onlineCheckUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
+  String get onlineCheckUpdates;
 }
 
 class _AppLocalizationsDelegate
