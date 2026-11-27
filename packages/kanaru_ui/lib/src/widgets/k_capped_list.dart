@@ -1,4 +1,5 @@
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:material_ui/material_ui.dart';
 
 import '../layout/form_factor.dart';
@@ -142,7 +143,7 @@ class _KCappedListState extends State<KCappedList> {
         physics: const ClampingScrollPhysics(),
         padding: EdgeInsets.zero,
         itemExtent: row + gap,
-        cacheExtent: (row + gap) * 2,
+        scrollCacheExtent: ScrollCacheExtent.pixels((row + gap) * 2),
         itemCount: widget.itemCount,
         itemBuilder: (context, i) => Padding(
           padding: EdgeInsets.only(bottom: gap),
