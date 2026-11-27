@@ -4,7 +4,8 @@ enum PluginKind {
   translate('translate', ['translate']),
   aiTranslate('ai-translate', ['translate']),
   streaming('streaming', ['search', 'stream']),
-  aiChat('ai-chat', ['chat']);
+  aiChat('ai-chat', ['chat']),
+  seekbar('seekbar', []);
 
   const PluginKind(this.wire, this.requiredScripts);
 
@@ -20,6 +21,10 @@ enum PluginKind {
 
   /// Only streaming plugins may list `*.` wildcard hosts.
   bool get allowsWildcardHosts => this == streaming;
+
+  /// Whether the plugin runs scripts. A seekbar plugin is data only: no code,
+  /// no hosts, no options.
+  bool get hasCode => requiredScripts.isNotEmpty;
 
   /// The kind whose wire name is [value], or null (also for non-strings).
   static PluginKind? fromWire(Object? value) {

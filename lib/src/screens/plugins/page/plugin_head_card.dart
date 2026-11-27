@@ -49,7 +49,7 @@ class PluginHeadCard extends ConsumerWidget {
       PluginKind.translate ||
       PluginKind.aiTranslate => _TranslateUseRow(installId: row.installId),
       PluginKind.aiChat => const _AiChatUseRow(),
-      PluginKind.streaming || null => null,
+      PluginKind.streaming || PluginKind.seekbar || null => null,
     };
     return SettingsBlock(
       children: [

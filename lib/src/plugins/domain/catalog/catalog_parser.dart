@@ -95,10 +95,14 @@ CatalogEntry? _entry(JsonObject json, Uri url, bool Function(Uri) allowed) {
   if (name == null) return null;
   if (version is! int || version < 1 || version > 2147483647) return null;
   if (apiVersion is! int || apiVersion < 1) return null;
-  final hosts = _hosts(
-    json['hosts'],
-    wildcardsAllowed: kind?.allowsWildcardHosts ?? true,
-  );
+  // A seekbar plugin runs no code and contacts nothing: no hosts at all.
+  final hosts = kind == PluginKind.seekbar
+      ? _noHosts(json)
+      : _hosts(
+          json['hosts'],
+          wildcardsAllowed: kind?.allowsWildcardHosts ?? true,
+        );
+  final features = _features(json['features']);
   final author = _text(json['author'], max: 80, optional: true);
   final description = _text(
     json['description'],
@@ -106,7 +110,12 @@ CatalogEntry? _entry(JsonObject json, Uri url, bool Function(Uri) allowed) {
     optional: true,
     keepNewlines: true,
   );
-  if (hosts == null || author == null || description == null) return null;
+  if (hosts == null ||
+      features == null ||
+      author == null ||
+      description == null) {
+    return null;
+  }
   final path = _reference(json['path'], url, allowed);
   if (path == null) return null;
   final iconField = json['icon'];
@@ -132,6 +141,7 @@ CatalogEntry? _entry(JsonObject json, Uri url, bool Function(Uri) allowed) {
     languages: parsePluginLanguages(json['languages']),
     sha256: (sha256 as String?)?.toLowerCase(),
     size: size as int?,
+    features: features,
   );
 }
 
@@ -154,6 +164,28 @@ Uri? _reference(Object? value, Uri url, bool Function(Uri) allowed) {
     return null;
   }
   return allowed(resolved) ? resolved : null;
+}
+
+/// `hosts` of a seekbar entry: absent or empty; null for anything else.
+List<String>? _noHosts(JsonObject json) {
+  if (!json.containsKey('hosts')) return const [];
+  final value = json['hosts'];
+  return value is List && value.isEmpty ? const [] : null;
+}
+
+/// `features`: absent, or at most [maxEntryFeatures] names of 1 to
+/// [maxFeatureNameLength] characters; null for anything else.
+List<String>? _features(Object? value) {
+  if (value == null) return const [];
+  if (value is! List || value.length > maxEntryFeatures) return null;
+  for (final item in value) {
+    if (item is! String ||
+        item.runes.isEmpty ||
+        item.runes.length > maxFeatureNameLength) {
+      return null;
+    }
+  }
+  return List<String>.unmodifiable(value);
 }
 
 List<String>? _hosts(Object? value, {required bool wildcardsAllowed}) {

@@ -42,6 +42,12 @@ final class UnsupportedKind extends PackageProblem {
   const UnsupportedKind(super.type);
 }
 
+/// The package uses a feature of the format this app cannot handle yet
+/// (`seekbar.thumb.lottie`); the detail is the feature name.
+final class UnsupportedFeature extends PackageProblem {
+  const UnsupportedFeature(super.feature);
+}
+
 /// A host that is not a public DNS name; the detail is the host.
 final class InvalidHost extends PackageProblem {
   const InvalidHost(super.host);

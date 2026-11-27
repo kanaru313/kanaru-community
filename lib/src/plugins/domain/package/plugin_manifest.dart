@@ -1,6 +1,7 @@
 import '../config/config_field.dart';
 import 'chat_spec.dart';
 import 'plugin_kind.dart';
+import 'seekbar_spec.dart';
 import 'translate_spec.dart';
 
 /// A checked `plugin.json`. Built by `parseManifest`; it is a read-only view:
@@ -20,6 +21,8 @@ class PluginManifest {
     this.regexp,
     this.translate,
     this.chat,
+    this.license = '',
+    this.seekbar,
     this.config = const [],
   });
 
@@ -56,6 +59,13 @@ class PluginManifest {
 
   /// The `chat` block; set exactly for an `ai-chat` plugin.
   final ChatSpec? chat;
+
+  /// `metadata.license` (1 to 64 characters); read and required for a
+  /// seekbar plugin only, '' for every other kind.
+  final String license;
+
+  /// The `seekbar` block; set exactly for a seekbar plugin.
+  final SeekbarSpec? seekbar;
 
   /// Config fields in manifest order.
   final List<ConfigField> config;

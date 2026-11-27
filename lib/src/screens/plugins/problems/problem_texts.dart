@@ -51,7 +51,7 @@ String packageProblemText(AppLocalizations l10n, PackageProblem problem) {
           ? l10n.pluginsReasonInvalidManifestPlain
           : l10n.pluginsReasonInvalidManifest(detail),
     UnknownConfigFormat() => l10n.pluginsReasonUnknownFormat(detail),
-    NeedsNewerApp() => l10n.pluginsReasonNeedsNewerApp,
+    NeedsNewerApp() || UnsupportedFeature() => l10n.pluginsReasonNeedsNewerApp,
     UnsupportedKind() => l10n.pluginsReasonUnsupportedKind,
     InvalidHost() => l10n.pluginsReasonBadHost(detail),
     InvalidWildcardHost() => l10n.pluginsReasonBadWildcard(detail),
