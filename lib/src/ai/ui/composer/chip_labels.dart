@@ -34,8 +34,14 @@ IconData chipIcon(ChipKind kind) => switch (kind) {
 
 /// The name of the tool group a chip needs, for the "tool is off" note.
 String chipGroupName(AppLocalizations l10n, ChipKind kind) =>
-    switch (chipGroup(kind)) {
+    toolGroupName(l10n, chipGroup(kind));
+
+/// The name of a tool group in the user's words.
+String toolGroupName(AppLocalizations l10n, AiToolGroup group) =>
+    switch (group) {
       AiToolGroup.nowPlaying => l10n.aiChatGroupNowPlaying,
       AiToolGroup.playlists => l10n.aiChatGroupPlaylists,
+      AiToolGroup.lyrics => l10n.aiChatGroupLyrics,
+      AiToolGroup.queue => l10n.aiChatGroupQueue,
       _ => l10n.aiChatGroupTrackInfo,
     };

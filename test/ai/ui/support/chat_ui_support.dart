@@ -108,9 +108,14 @@ class FakeChatSession extends ChatSessionController {
   /// What `send` answers; null is an accepted message.
   SendResult? sendResult;
 
+  /// Holds `send` back until it completes (a send that is still running when
+  /// the chat leaves the screen).
+  Completer<void>? sendGate;
+
   @override
   Future<SendResult> send(String text, {bool shortVersion = false}) async {
     calls.add(shortVersion ? 'send short $text' : 'send $text');
+    await sendGate?.future;
     return sendResult ?? SendSent(Future.value());
   }
 

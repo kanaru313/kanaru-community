@@ -1,12 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:logging/logging.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../domain/variables/variable_filler.dart';
 import '../../state/chat_attachments.dart';
 import '../../state/chat_session.dart';
+import '../../state/chat_view/composer_draft.dart';
 import '../../state/chat_view/composer_inputs.dart';
 import '../../state/chat_view/composer_send.dart';
 import '../../state/chat_view/composer_view.dart';
+import '../../state/chat_view/prompt_apply.dart';
 import '../composer_draft_binding.dart';
 import 'composer_buttons.dart';
 import 'composer_field.dart';
@@ -15,6 +21,8 @@ import 'composer_text_controller.dart';
 import 'context_chips.dart';
 import 'plugin_picker.dart';
 import 'prompt_chips.dart';
+
+final _log = Logger('ai.composer');
 
 /// The message box under the conversation: a note, the context chips, the
 /// field and the button row. With [showPromptChips] (the chat has messages)
@@ -93,17 +101,48 @@ class _ComposerBoxState extends ConsumerState<_ComposerBox> {
     final text = widget.controller.text;
     final chips = ref.read(chatAttachmentsProvider).attached;
     if (text.trim().isEmpty && chips.isEmpty) return;
-    final result = await sendFromComposer(
-      session: ref.read(chatSessionProvider.notifier),
-      notice: ref.read(composerSendNoticeProvider.notifier),
-      text: text,
-      shortVersion: shortVersion,
-    );
-    // Clear only what was sent: typing meanwhile stays.
-    if (!mounted || result is! SendSent || widget.controller.text != text) {
+    // Taken before the await: the chat may leave the screen meanwhile (a panel
+    // swap), and what was sent must leave the draft all the same.
+    final draft = ref.read(composerDraftProvider.notifier);
+    final notice = ref.read(composerSendNoticeProvider.notifier);
+    final SendResult result;
+    try {
+      result = await sendFromComposer(
+        session: ref.read(chatSessionProvider.notifier),
+        notice: notice,
+        text: text,
+        shortVersion: shortVersion,
+      );
+    } on Object catch (e, s) {
+      _log.warning('send failed: ${e.runtimeType}', e, s);
+      notice.set(const NoticeSendFailed());
       return;
     }
-    widget.controller.clear();
+    // Clear only what was sent: typing meanwhile stays.
+    if (result is SendSent) draft.clearIfSent(text);
+    // A blank of a prompt that was left in: point at it.
+    if (mounted &&
+        result is SendMissingData &&
+        result.issues.any(
+          (i) => i is VariableIssue && i.issue is FillLeftoverInput,
+        )) {
+      final selected = selectInputBlank(widget.controller.value);
+      if (selected != null) {
+        widget.controller.value = selected;
+        widget.focusNode.requestFocus();
+      }
+    }
+  }
+
+  void _stop() {
+    unawaited(
+      ref.read(chatSessionProvider.notifier).stop().catchError((
+        Object e,
+        StackTrace s,
+      ) {
+        _log.warning('stop failed: ${e.runtimeType}', e, s);
+      }),
+    );
   }
 
   @override
@@ -151,11 +190,7 @@ class _ComposerBoxState extends ConsumerState<_ComposerBox> {
               onSubmit: _send,
             ),
             const SizedBox(height: KSpace.x1),
-            ComposerButtons(
-              view: view,
-              onSend: _send,
-              onStop: () => ref.read(chatSessionProvider.notifier).stop(),
-            ),
+            ComposerButtons(view: view, onSend: _send, onStop: _stop),
           ],
         ),
       ),

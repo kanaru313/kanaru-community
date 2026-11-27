@@ -54,7 +54,7 @@ Future<void> showPluginPicker(
         SelectionOption<String>(
           value: p.installId,
           title: Text(p.name),
-          subtitle: Text(pluginStatusText(l10n, p)),
+          subtitle: _status(l10n, p),
           leading: ChatPluginIcon(installId: p.installId),
         ),
     ],
@@ -67,4 +67,10 @@ Future<void> showPluginPicker(
     ),
   );
   if (chosen != null && chosen != current) await session.switchPlugin(chosen);
+}
+
+/// The state line, or none when the plugin has no state to tell.
+Widget? _status(AppLocalizations l10n, ChatPluginInfo plugin) {
+  final text = pluginStatusText(l10n, plugin);
+  return text.isEmpty ? null : Text(text);
 }

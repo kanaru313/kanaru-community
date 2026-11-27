@@ -24,8 +24,6 @@ import 'package:kanaru/src/playback/state/now_playing_panel.dart';
 import 'package:kanaru/src/playback/state/sleep_timer_provider.dart';
 import 'package:kanaru/src/plugins/state/plugin_store_providers.dart'
     show installedPluginProvider;
-import 'package:kanaru/src/plugins/state/store_ops.dart'
-    show pluginIconProvider;
 import 'package:kanaru/src/screens/now_playing/ui/desktop/desktop_now_playing.dart';
 import 'package:kanaru/src/screens/now_playing/ui/desktop/desktop_now_playing_header.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -72,7 +70,7 @@ class _Feed {
       (ref, id) =>
           AsyncData(liveRow(id, name: 'Google Translate', kind: 'translate')),
     ),
-    pluginIconProvider.overrideWith((ref, id) async => null),
+    // The desktop host's chat overrides already stub pluginIconProvider.
     sleepTimerProvider.overrideWith(FakeSleepTimer.new),
     ...sleepEstimates(),
   ];

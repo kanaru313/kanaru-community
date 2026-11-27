@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -24,12 +26,19 @@ void openChatPage(GoRouter router) {
   if (chatPageOnTop(router)) return;
   if (chatPageInStack(router)) {
     // Pages (a sheet's route, a detail) were pushed over the chat: pop them.
-    while (!chatPageOnTop(router) && router.canPop()) {
-      router.pop();
-    }
+    // maybePop respects the pages' own guards (an unsaved edit): stop when
+    // one refuses.
+    unawaited(_popToChat(router));
     return;
   }
   router.push(chatPath);
+}
+
+Future<void> _popToChat(GoRouter router) async {
+  final navigator = router.routerDelegate.navigatorKey.currentState;
+  while (navigator != null && !chatPageOnTop(router) && router.canPop()) {
+    if (!await navigator.maybePop()) return;
+  }
 }
 
 /// The shell's [ChatHost]: the chat is the right panel on desktop and a page
@@ -42,7 +51,9 @@ class ChatHostShell implements ChatHost {
   final GoRouter Function() _router;
 
   @override
-  bool get isPanel => !chatPageOnTop(_router());
+  // The shell decides, not the route stack: a page above the phone's chat
+  // page must not make `close` shut the (closed) panel.
+  bool get isPanel => _ref.read(rightPanelProvider) == RightPanelKind.chat;
 
   @override
   void close() {

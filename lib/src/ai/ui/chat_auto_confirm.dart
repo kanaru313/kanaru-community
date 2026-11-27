@@ -15,12 +15,14 @@ enum AutoModeScope {
 ///
 /// Stand-in until the AI settings work lands its shared dialog with the same
 /// names and signature (`auto_mode_confirm.dart`); the rebase replaces this
-/// file with it. Until then it confirms at once.
+/// file with it. Until then it REFUSES: the automatic permission lets the
+/// assistant change the library without asking, so it must never be switched
+/// on without the user's explicit confirmation.
 Future<bool> confirmAutoMode(
   BuildContext context,
   WidgetRef ref, {
   required AutoModeScope scope,
-}) => Future.value(true);
+}) => Future.value(false);
 
 /// The shape of [confirmAutoMode], so a test can hand the picker its own.
 typedef AutoModeConfirm = Future<bool> Function(

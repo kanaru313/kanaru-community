@@ -73,14 +73,32 @@ class _AppShellState extends ConsumerState<AppShell> {
     });
   }
 
+  GoRouter? _router;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _history ??= NavHistory(GoRouter.of(context));
+    final router = GoRouter.of(context);
+    _history ??= NavHistory(router);
+    if (!identical(router, _router)) {
+      _router?.routerDelegate.removeListener(_onRoute);
+      _router = router..routerDelegate.addListener(_onRoute);
+    }
+  }
+
+  /// A page above the phone's chat page was popped while the window is wide:
+  /// the chat page is on top again and the panel takes over.
+  void _onRoute() {
+    final router = _router;
+    if (!mounted || router == null) return;
+    if (FormFactor.of(context) == FormFactor.desktop && chatPageOnTop(router)) {
+      _chatToPanel();
+    }
   }
 
   @override
   void dispose() {
+    _router?.routerDelegate.removeListener(_onRoute);
     _coverColors?.close();
     _history?.dispose();
     super.dispose();

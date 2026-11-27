@@ -67,6 +67,24 @@ All keep-alive providers, so the panel swapping to the queue (the chat widget is
 disposed) or the panel and the page replacing each other lose nothing. No
 `GlobalKey` crosses a swap.
 
+- The open conversation's messages stay loaded while the chat is off screen:
+  `chatMessagesHoldProvider` (watched by the surface, not auto-disposed) listens
+  to the engine's auto-dispose `chatMessagesProvider(id)` for the open id, so a
+  swap keeps the pages already loaded; it is released when another conversation
+  opens. Switching conversation also clears the send note and the scroll anchor.
+- A refused send's note is recorded after the field is written (editing the
+  field ends the note); a send that finishes after the chat left the screen
+  still clears the sent text from the draft (`clearIfSent`). The draft never
+  stores the IME composing range.
+- Rename starts from the stored title (empty for an unnamed chat; the
+  placeholder is only a hint); saving it unchanged is not a rename, so
+  auto-titling stays.
+- "Sao chép" on an answer copies the rendered text (`plainAnswerText`): markers
+  dropped, `[[t:ID]]` lines as "title – artist" when known, else left out.
+- Streaming cost: closed groups and the open blocks sit in their own
+  `RepaintBoundary`; open block views are reused while their block is equal.
+  Known track ids are cached per message and cover the loaded page only.
+
 | Provider | Holds |
 |---|---|
 | `chatViewProvider` | `historyOpen`, `renaming`, `renameText`; `back()` (rename, then history; true when it took a step), `startNewConversation()`, `deleteConversation(id)`, `commitRename()`, `ensureConversation()` |
@@ -218,9 +236,10 @@ messages they are one small scrolling row above the composer.
   card's "Đổi model" calls `request()`.
 - **Stand-ins until the settings work merges:** `chat_auto_confirm.dart`
   (`AutoModeScope`, `confirmAutoMode`, same names as the settings lane's
-  `auto_mode_confirm.dart`; confirms at once), `chat_links.dart`, and the
-  built-in prompt texts in the chat's own l10n (`aiChatPrompt*`), variable
-  names without descriptions.
+  `auto_mode_confirm.dart`; REFUSES, so Tự động cannot be switched on from the
+  chat until the settings dialog replaces it at the rebase), `chat_links.dart`,
+  and the built-in prompt texts and variable descriptions in the chat's own
+  l10n (`aiChatPrompt*`, `aiChatVarDesc*`).
 - **Tests:** `test/ai/ui/support/chat_ui_support.dart` now also fakes `send`,
   `stop`, `switchPlugin`, `switchModel`, `setPermission` (recorded in `calls`,
   they change `fakeChatBindingProvider`), readiness (`fakeChatReadinessProvider`),

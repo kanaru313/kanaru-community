@@ -1,4 +1,8 @@
+import 'dart:async';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/ai/domain/conversation/ai_message.dart';
 import 'package:kanaru/src/ai/domain/conversation/parts.dart';
 import 'package:kanaru/src/ai/domain/loop/loop_state.dart';
 import 'package:kanaru/src/ai/domain/output/chat_readiness.dart';
@@ -15,9 +19,8 @@ import 'package:kanaru/src/ai/ui/composer/composer_notice.dart';
 import 'package:kanaru/src/ai/ui/composer/composer_text_controller.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../../../packages/kanaru_ui/test/support/finders.dart'
-    show byEnabledState;
 import '../../../support/icon_button_finders.dart';
+import '../../../support/kanaru_ui_finders.dart' show byEnabledState;
 import '../support/chat_ui_support.dart';
 import 'composer_harness.dart';
 
@@ -72,14 +75,18 @@ void main() {
   });
 
   group('Enter', () {
-    testWidgets('Enter sends on desktop, newline on mobile', (tester) async {
+    testWidgets('Enter sends on desktop, Shift+Enter is a new line', (
+      tester,
+    ) async {
       final desktop = await pumpComposer(tester);
       await typeInComposer(tester, 'hello');
       await pressEnter(tester, shift: true);
       expect(desktop.sends, isEmpty, reason: 'Shift+Enter is a new line');
       await pressEnter(tester);
       expect(desktop.sends, ['send hello']);
+    });
 
+    testWidgets('Enter is a new line on the phone', (tester) async {
       final phone = await pumpComposer(tester, size: _phone);
       await typeInComposer(tester, 'hello');
       await pressEnter(tester);
@@ -234,6 +241,34 @@ void main() {
       expect(setup.controller.text, 'Say hi');
     });
 
+    testWidgets('a refused prompt keeps its note and the text', (tester) async {
+      var searched = 0;
+      final setup = await pumpComposer(
+        tester,
+        promptChips: true,
+        overrides: [
+          chatFindLyricsProvider.overrideWithValue((_) => searched++),
+        ],
+      );
+      setup.container
+          .read(fakeComposerSettingsProvider.notifier)
+          .set(prompts());
+      setup.session.sendResult = const SendMissingData([
+        VariableIssue(FillMissing(AiVariable.lyrics, 'no lyrics')),
+      ]);
+      await tester.pump();
+      await tester.tap(find.text('Lyrics'));
+      await tester.pump();
+      // The prompt is in the field, and the note says why it was not sent.
+      expect(setup.controller.text, 'Explain {{lyrics}}');
+      expect(
+        find.textContaining('has no lyrics, so {{lyrics}} cannot be filled'),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Find lyrics for this song'));
+      expect(searched, 1);
+    });
+
     testWidgets('chips lock while streaming and dim without data', (
       tester,
     ) async {
@@ -289,6 +324,39 @@ void main() {
       expect(setup.controller.text, 'Explain {{lyrics}}');
     });
 
+    testWidgets('a leftover blank is selected for typing', (tester) async {
+      final setup = await pumpComposer(tester);
+      setup.session.sendResult = const SendMissingData([
+        VariableIssue(FillLeftoverInput()),
+      ]);
+      await typeInComposer(tester, 'Mood: {{input}}');
+      await tester.tap(find.byTooltip('Send'));
+      await tester.pump();
+      expect(find.textContaining('is still in the message'), findsOneWidget);
+      expect(
+        setup.controller.selection.textInside(setup.controller.text),
+        '{{input}}',
+      );
+    });
+
+    testWidgets('a variable whose tool is off names the tool', (tester) async {
+      final setup = await pumpComposer(tester);
+      setup.session.sendResult = const SendMissingData([
+        VariableIssue(FillGroupOff(AiVariable.nowPlaying)),
+      ]);
+      await typeInComposer(tester, 'Tell me about {{now_playing}}');
+      await tester.tap(find.byTooltip('Send'));
+      await tester.pump();
+      expect(
+        find.text(
+          'The “Now playing” tool is off, so {{now_playing}} cannot be '
+          'filled. Nothing was sent.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('AI settings'), findsOneWidget);
+    });
+
     testWidgets('editing the text ends the note of a refused send', (
       tester,
     ) async {
@@ -302,22 +370,47 @@ void main() {
       expect(find.textContaining('could not be saved'), findsNothing);
     });
 
-    testWidgets('oversize sends the short version', (tester) async {
-      final setup = await pumpComposer(tester);
+    testWidgets('oversize queue shows the count and sends the short version', (
+      tester,
+    ) async {
+      final setup = await pumpComposer(
+        tester,
+        overrides: [chatQueueLengthProvider.overrideWithValue(412)],
+      );
       setup.session.sendResult = const SendOversize([AiVariable.queue]);
       await typeInComposer(tester, 'Clean {{queue}}');
       await tester.tap(find.byTooltip('Send'));
       await tester.pump();
-      expect(find.textContaining('too large to send to m1'), findsOneWidget);
+      expect(
+        find.text('{{queue}} has 412 songs, over the limit m1 accepts.'),
+        findsOneWidget,
+      );
 
       setup.session.sendResult = null;
-      await tester.tap(find.text('Send the short version'));
+      await tester.tap(
+        find.text('Send the short version: 50 songs around the playing one'),
+      );
       await tester.pump();
       expect(setup.sends, [
         'send Clean {{queue}}',
         'send short Clean {{queue}}',
       ]);
       expect(setup.controller.text, isEmpty);
+    });
+
+    testWidgets('oversize without a known count uses the plain wording', (
+      tester,
+    ) async {
+      final setup = await pumpComposer(tester);
+      setup.session.sendResult = const SendOversize([AiVariable.lyrics]);
+      await typeInComposer(tester, 'Explain {{lyrics}}');
+      await tester.tap(find.byTooltip('Send'));
+      await tester.pump();
+      expect(
+        find.text('{{lyrics}} is too large to send to m1.'),
+        findsOneWidget,
+      );
+      expect(find.text('Send the short version'), findsOneWidget);
     });
 
     testWidgets('cancel on the oversize note keeps the text', (tester) async {
@@ -401,6 +494,32 @@ void main() {
       expect(find.text('Choose a plugin'), findsOneWidget);
     });
 
+    testWidgets('a removed plugin is named when the chat switched to it', (
+      tester,
+    ) async {
+      final setup = await pumpComposer(
+        tester,
+        readiness: const ChatPluginRemoved(),
+      );
+      setup.container.read(fakeChatMessagesProvider.notifier).set([
+        chatMessage(
+          1,
+          role: AiMessageRole.event,
+          parts: const [
+            EventPart.pluginSwitch(fromName: 'Claude', toName: 'Grok'),
+          ],
+        ),
+      ]);
+      await tester.pump();
+      await tester.pump();
+      expect(
+        find.text(
+          'Plugin “Grok” was removed. Choose another plugin to continue.',
+        ),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('a model without tools gets a gentle note and still sends', (
       tester,
     ) async {
@@ -429,6 +548,52 @@ void main() {
       await tester.tap(byIconButton('Remove chip Now playing'));
       await tester.pump();
       expect(setup.container.read(chatAttachmentsProvider).attached, isEmpty);
+    });
+  });
+
+  group('draft', () {
+    testWidgets('the draft never keeps the IME composing range', (
+      tester,
+    ) async {
+      final setup = await pumpComposer(tester);
+      await typeInComposer(tester, '');
+      setup.controller.value = const TextEditingValue(
+        text: 'xin',
+        selection: TextSelection.collapsed(offset: 3),
+        composing: TextRange(start: 0, end: 3),
+      );
+      await tester.pump();
+      final draft = setup.container.read(composerDraftProvider);
+      expect(draft.text, 'xin');
+      expect(draft.composing, TextRange.empty);
+      // The field itself keeps composing: the draft write did not undo it.
+      expect(
+        setup.controller.value.composing,
+        const TextRange(start: 0, end: 3),
+      );
+    });
+
+    testWidgets('a send that ends after the chat left still clears the text', (
+      tester,
+    ) async {
+      final setup = await pumpComposer(tester);
+      setup.session.sendGate = Completer<void>();
+      await typeInComposer(tester, 'hello');
+      await tester.tap(find.byTooltip('Send'));
+      await tester.pump();
+      expect(setup.sends, ['send hello']);
+
+      // The chat leaves the screen (a panel swap) while the send runs.
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: setup.container,
+          child: const MaterialApp(home: SizedBox()),
+        ),
+      );
+      setup.session.sendGate!.complete();
+      await tester.pump();
+      await tester.pump();
+      expect(setup.container.read(composerDraftProvider).text, isEmpty);
     });
   });
 }

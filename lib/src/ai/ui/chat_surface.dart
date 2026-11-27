@@ -7,6 +7,7 @@ import '../state/chat_messages_provider.dart';
 import '../state/chat_providers.dart';
 import '../state/chat_session.dart';
 import '../state/chat_view/chat_view_state.dart';
+import '../state/chat_view/composer_view.dart';
 import 'chat_history_slot.dart';
 import 'composer/composer.dart';
 import 'composer/prompt_chips.dart';
@@ -40,19 +41,23 @@ class _ChatSurfaceState extends ConsumerState<ChatSurface> {
       unawaited(ref.read(chatViewProvider.notifier).ensureConversation());
     });
     // Another conversation (new, deleted, opened from the history): a rename
-    // of the old one ends.
+    // of the old one ends, and so do the note of a refused send and the scroll
+    // place, which described the old one.
     ref.listenManual(chatSessionProvider.select((s) => s.conversationId), (
       previous,
       next,
     ) {
       if (previous != null && previous != next) {
         ref.read(chatViewProvider.notifier).cancelRename();
+        ref.read(composerSendNoticeProvider.notifier).clear();
+        ref.read(chatScrollAnchorProvider.notifier).set(null);
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(chatMessagesHoldProvider);
     final historyOpen = ref.watch(
       chatViewProvider.select((s) => s.historyOpen),
     );

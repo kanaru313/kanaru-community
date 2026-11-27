@@ -52,7 +52,7 @@ class ChatMenu extends ConsumerWidget {
     final desktop = FormFactor.of(context) == FormFactor.desktop;
     final view = ref.read(chatViewProvider.notifier);
     final host = ref.read(chatHostProvider);
-    final title = chatTitleOf(ref, l10n);
+    final storedTitle = chatStoredTitleOf(ref);
     // The menu and the dialog outlive this widget (a hand-over may rebuild
     // it), so they work on the container, not on `ref`.
     final container = ProviderScope.containerOf(context, listen: false);
@@ -76,7 +76,7 @@ class ChatMenu extends ConsumerWidget {
             KMenuRow(
               title: l10n.aiChatMenuRename,
               icon: KIcons.edit,
-              onTap: () => view.startRename(title),
+              onTap: () => view.startRename(storedTitle),
             ),
             KMenuRow(
               title: l10n.aiChatMenuDelete,

@@ -7,11 +7,13 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../state/chat_messages_provider.dart';
+import '../state/chat_providers.dart';
 import '../state/chat_view/chat_view_state.dart';
 import '../state/chat_view/message_view.dart';
 import 'assistant_message.dart';
 import 'chat_card_slot.dart';
 import 'chat_jump_button.dart';
+import 'composer/chat_plugin_icon.dart';
 import 'message_bubble.dart';
 import 'tool_card.dart';
 import 'track_row.dart';
@@ -45,7 +47,9 @@ class ChatMessageList extends ConsumerStatefulWidget {
 class _ChatMessageListState extends ConsumerState<ChatMessageList> {
   final _controller = ScrollController();
   final _centerKey = GlobalKey();
-  final _slots = <int, _SlotState>{};
+  // One slot per drawn row: a message can draw two (its text and its card).
+  final _slots = <Key, _SlotState>{};
+  final _knownCache = <int, KnownIdsEntry>{};
   final _showJump = ValueNotifier<bool>(false);
   late int _centerId;
   bool _atBottom = true;
@@ -79,7 +83,7 @@ class _ChatMessageListState extends ConsumerState<ChatMessageList> {
     if (identical(_derivedFrom, messages)) return;
     _derivedFrom = messages;
     _items = chatItemsOf(messages);
-    _known = knownTrackIds(messages);
+    _known = knownTrackIds(messages, cache: _knownCache);
   }
 
   bool _onMetrics(ScrollMetricsNotification n) {
@@ -183,7 +187,13 @@ class _ChatMessageListState extends ConsumerState<ChatMessageList> {
         },
       ),
     };
-    return _Slot(key: ValueKey(id), messageId: id, owner: this, child: child);
+    // Keyed by row kind too: a failed answer draws its text and its card.
+    return _Slot(
+      key: ValueKey('${item.runtimeType}-$id'),
+      messageId: id,
+      owner: this,
+      child: child,
+    );
   }
 
   Widget _spaced(Widget child) => Padding(
@@ -277,13 +287,13 @@ class _SlotState extends State<_Slot> {
   @override
   void initState() {
     super.initState();
-    widget.owner._slots[widget.messageId] = this;
+    widget.owner._slots[widget.key!] = this;
   }
 
   @override
   void dispose() {
-    if (widget.owner._slots[widget.messageId] == this) {
-      widget.owner._slots.remove(widget.messageId);
+    if (widget.owner._slots[widget.key] == this) {
+      widget.owner._slots.remove(widget.key);
     }
     super.dispose();
   }
@@ -293,16 +303,24 @@ class _SlotState extends State<_Slot> {
 }
 
 /// "Từ đây dùng Gemini · gemini-2.5-flash", centred between two short rules.
-class _SwitchDivider extends StatelessWidget {
+class _SwitchDivider extends ConsumerWidget {
   const _SwitchDivider({required this.item});
 
   final ChatSwitchItem item;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final model = item.model;
+    // The event keeps the plugin's name only: a plugin no longer installed
+    // under that name shows the "?" tile.
+    String? installId;
+    final plugins =
+        ref.watch(chatPluginsProvider).value ?? const <ChatPluginInfo>[];
+    for (final p in plugins) {
+      if (p.name == item.toName) installId = p.installId;
+    }
     final label = model == null || model.isEmpty
         ? l10n.aiChatPluginSwitchNoModel(item.toName)
         : l10n.aiChatPluginSwitch(item.toName, model);
@@ -317,6 +335,8 @@ class _SwitchDivider extends StatelessWidget {
         children: [
           rule,
           const SizedBox(width: KSpace.x2),
+          ChatPluginIcon(installId: installId, size: KIconSize.xs),
+          const SizedBox(width: KSpace.x1),
           Flexible(
             child: Text(
               label,

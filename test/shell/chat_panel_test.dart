@@ -14,6 +14,8 @@ import 'package:kanaru/src/ai/ui/chat_surface.dart';
 import 'package:kanaru/src/playback/state/player_ready.dart';
 import 'package:kanaru/src/router/state/router_provider.dart';
 import 'package:kanaru/src/shell/state/right_panel.dart';
+import 'package:kanaru/src/shell/ui/right_panel/right_panel_host.dart'
+    show rightPanelFrameKey;
 import 'package:kanaru/src/shell/ui/chat_host_shell.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -198,7 +200,7 @@ void main() {
       // The panel's room is kept, its content waits for the player.
       expect(find.byType(ChatSurface), findsNothing);
       expect(
-        tester.getSize(find.byType(DecoratedBox).last).width,
+        tester.getSize(find.byKey(rightPanelFrameKey)).width,
         greaterThan(0),
       );
       await tester.runAsync(

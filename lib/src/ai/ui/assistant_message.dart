@@ -1,15 +1,22 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:logging/logging.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
+import '../../media/domain/track_id.dart';
+import '../../playback/state/track_info_providers.dart';
 import '../domain/conversation/ai_message.dart';
 import '../domain/loop/loop_state.dart';
 import '../state/chat_session.dart';
 import '../state/chat_view/message_view.dart';
 import '../state/live_text_provider.dart';
 import 'assistant_blocks.dart';
+import 'markdown/chat_markdown_plain.dart';
 import 'message_time.dart';
+import 'track_row.dart';
+
+final _log = Logger('ai.assistant_message');
 
 /// An answer of the assistant: text on the page (no bubble), then either the
 /// three dots (while it streams) or "Đã dừng" and the footer (time · model,
@@ -92,17 +99,18 @@ class _Stopped extends StatelessWidget {
   }
 }
 
-class _Footer extends StatelessWidget {
+class _Footer extends ConsumerWidget {
   const _Footer({required this.message, required this.text});
 
   final AiMessage message;
   final String text;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final style = Theme.of(context).textTheme.bodySmall
         ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant);
     final model = message.model;
+    final known = ChatKnownTracks.of(context);
     return Row(
       children: [
         MessageTime(at: message.createdAt),
@@ -117,8 +125,34 @@ class _Footer extends StatelessWidget {
             ),
           ),
         ],
-        MessageCopyButton(text: text),
+        MessageCopyButton(textBuilder: () => _plainText(ref, known)),
       ],
     );
+  }
+}
+
+extension on _Footer {
+  /// The answer as it reads on screen: song lines of this conversation become
+  /// "title – artist", the rest of the markers are dropped.
+  Future<String> _plainText(WidgetRef ref, Set<int> known) async {
+    final labels = <String, String>{};
+    for (final token in trackTokensOf(text)) {
+      final id = int.tryParse(token);
+      if (id == null || !known.contains(id) || labels.containsKey(token)) {
+        continue;
+      }
+      try {
+        final info = await ref.read(trackInfoProvider(TrackId(id)).future);
+        if (info == null) continue;
+        final artist = info.artist;
+        labels[token] = artist == null || artist.isEmpty
+            ? info.title
+            : '${info.title} – $artist';
+      } on Object catch (e, s) {
+        // The song is left out of the copy; the rest still copies.
+        _log.warning('track lookup for copy failed', e, s);
+      }
+    }
+    return plainAnswerText(text, trackLabel: (id) => labels[id]);
   }
 }

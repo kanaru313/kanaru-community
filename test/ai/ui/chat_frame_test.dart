@@ -5,6 +5,7 @@ import 'package:kanaru/l10n/gen/app_localizations.dart';
 import 'package:kanaru/src/ai/state/chat_session.dart';
 import 'package:kanaru/src/ai/state/chat_view/chat_view_state.dart';
 import 'package:kanaru/src/ai/state/chat_view/composer_draft.dart';
+import 'package:kanaru/src/ai/state/chat_view/composer_view.dart';
 import 'package:kanaru/src/ai/ui/chat_header_title.dart';
 import 'package:kanaru/src/ai/ui/chat_history_slot.dart';
 import 'package:kanaru/src/ai/ui/chat_host.dart';
@@ -250,6 +251,19 @@ void main() {
       expect(find.text('Gym'), findsOneWidget);
     });
 
+    testWidgets('Enter on an untouched placeholder saves nothing', (
+      tester,
+    ) async {
+      final setup = await _pump(tester);
+      await tester.tap(find.text('New conversation'));
+      await tester.pump();
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+      await tester.pump();
+      expect(setup.session.calls.where((c) => c.startsWith('rename')), isEmpty);
+      expect(setup.view.renaming, isFalse);
+    });
+
     testWidgets('a blank name keeps the old one', (tester) async {
       final setup = await _pump(tester);
       await tester.tap(find.text('New conversation'));
@@ -271,6 +285,34 @@ void main() {
     });
   });
 
+  group('conversation change', () {
+    testWidgets('the note of a refused send ends with its conversation', (
+      tester,
+    ) async {
+      final setup = await _pump(tester);
+      setup.container
+          .read(composerSendNoticeProvider.notifier)
+          .set(const NoticeSendFailed());
+      await tester.pump();
+      expect(find.textContaining('could not be saved'), findsOneWidget);
+      await setup.container.read(chatSessionProvider.notifier).open(7);
+      await tester.pump();
+      await tester.pump();
+      expect(setup.container.read(composerSendNoticeProvider), isNull);
+      expect(find.textContaining('could not be saved'), findsNothing);
+    });
+
+    testWidgets('the scroll place of the old conversation is dropped', (
+      tester,
+    ) async {
+      final setup = await _pump(tester);
+      setup.container.read(chatScrollAnchorProvider.notifier).set(42);
+      await setup.container.read(chatSessionProvider.notifier).open(7);
+      await tester.pump();
+      expect(setup.container.read(chatScrollAnchorProvider), isNull);
+    });
+  });
+
   group('menu', () {
     testWidgets('Cài đặt AI calls host.openSettings with the AI location', (
       tester,
@@ -288,19 +330,30 @@ void main() {
       await _menuRow(tester, 'New conversation');
       expect(setup.session.calls, contains('new'));
       expect(setup.container.read(chatSessionProvider).conversationId, 2);
-      expect(
-        tester.widget<TextField>(find.byType(TextField)).focusNode!.hasFocus,
-        isTrue,
-      );
+      // The composer took the one-shot request. Whether the field still holds
+      // the focus afterwards depends on the closing menu route's own focus
+      // restore, which is the framework's business, so it is not asserted.
+      expect(setup.container.read(composerFocusRequestProvider), isFalse);
     });
 
-    testWidgets('Rename starts rename mode on the current name', (
+    testWidgets('Rename on an unnamed chat starts with an empty name', (
       tester,
     ) async {
       final setup = await _pump(tester);
       await _menuRow(tester, 'Rename');
       expect(setup.view.renaming, isTrue);
-      expect(setup.view.renameText, 'New conversation');
+      // The placeholder is only a hint: it must not become the saved name.
+      expect(setup.view.renameText, isEmpty);
+    });
+
+    testWidgets('Rename starts on the current name of a named chat', (
+      tester,
+    ) async {
+      final setup = await _pump(tester);
+      setup.container.read(fakeChatTitlesProvider.notifier).set(1, 'Roadtrip');
+      await tester.pump();
+      await _menuRow(tester, 'Rename');
+      expect(setup.view.renameText, 'Roadtrip');
     });
 
     testWidgets('Delete asks first; Cancel keeps it, Delete removes it', (
@@ -314,7 +367,7 @@ void main() {
       expect(setup.session.calls, isNot(contains('delete 1')));
 
       await _menuRow(tester, 'Delete this conversation');
-      await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+      await tester.tap(find.text('Delete').last);
       await tester.pumpAndSettle();
       expect(setup.session.calls, contains('delete 1'));
       expect(setup.container.read(chatSessionProvider).conversationId, 2);

@@ -41,3 +41,13 @@ PromptAction applyPrompt(String body, TextEditingValue current) {
     ),
   );
 }
+
+/// [value] with its first `{{input}}` blank selected, or null when it has
+/// none (a refused send points at the blank the user left).
+TextEditingValue? selectInputBlank(TextEditingValue value) {
+  final blank = _input.firstMatch(value.text);
+  if (blank == null) return null;
+  return value.copyWith(
+    selection: TextSelection(baseOffset: blank.start, extentOffset: blank.end),
+  );
+}

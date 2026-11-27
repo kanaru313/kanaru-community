@@ -13,6 +13,14 @@ Future<SendResult> sendFromComposer({
   bool shortVersion = false,
 }) async {
   final result = await session.send(text, shortVersion: shortVersion);
+  recordSendResult(notice, result);
+  return result;
+}
+
+/// Records what [result] leaves for the composer to show. Split from
+/// [sendFromComposer] so a caller that writes the field after a refusal can
+/// record the note afterwards (editing the field ends the note).
+void recordSendResult(ComposerSendNotice notice, SendResult result) {
   switch (result) {
     case SendSent():
       notice.clear();
@@ -25,5 +33,4 @@ Future<SendResult> sendFromComposer({
     case SendBlocked() || SendBusy():
       break;
   }
-  return result;
 }

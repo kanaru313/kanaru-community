@@ -168,7 +168,11 @@ class _EmptyFrame extends StatelessWidget {
             ),
             child: Column(
               children: [
-                Expanded(child: Center(child: header)),
+                // Spacers, not an Expanded box: in a panel shorter than the
+                // header the column grows and the sliver scrolls.
+                const Spacer(),
+                header,
+                const Spacer(),
                 const SizedBox(height: KSpace.x4),
                 ?below,
               ],

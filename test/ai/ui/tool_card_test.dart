@@ -7,10 +7,19 @@ import 'package:material_ui/material_ui.dart';
 
 import 'support/chat_ui_support.dart';
 
-Future<void> _pump(WidgetTester tester, AiMessage message) => tester.pumpWidget(
+Future<void> _pump(
+  WidgetTester tester,
+  AiMessage message, {
+  bool disableAnimations = false,
+}) => tester.pumpWidget(
   MaterialApp(
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(context)
+          .copyWith(disableAnimations: disableAnimations),
+      child: child!,
+    ),
     home: Scaffold(body: ToolCard(message: message)),
   ),
 );
@@ -66,12 +75,22 @@ void main() {
     expect(find.text('Parameters'), findsNothing);
   });
 
-  testWidgets('running state shows the running title and a spinner', (
+  testWidgets('running state shows the running title instead of the name', (
     tester,
   ) async {
     await _pump(tester, _tool(state: AiMessageState.running, result: false));
     expect(find.text('Running: Search the library'), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
     expect(find.text('Search the library'), findsNothing);
+  });
+
+  testWidgets('with animations off a running card holds still', (tester) async {
+    await _pump(
+      tester,
+      _tool(state: AiMessageState.running, result: false),
+      disableAnimations: true,
+    );
+    // A spinner that keeps animating would never settle.
+    await tester.pumpAndSettle();
+    expect(find.text('Running: Search the library'), findsOneWidget);
   });
 }

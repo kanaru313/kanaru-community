@@ -7,8 +7,7 @@ import '../../domain/variables/variable_catalog.dart';
 /// The variables the user can insert after typing `{{`, listed above the
 /// field. [selected] is the row Enter would insert.
 ///
-/// Only the names are shown; the one-line descriptions come from the AI
-/// settings strings once those exist.
+/// Each row shows the name and its one-line description.
 class VariableList extends StatelessWidget {
   const VariableList({
     super.key,
@@ -66,6 +65,18 @@ class VariableList extends StatelessWidget {
   }
 }
 
+/// What a variable stands for, in one line.
+String variableDescription(AppLocalizations l10n, AiVariable v) => switch (v) {
+  AiVariable.nowPlaying => l10n.aiChatVarDescNowPlaying,
+  AiVariable.title => l10n.aiChatVarDescTitle,
+  AiVariable.artist => l10n.aiChatVarDescArtist,
+  AiVariable.album => l10n.aiChatVarDescAlbum,
+  AiVariable.lyrics => l10n.aiChatVarDescLyrics,
+  AiVariable.queue => l10n.aiChatVarDescQueue,
+  // The prompts' blank is never offered for inserting by hand.
+  AiVariable.input => '',
+};
+
 class _VariableRow extends StatelessWidget {
   const _VariableRow({
     required this.variable,
@@ -80,11 +91,15 @@ class _VariableRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
     final label = '{{${variable.name}}}';
+    final description = variableDescription(l10n, variable);
+    final mobile = FormFactor.of(context) == FormFactor.mobile;
     return Semantics(
       button: true,
       selected: selected,
-      label: label,
+      label: '$label, $description',
       excludeSemantics: true,
       onTap: onTap,
       child: InkWell(
@@ -94,18 +109,31 @@ class _VariableRow extends StatelessWidget {
         child: ColoredBox(
           color: selected ? scheme.secondaryContainer : Colors.transparent,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 40),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: KSpace.x3),
-                child: Text(
-                  label,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontFamily: 'monospace',
-                    color: scheme.primary,
+            constraints: BoxConstraints(minHeight: mobile ? 48 : 40),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: KSpace.x3),
+              child: Row(
+                children: [
+                  Text(
+                    label,
+                    style: text.bodyMedium?.copyWith(
+                      fontFamily: KFont.mono,
+                      fontFamilyFallback: KFont.monoFallback,
+                      color: scheme.primary,
+                    ),
                   ),
-                ),
+                  const SizedBox(width: KSpace.x3),
+                  Expanded(
+                    child: Text(
+                      description,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

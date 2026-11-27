@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../domain/conversation/ai_message.dart';
 import '../../domain/conversation/parts.dart';
 import '../../domain/loop/loop_state.dart';
 import '../../domain/output/chat_readiness.dart';
@@ -7,6 +8,7 @@ import '../../domain/permission.dart';
 import '../../domain/variables/variable_catalog.dart';
 import '../chat_attachments.dart';
 import '../chat_conversation_providers.dart';
+import '../chat_messages_provider.dart';
 import '../chat_providers.dart';
 import '../chat_session.dart';
 import 'composer_inputs.dart';
@@ -44,7 +46,11 @@ final class NoticeNeedsConfig extends ComposerNotice {
 
 /// The chat's plugin was uninstalled; the composer is locked.
 final class NoticeRemoved extends ComposerNotice {
-  const NoticeRemoved();
+  const NoticeRemoved([this.plugin]);
+
+  /// The plugin's name when the conversation recorded it (a plugin switch),
+  /// else null.
+  final String? plugin;
 }
 
 /// The chat's plugin was removed and installed again; the composer is locked.
@@ -164,6 +170,7 @@ ComposerView deriveComposerView({
   String? model,
   List<ChipPart> struckChips = const [],
   ComposerNotice? sendNotice,
+  String? removedPluginName,
 }) {
   final locked = turn == TurnState.streaming || turn == TurnState.runningTools;
   final gone =
@@ -173,7 +180,7 @@ ComposerView deriveComposerView({
       ? plugin.spec.capabilitiesOf(model).tools
       : true;
   final notice =
-      _readinessNotice(readiness, plugin) ??
+      _readinessNotice(readiness, plugin, removedPluginName) ??
       (struckChips.isEmpty ? null : NoticeStruckChip(struckChips.first)) ??
       sendNotice ??
       (readiness is ChatReady && !tools ? NoticeNoTools(model) : null);
@@ -198,6 +205,7 @@ ComposerView deriveComposerView({
 ComposerNotice? _readinessNotice(
   ChatReadiness? readiness,
   ChatPluginInfo? plugin,
+  String? removedPluginName,
 ) => switch (readiness) {
   ChatNeedsKey() when plugin != null => NoticeNeedsKey(
     plugin.name,
@@ -209,7 +217,7 @@ ComposerNotice? _readinessNotice(
     plugin.installId,
     titles,
   ),
-  ChatPluginRemoved() => const NoticeRemoved(),
+  ChatPluginRemoved() => NoticeRemoved(removedPluginName),
   ChatPluginReinstalled() => NoticeReinstalled(plugin?.name),
   _ => null,
 };
@@ -230,6 +238,14 @@ final composerViewProvider = Provider<ComposerView>((ref) {
   for (final p in plugins) {
     if (p.installId == installId) plugin = p;
   }
+  // The name of a removed plugin is only known from the plugin switches the
+  // conversation recorded.
+  final removedName = id == null || readiness is! ChatPluginRemoved
+      ? null
+      : ref.watch(
+          chatMessagesProvider(id)
+              .select((m) => lastSwitchTarget(m.value?.messages)),
+        );
   final settings = ref.watch(composerSettingsProvider);
   final attached = ref.watch(chatAttachmentsProvider).attached;
   return deriveComposerView(
@@ -243,5 +259,18 @@ final composerViewProvider = Provider<ComposerView>((ref) {
         if (settings.isStruck(c)) c,
     ],
     sendNotice: ref.watch(composerSendNoticeProvider),
+    removedPluginName: removedName,
   );
 });
+
+/// The plugin the conversation last switched to (from its switch dividers);
+/// null when it never switched.
+String? lastSwitchTarget(List<AiMessage>? messages) {
+  if (messages == null) return null;
+  for (final m in messages.reversed) {
+    for (final p in m.parts) {
+      if (p is EventPart) return p.toName;
+    }
+  }
+  return null;
+}

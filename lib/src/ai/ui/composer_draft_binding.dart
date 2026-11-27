@@ -39,7 +39,10 @@ class _ComposerDraftBindingState extends ConsumerState<ComposerDraftBinding> {
     _controller.addListener(_save);
     // Someone else wrote the draft (a prompt chip): show it.
     ref.listenManual(composerDraftProvider, (_, next) {
-      if (next != _controller.value) _controller.value = next;
+      // The draft has no composing range: compare without it, or every
+      // keystroke of an IME composition would be undone.
+      final own = _controller.value.copyWith(composing: TextRange.empty);
+      if (next != own) _controller.value = next;
     });
     ref.listenManual(composerFocusRequestProvider, (_, pending) {
       if (pending) _takeRequest();

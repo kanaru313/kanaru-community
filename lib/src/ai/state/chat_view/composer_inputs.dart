@@ -123,3 +123,10 @@ class ModelPickerRequest extends Notifier<bool> {
 final modelPickerRequestProvider = NotifierProvider<ModelPickerRequest, bool>(
   ModelPickerRequest.new,
 );
+
+/// How many songs the queue holds, for the oversize note; null before the
+/// player exists or the queue is read.
+final chatQueueLengthProvider = Provider<int?>((ref) {
+  if (!ref.watch(playerCreatedProvider)) return null;
+  return ref.watch(queueViewProvider.select((q) => q.value?.items.length));
+});

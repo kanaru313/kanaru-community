@@ -14,6 +14,9 @@ import 'right_panel_header.dart';
 /// Fixed width of the right panel.
 const double rightPanelWidth = 420;
 
+/// Key of the panel's frame, for tests that look at its room.
+const Key rightPanelFrameKey = Key('right-panel-frame');
+
 /// Time of the sideways slide between the Queue and the Chat content.
 const Duration rightPanelSlideDuration = Duration(milliseconds: 340);
 
@@ -34,6 +37,7 @@ class RightPanelHost extends ConsumerWidget {
     final scheme = Theme.of(context).colorScheme;
     final reduced = MediaQuery.disableAnimationsOf(context);
     return DecoratedBox(
+      key: rightPanelFrameKey,
       decoration: BoxDecoration(
         color: scheme.surface,
         border: Border(left: BorderSide(color: scheme.outlineVariant)),

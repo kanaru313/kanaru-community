@@ -110,12 +110,15 @@ class _ToolCardState extends State<ToolCard> {
                             ),
                           ),
                           if (running)
-                            const Padding(
-                              padding: EdgeInsets.all(KSpace.x2),
+                            Padding(
+                              padding: const EdgeInsets.all(KSpace.x2),
                               child: SizedBox.square(
                                 dimension: 18,
+                                // With animations off a still arc stands for
+                                // "working"; the title says it too.
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2.5,
+                                  value: instant ? 0.3 : null,
                                 ),
                               ),
                             )

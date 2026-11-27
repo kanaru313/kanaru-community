@@ -11,11 +11,16 @@ import '../state/chat_view/chat_view_state.dart';
 /// The name of the open conversation, as shown in the header: the empty name
 /// of a new conversation reads "Cuộc trò chuyện mới".
 String chatTitleOf(WidgetRef ref, AppLocalizations l10n) {
+  final title = chatStoredTitleOf(ref);
+  return title.trim().isEmpty ? l10n.aiChatNewTitle : title;
+}
+
+/// The name as stored: empty while the conversation has none yet.
+String chatStoredTitleOf(WidgetRef ref) {
   final id = ref.watch(chatSessionProvider.select((s) => s.conversationId));
-  final title = id == null
-      ? null
-      : ref.watch(chatConversationProvider(id)).value?.title;
-  return title == null || title.trim().isEmpty ? l10n.aiChatNewTitle : title;
+  return id == null
+      ? ''
+      : ref.watch(chatConversationProvider(id)).value?.title ?? '';
 }
 
 /// Title of the chat header. A tap turns it into an input (Enter saves, Esc
@@ -39,7 +44,11 @@ class ChatHeaderTitle extends ConsumerWidget {
         message: l10n.aiChatMenuRename,
         child: InkWell(
           borderRadius: BorderRadius.circular(KSpace.x2),
-          onTap: () => ref.read(chatViewProvider.notifier).startRename(title),
+          // A conversation without a name starts with an empty input (the
+          // placeholder is only a hint), so saving untouched keeps auto-titling.
+          onTap: () => ref
+              .read(chatViewProvider.notifier)
+              .startRename(chatStoredTitleOf(ref)),
           child: Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: KSpace.x2,

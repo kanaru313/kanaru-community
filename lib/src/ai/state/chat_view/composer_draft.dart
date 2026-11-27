@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart' show TextEditingValue;
+import 'package:flutter/widgets.dart' show TextEditingValue, TextRange;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// What the user has typed in the composer, selection included. Lives here,
@@ -9,8 +9,19 @@ class ComposerDraft extends Notifier<TextEditingValue> {
   @override
   TextEditingValue build() => TextEditingValue.empty;
 
+  /// Stores [value] without its composing range: the IME's composition
+  /// belongs to the field it happens in, and a stale range handed to another
+  /// field would make it treat a finished word as still being composed.
   void set(TextEditingValue value) {
-    if (value != state) state = value;
+    final next = value.copyWith(composing: TextRange.empty);
+    if (next != state) state = next;
+  }
+
+  /// Empties the draft when it still holds [sent] (what a finished send took):
+  /// text typed meanwhile stays. Works with no field on screen, so a send that
+  /// finishes after the chat left the screen does not bring its text back.
+  void clearIfSent(String sent) {
+    if (state.text == sent) state = TextEditingValue.empty;
   }
 }
 

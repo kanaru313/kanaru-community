@@ -34,6 +34,9 @@ class _AssistantBlocksState extends State<AssistantBlocks> {
   final _groups = <Widget>[];
   final _tailViews = <Widget>[];
   Widget? _tailGroup;
+  // Views of the open blocks of the last build, reused while their block is
+  // unchanged (a run of song lines or paragraphs does not rebuild per delta).
+  List<({ChatBlock block, Widget view})> _openViews = const [];
   int _built = 0;
   String _fed = '';
 
@@ -81,14 +84,21 @@ class _AssistantBlocksState extends State<AssistantBlocks> {
   @override
   Widget build(BuildContext context) {
     final open = widget.streaming ? _stream.openBlocks : const <ChatBlock>[];
+    final previous = _openViews;
+    _openViews = [
+      for (var i = 0; i < open.length; i++)
+        if (i < previous.length && previous[i].block == open[i])
+          previous[i]
+        else
+          (
+            block: open[i],
+            view: RepaintBoundary(child: ChatBlockView(open[i])),
+          ),
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: KSpace.x2,
-      children: [
-        ..._groups,
-        ?_tailGroup,
-        for (final b in open) ChatBlockView(b),
-      ],
+      children: [..._groups, ?_tailGroup, for (final v in _openViews) v.view],
     );
   }
 }
@@ -99,9 +109,12 @@ class _BlockGroup extends StatelessWidget {
   final List<Widget> views;
 
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    spacing: KSpace.x2,
-    children: views,
+  // Its own layer: a delta repaints the open tail, not the closed groups.
+  Widget build(BuildContext context) => RepaintBoundary(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: KSpace.x2,
+      children: views,
+    ),
   );
 }

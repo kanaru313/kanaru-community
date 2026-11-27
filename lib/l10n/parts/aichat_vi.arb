@@ -419,6 +419,15 @@
   "@aiChatNoticeRemoved": {
     "description": "Note when the chat's plugin was uninstalled."
   },
+  "aiChatNoticeRemovedNamed": "Plugin “{plugin}” đã gỡ. Chọn plugin khác để tiếp tục.",
+  "@aiChatNoticeRemovedNamed": {
+    "description": "Note when the chat's plugin was uninstalled and its name is known.",
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
   "aiChatNoticeReinstalled": "Plugin “{plugin}” đã được gỡ rồi cài lại. Chọn plugin để tiếp tục cuộc này.",
   "@aiChatNoticeReinstalled": {
     "description": "Note when the chat's plugin was removed and installed again.",
@@ -464,10 +473,13 @@
       }
     }
   },
-  "aiChatNoticeGroupOff": "Công cụ của {variable} đang tắt nên chưa điền được. Chưa gửi gì; chữ vẫn ở đây.",
+  "aiChatNoticeGroupOff": "Công cụ “{group}” đang tắt nên chưa điền được {variable}. Chưa gửi gì.",
   "@aiChatNoticeGroupOff": {
     "description": "Note when a variable's tool group is off.",
     "placeholders": {
+      "group": {
+        "type": "String"
+      },
       "variable": {
         "type": "String"
       }
@@ -500,6 +512,30 @@
       },
       "model": {
         "type": "String"
+      }
+    }
+  },
+  "aiChatNoticeOversizeQueue": "{variable} có {count} bài, quá giới hạn gửi của {model}.",
+  "@aiChatNoticeOversizeQueue": {
+    "description": "Note when the queue is over the model's limit; {count} is the number of songs in it.",
+    "placeholders": {
+      "variable": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatActionSendShortQueue": "Gửi bản rút gọn: {count} bài quanh bài đang phát",
+  "@aiChatActionSendShortQueue": {
+    "description": "Button of a note: sends the queue shortened to {count} songs around the playing one.",
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -603,6 +639,14 @@
   "@aiChatGroupPlaylists": {
     "description": "Name of the playlists tool group in a note."
   },
+  "aiChatGroupLyrics": "Lời bài hát",
+  "@aiChatGroupLyrics": {
+    "description": "Name of the lyrics tool group in a note."
+  },
+  "aiChatGroupQueue": "Hàng đợi",
+  "@aiChatGroupQueue": {
+    "description": "Name of the queue tool group in a note."
+  },
   "aiChatVarListLabel": "Chèn biến",
   "@aiChatVarListLabel": {
     "description": "Screen-reader label of the variable list."
@@ -610,6 +654,30 @@
   "aiChatVarListTitle": "Chèn biến · app điền lúc gửi",
   "@aiChatVarListTitle": {
     "description": "Heading of the variable list shown after typing {{."
+  },
+  "aiChatVarDescNowPlaying": "Bài đang phát (tên – nghệ sĩ)",
+  "@aiChatVarDescNowPlaying": {
+    "description": "One-line description of the {{NowPlaying}} variable in the list shown after typing {{."
+  },
+  "aiChatVarDescTitle": "Tên bài đang phát",
+  "@aiChatVarDescTitle": {
+    "description": "One-line description of the {{Title}} variable in the list shown after typing {{."
+  },
+  "aiChatVarDescArtist": "Nghệ sĩ bài đang phát",
+  "@aiChatVarDescArtist": {
+    "description": "One-line description of the {{Artist}} variable in the list shown after typing {{."
+  },
+  "aiChatVarDescAlbum": "Album bài đang phát",
+  "@aiChatVarDescAlbum": {
+    "description": "One-line description of the {{Album}} variable in the list shown after typing {{."
+  },
+  "aiChatVarDescLyrics": "Lời bài đang phát, không có thời gian",
+  "@aiChatVarDescLyrics": {
+    "description": "One-line description of the {{Lyrics}} variable in the list shown after typing {{."
+  },
+  "aiChatVarDescQueue": "Hàng đợi, mỗi bài một dòng",
+  "@aiChatVarDescQueue": {
+    "description": "One-line description of the {{Queue}} variable in the list shown after typing {{."
   },
   "aiChatPromptsLabel": "Prompt mẫu",
   "@aiChatPromptsLabel": {

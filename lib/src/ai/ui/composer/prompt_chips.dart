@@ -92,12 +92,10 @@ Future<void> usePrompt(WidgetRef ref, String body) async {
       draft.set(value);
       focus.request();
     case PromptSendNow(:final text):
-      final result = await sendFromComposer(
-        session: session,
-        notice: notice,
-        text: text,
-      );
+      final result = await session.send(text);
       if (result is! SendSent) {
+        // Write the field first: a change of its text ends the send note, so
+        // the note is recorded after it.
         draft.set(
           TextEditingValue(
             text: text,
@@ -106,5 +104,6 @@ Future<void> usePrompt(WidgetRef ref, String body) async {
         );
         focus.request();
       }
+      recordSendResult(notice, result);
   }
 }

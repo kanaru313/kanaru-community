@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show listEquals;
+
 import '../../domain/conversation/ai_message.dart';
 import '../../domain/conversation/parts.dart';
 
@@ -118,26 +120,51 @@ const _songTools = {
 
 final _rowId = RegExp(r'^(\d{1,18})\|');
 
+/// The ids one message made known, kept with the parts they were read from.
+typedef KnownIdsEntry = ({List<AiPart> parts, Set<int> ids});
+
 /// Track ids this conversation has seen: song rows of tool results, songs a
 /// write tool changed, songs the user attached. `[[t:ID]]` in an answer is a
 /// track row only for one of these; the model cannot make up a song row.
-Set<int> knownTrackIds(Iterable<AiMessage> messages) {
+///
+/// Only the loaded messages are read: an id seen on an older page that is not
+/// loaded yet shows as plain text until the page is. With a [cache] (message
+/// id to its entry) a message whose parts did not change is not decoded again.
+Set<int> knownTrackIds(
+  Iterable<AiMessage> messages, {
+  Map<int, KnownIdsEntry>? cache,
+}) {
   final ids = <int>{};
   for (final m in messages) {
-    for (final p in m.parts) {
-      switch (p) {
-        case ToolResultPart() when _songTools.contains(p.name) && !p.isError:
-          for (final c in p.content.whereType<TextPart>()) {
-            ids.addAll(_idsOfResult(c.text));
-          }
-        case DonePart():
-          ids
-            ..addAll(p.added.map((t) => t.trackId))
-            ..addAll(p.removed.map((t) => t.trackId));
-        case ChipPart():
-          ids.addAll(p.tracks.map((t) => t.trackId));
-        default:
-      }
+    final cached = cache?[m.id];
+    if (cached != null &&
+        (identical(cached.parts, m.parts) ||
+            listEquals(cached.parts, m.parts))) {
+      ids.addAll(cached.ids);
+      continue;
+    }
+    final own = _idsOfMessage(m);
+    cache?[m.id] = (parts: m.parts, ids: own);
+    ids.addAll(own);
+  }
+  return ids;
+}
+
+Set<int> _idsOfMessage(AiMessage m) {
+  final ids = <int>{};
+  for (final p in m.parts) {
+    switch (p) {
+      case ToolResultPart() when _songTools.contains(p.name) && !p.isError:
+        for (final c in p.content.whereType<TextPart>()) {
+          ids.addAll(_idsOfResult(c.text));
+        }
+      case DonePart():
+        ids
+          ..addAll(p.added.map((t) => t.trackId))
+          ..addAll(p.removed.map((t) => t.trackId));
+      case ChipPart():
+        ids.addAll(p.tracks.map((t) => t.trackId));
+      default:
     }
   }
   return ids;

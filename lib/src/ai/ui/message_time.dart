@@ -105,9 +105,13 @@ Future<void> copyMessageText(String text) async {
 
 /// The [Sao chép] button of a message footer.
 class MessageCopyButton extends StatelessWidget {
-  const MessageCopyButton({super.key, required this.text});
+  const MessageCopyButton({super.key, this.text = '', this.textBuilder});
 
   final String text;
+
+  /// Builds the text at the moment of the tap (it may need lookups); used
+  /// instead of [text] when given.
+  final Future<String> Function()? textBuilder;
 
   @override
   Widget build(BuildContext context) => KIconButton(
@@ -115,6 +119,9 @@ class MessageCopyButton extends StatelessWidget {
     size: KIconSize.xs,
     padding: const EdgeInsets.all(KSpace.x2),
     tooltip: AppLocalizations.of(context).aiChatCopy,
-    onPressed: () => copyMessageText(text),
+    onPressed: () async {
+      final build = textBuilder;
+      await copyMessageText(build == null ? text : await build());
+    },
   );
 }

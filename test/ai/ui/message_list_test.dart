@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/ai/domain/conversation/ai_message.dart';
 import 'package:kanaru/src/ai/domain/conversation/parts.dart';
 import 'package:kanaru/src/ai/domain/loop/loop_state.dart';
-import 'package:kanaru_ui/kanaru_ui.dart';
 
 import '../../support/icon_button_finders.dart';
 import 'support/chat_list_harness.dart';
@@ -55,7 +54,13 @@ void main() {
       live.set('start');
       await tester.pump();
       // Well over a screen above the end.
-      await tester.drag(find.byType(Scrollable).first, const Offset(0, 3000));
+      final position = _position(tester);
+      position.jumpTo(
+        (position.pixels - 3000).clamp(
+          position.minScrollExtent,
+          position.maxScrollExtent,
+        ),
+      );
       await tester.pump();
       final before = _firstVisible(tester);
       final pixels = _position(tester).pixels;
@@ -119,22 +124,24 @@ void main() {
     testWidgets('dots only while streaming, static with disableAnimations', (
       tester,
     ) async {
+      final handle = tester.ensureSemantics();
       final setup = await pumpChatList(tester, disableAnimations: true);
       await setup.setMessages(tester, [
         _user(1, 'hi'),
         _answer(2, 'partial', state: AiMessageState.streaming),
       ]);
-      expect(find.byType(KStreamingDots), findsNothing);
+      expect(find.semantics.byLabel('Answering'), findsNothing);
       setup.session.setTurn(TurnState.streaming);
       await tester.pump();
-      expect(find.byType(KStreamingDots), findsOneWidget);
+      expect(find.semantics.byLabel('Answering'), findsOneWidget);
       // No ticker runs: settling returns at once.
       await tester.pumpAndSettle();
 
       await setup.setMessages(tester, [_user(1, 'hi'), _answer(2, 'partial')]);
       setup.session.setTurn(TurnState.idle);
       await tester.pump();
-      expect(find.byType(KStreamingDots), findsNothing);
+      expect(find.semantics.byLabel('Answering'), findsNothing);
+      handle.dispose();
     });
 
     testWidgets('stop shows Stopped and keeps the text', (tester) async {

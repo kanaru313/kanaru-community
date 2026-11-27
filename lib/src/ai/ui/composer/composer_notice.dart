@@ -5,10 +5,13 @@ import 'package:material_ui/material_ui.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../lyrics/state/playing_lyrics_providers.dart';
 import '../../../lyrics/ui/lyrics_for_track_modal.dart';
+import '../../domain/settings/tool_groups.dart';
 import '../../domain/variables/variable_catalog.dart';
+import '../../domain/variables/variable_values.dart' show queueShortEntries;
 import '../../domain/variables/variable_filler.dart';
 import '../../state/chat_attachments.dart';
 import '../../state/chat_send.dart';
+import '../../state/chat_view/composer_inputs.dart';
 import '../../state/chat_view/composer_view.dart';
 import '../chat_host.dart';
 import '../chat_links.dart';
@@ -99,8 +102,10 @@ class ComposerNoticeView extends ConsumerWidget {
         action: l10n.aiChatActionOpenPluginSettings,
         onAction: () => openPlugin(installId),
       ),
-      NoticeRemoved() => warn(
-        l10n.aiChatNoticeRemoved,
+      NoticeRemoved(:final plugin) => warn(
+        plugin == null
+            ? l10n.aiChatNoticeRemoved
+            : l10n.aiChatNoticeRemovedNamed(plugin),
         action: l10n.aiChatActionPickPlugin,
         onAction: onPickPlugin,
         icon: KIcons.extension,
@@ -119,6 +124,7 @@ class ComposerNoticeView extends ConsumerWidget {
         onAction: () => ref.read(chatAttachmentsProvider.notifier).detach(chip),
         second: l10n.aiChatActionAiSettings,
         onSecond: () => host.openSettings(aiSettingsLocation),
+        icon: KIcons.advanced,
       ),
       NoticeMissingData(:final issues) => _missing(
         context,
@@ -127,15 +133,12 @@ class ComposerNoticeView extends ConsumerWidget {
         issues.first,
         dismiss,
       ),
-      NoticeOversize(:final variables) => warn(
-        l10n.aiChatNoticeOversize(
-          variables.map((v) => '{{${v.name}}}').join(', '),
-          model ?? '',
-        ),
-        action: l10n.aiChatActionCancel,
-        onAction: dismiss,
-        second: l10n.aiChatActionSendShort,
-        onSecond: onSendShort,
+      NoticeOversize(:final variables) => _oversize(
+        l10n,
+        ref,
+        variables,
+        onSendShort,
+        dismiss,
       ),
       NoticeSendFailed() => warn(
         l10n.aiChatNoticeSendFailed,
@@ -149,6 +152,34 @@ class ComposerNoticeView extends ConsumerWidget {
     };
   }
 
+  /// "{{queue}} có 412 bài, quá giới hạn…" with the short version as the
+  /// main action and Cancel next to it.
+  Widget _oversize(
+    AppLocalizations l10n,
+    WidgetRef ref,
+    List<AiVariable> variables,
+    VoidCallback onSendShort,
+    VoidCallback dismiss,
+  ) {
+    final queue = variables.contains(AiVariable.queue);
+    final count = queue ? ref.watch(chatQueueLengthProvider) : null;
+    final tags = variables.map((v) => '{{${v.name}}}').join(', ');
+    final modelName = model ?? '';
+    return _warn(
+      l10n,
+      dismiss,
+      variables.length == 1 && count != null
+          ? l10n.aiChatNoticeOversizeQueue(tags, count, modelName)
+          : l10n.aiChatNoticeOversize(tags, modelName),
+      action: queue
+          ? l10n.aiChatActionSendShortQueue(queueShortEntries)
+          : l10n.aiChatActionSendShort,
+      onAction: onSendShort,
+      second: l10n.aiChatActionCancel,
+      onSecond: dismiss,
+    );
+  }
+
   Widget _missing(
     BuildContext context,
     WidgetRef ref,
@@ -160,13 +191,19 @@ class ComposerNoticeView extends ConsumerWidget {
       String message, {
       String? action,
       VoidCallback? onAction,
+      String? second,
+      VoidCallback? onSecond,
+      IconData icon = KIcons.warning,
     }) => _warn(
       l10n,
       dismiss,
       message,
       action: action,
       onAction: onAction,
+      second: second,
+      onSecond: onSecond,
       dismissible: true,
+      icon: icon,
     );
 
     String tag(AiVariable v) => '{{${v.name}}}';
@@ -187,9 +224,13 @@ class ComposerNoticeView extends ConsumerWidget {
         );
       case VariableIssue(issue: FillGroupOff(:final variable)):
         return warn(
-          l10n.aiChatNoticeGroupOff(tag(variable)),
+          l10n.aiChatNoticeGroupOff(
+            toolGroupName(l10n, variable.group ?? AiToolGroup.nowPlaying),
+            tag(variable),
+          ),
           action: l10n.aiChatActionAiSettings,
           onAction: () => host.openSettings(aiSettingsLocation),
+          icon: KIcons.advanced,
         );
       case VariableIssue(issue: FillLeftoverInput()):
         return warn(l10n.aiChatNoticeLeftoverInput(tag(AiVariable.input)));
@@ -199,6 +240,7 @@ class ComposerNoticeView extends ConsumerWidget {
           action: l10n.aiChatActionDropChip,
           onAction: () =>
               ref.read(chatAttachmentsProvider.notifier).detach(chip),
+          icon: KIcons.advanced,
         );
       case ChipGroupOff(:final chip):
         return warn(
@@ -206,6 +248,7 @@ class ComposerNoticeView extends ConsumerWidget {
           action: l10n.aiChatActionDropChip,
           onAction: () =>
               ref.read(chatAttachmentsProvider.notifier).detach(chip),
+          icon: KIcons.advanced,
         );
     }
   }

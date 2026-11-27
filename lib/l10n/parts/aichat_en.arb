@@ -419,6 +419,15 @@
   "@aiChatNoticeRemoved": {
     "description": "Note when the chat's plugin was uninstalled."
   },
+  "aiChatNoticeRemovedNamed": "Plugin “{plugin}” was removed. Choose another plugin to continue.",
+  "@aiChatNoticeRemovedNamed": {
+    "description": "Note when the chat's plugin was uninstalled and its name is known.",
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
   "aiChatNoticeReinstalled": "Plugin “{plugin}” was removed and installed again. Choose a plugin to continue this chat.",
   "@aiChatNoticeReinstalled": {
     "description": "Note when the chat's plugin was removed and installed again.",
@@ -464,10 +473,13 @@
       }
     }
   },
-  "aiChatNoticeGroupOff": "The tool behind {variable} is off, so it cannot be filled. Nothing was sent; your text is still here.",
+  "aiChatNoticeGroupOff": "The “{group}” tool is off, so {variable} cannot be filled. Nothing was sent.",
   "@aiChatNoticeGroupOff": {
     "description": "Note when a variable's tool group is off.",
     "placeholders": {
+      "group": {
+        "type": "String"
+      },
       "variable": {
         "type": "String"
       }
@@ -500,6 +512,30 @@
       },
       "model": {
         "type": "String"
+      }
+    }
+  },
+  "aiChatNoticeOversizeQueue": "{variable} has {count} songs, over the limit {model} accepts.",
+  "@aiChatNoticeOversizeQueue": {
+    "description": "Note when the queue is over the model's limit; {count} is the number of songs in it.",
+    "placeholders": {
+      "variable": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatActionSendShortQueue": "Send the short version: {count} songs around the playing one",
+  "@aiChatActionSendShortQueue": {
+    "description": "Button of a note: sends the queue shortened to {count} songs around the playing one.",
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   },
@@ -603,6 +639,14 @@
   "@aiChatGroupPlaylists": {
     "description": "Name of the playlists tool group in a note."
   },
+  "aiChatGroupLyrics": "Lyrics",
+  "@aiChatGroupLyrics": {
+    "description": "Name of the lyrics tool group in a note."
+  },
+  "aiChatGroupQueue": "Queue",
+  "@aiChatGroupQueue": {
+    "description": "Name of the queue tool group in a note."
+  },
   "aiChatVarListLabel": "Insert a variable",
   "@aiChatVarListLabel": {
     "description": "Screen-reader label of the variable list."
@@ -610,6 +654,30 @@
   "aiChatVarListTitle": "Insert a variable · the app fills it when you send",
   "@aiChatVarListTitle": {
     "description": "Heading of the variable list shown after typing {{."
+  },
+  "aiChatVarDescNowPlaying": "Playing song (title – artist)",
+  "@aiChatVarDescNowPlaying": {
+    "description": "One-line description of the {{NowPlaying}} variable in the list shown after typing {{."
+  },
+  "aiChatVarDescTitle": "Title of the playing song",
+  "@aiChatVarDescTitle": {
+    "description": "One-line description of the {{Title}} variable in the list shown after typing {{."
+  },
+  "aiChatVarDescArtist": "Artist of the playing song",
+  "@aiChatVarDescArtist": {
+    "description": "One-line description of the {{Artist}} variable in the list shown after typing {{."
+  },
+  "aiChatVarDescAlbum": "Album of the playing song",
+  "@aiChatVarDescAlbum": {
+    "description": "One-line description of the {{Album}} variable in the list shown after typing {{."
+  },
+  "aiChatVarDescLyrics": "Lyrics of the playing song, without timestamps",
+  "@aiChatVarDescLyrics": {
+    "description": "One-line description of the {{Lyrics}} variable in the list shown after typing {{."
+  },
+  "aiChatVarDescQueue": "The queue, one song per line",
+  "@aiChatVarDescQueue": {
+    "description": "One-line description of the {{Queue}} variable in the list shown after typing {{."
   },
   "aiChatPromptsLabel": "Saved prompts",
   "@aiChatPromptsLabel": {

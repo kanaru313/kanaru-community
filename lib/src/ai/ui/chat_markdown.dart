@@ -45,11 +45,13 @@ class _ListView extends StatelessWidget {
     // Wide enough for the longest marker ("100.") at this text size.
     final last = list.start + list.items.length - 1;
     final marker = list.ordered ? '$last.' : '•';
-    final width = (TextPainter(
+    final painter = TextPainter(
       text: TextSpan(text: marker, style: style),
       textDirection: Directionality.of(context),
       textScaler: MediaQuery.textScalerOf(context),
-    )..layout()).width;
+    )..layout();
+    final width = painter.width;
+    painter.dispose();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

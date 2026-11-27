@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 
+import '../chat_messages_provider.dart';
 import '../chat_session.dart';
 import 'composer_draft.dart';
 
@@ -14,6 +15,7 @@ class ChatViewState {
     this.historyOpen = false,
     this.renaming = false,
     this.renameText = '',
+    this.renameOriginal = '',
   });
 
   /// The history list replaces the conversation.
@@ -23,14 +25,19 @@ class ChatViewState {
   final bool renaming;
   final String renameText;
 
+  /// The name when rename started: saving it unchanged is not a rename.
+  final String renameOriginal;
+
   ChatViewState copyWith({
     bool? historyOpen,
     bool? renaming,
     String? renameText,
+    String? renameOriginal,
   }) => ChatViewState(
     historyOpen: historyOpen ?? this.historyOpen,
     renaming: renaming ?? this.renaming,
     renameText: renameText ?? this.renameText,
+    renameOriginal: renameOriginal ?? this.renameOriginal,
   );
 }
 
@@ -44,20 +51,25 @@ class ChatViewNotifier extends Notifier<ChatViewState> {
   void closeHistory() => state = state.copyWith(historyOpen: false);
 
   /// Turns the title into an input holding [current].
-  void startRename(String current) =>
-      state = state.copyWith(renaming: true, renameText: current);
+  void startRename(String current) => state = state.copyWith(
+    renaming: true,
+    renameText: current,
+    renameOriginal: current,
+  );
 
   void setRenameText(String text) => state = state.copyWith(renameText: text);
 
   void cancelRename() => state = state.copyWith(renaming: false);
 
   /// Saves the typed name on the open conversation and leaves rename mode. A
-  /// blank name keeps the old one.
+  /// blank or unchanged name keeps the old one (and the automatic title).
   Future<void> commitRename() async {
     final text = state.renameText.trim();
     final id = ref.read(chatSessionProvider).conversationId;
     state = state.copyWith(renaming: false);
-    if (text.isEmpty || id == null) return;
+    if (text.isEmpty || id == null || text == state.renameOriginal.trim()) {
+      return;
+    }
     try {
       await ref.read(chatSessionProvider.notifier).rename(id, text);
     } on Object catch (e, s) {
@@ -132,3 +144,13 @@ class ChatScrollAnchor extends Notifier<int?> {
 final chatScrollAnchorProvider = NotifierProvider<ChatScrollAnchor, int?>(
   ChatScrollAnchor.new,
 );
+
+/// Keeps the open conversation's messages loaded while the chat is off screen
+/// (the panel swapped to the queue, a hand-over), so coming back keeps the
+/// pages already loaded and the scroll anchor stays valid. Released when
+/// another conversation opens. The chat surface watches it once; it is not
+/// auto-disposed, so it outlives the surface.
+final chatMessagesHoldProvider = Provider<void>((ref) {
+  final id = ref.watch(chatSessionProvider.select((s) => s.conversationId));
+  if (id != null) ref.listen(chatMessagesProvider(id), (_, _) {});
+});

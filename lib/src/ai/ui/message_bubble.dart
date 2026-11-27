@@ -1,8 +1,10 @@
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../l10n/gen/app_localizations.dart';
 import '../domain/conversation/parts.dart';
 import '../state/chat_view/message_view.dart';
+import 'composer/chip_labels.dart';
 import 'message_time.dart';
 
 /// A message of the user: the bubble on the right, the chips it was sent with
@@ -73,15 +75,6 @@ class UserMessage extends StatelessWidget {
   }
 }
 
-IconData _chipIcon(ChipKind kind) => switch (kind) {
-  ChipKind.nowPlaying || ChipKind.song || ChipKind.songs => KIcons.songs,
-  ChipKind.album => KIcons.albums,
-  ChipKind.artist => KIcons.artists,
-  ChipKind.genre => KIcons.genres,
-  ChipKind.language => KIcons.languages,
-  ChipKind.playlist => KIcons.playlists,
-};
-
 /// A chip the message was sent with: small, tonal, not interactive.
 class _SentChip extends StatelessWidget {
   const _SentChip({required this.chip});
@@ -91,7 +84,7 @@ class _SentChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final label = chip.label ?? chip.tracks.firstOrNull?.title ?? '';
+    final label = chipLabel(AppLocalizations.of(context), chip);
     return DecoratedBox(
       decoration: BoxDecoration(
         color: scheme.secondaryContainer,
@@ -106,7 +99,7 @@ class _SentChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              _chipIcon(chip.kind),
+              chipIcon(chip.kind),
               size: KIconSize.xs,
               color: scheme.onSecondaryContainer,
             ),

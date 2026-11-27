@@ -118,6 +118,24 @@ void main() {
     });
   });
 
+  group('permission picker without the settings dialog', () {
+    testWidgets('Tự động is refused until the shared confirm exists', (
+      tester,
+    ) async {
+      final setup = await pumpComposer(tester);
+      await tester.tap(byIconButton(_permissionButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Automatic'));
+      await tester.pumpAndSettle();
+      // The stand-in confirm says no: nothing changed, the picker stays.
+      expect(
+        setup.session.calls.where((c) => c.startsWith('permission')),
+        isEmpty,
+      );
+      expect(find.text('For this conversation only.'), findsOneWidget);
+    });
+  });
+
   group('model picker', () {
     testWidgets('model list = options + custom choices with capability tags', (
       tester,
