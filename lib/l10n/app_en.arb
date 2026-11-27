@@ -5799,6 +5799,1301 @@
   "@aiChatPlayContextLabel": {
     "description": "Name of the play context when the AI assistant starts a queue."
   },
+  "aiChatNewTitle": "New conversation",
+  "@aiChatNewTitle": {
+    "description": "Title of a conversation that has no name yet, and the menu row that starts one."
+  },
+  "aiChatMenuTooltip": "Chat options",
+  "@aiChatMenuTooltip": {
+    "description": "Tooltip of the ⋮ button of the chat header."
+  },
+  "aiChatMenuHistory": "Chat history",
+  "@aiChatMenuHistory": {
+    "description": "Menu row that opens the list of past conversations."
+  },
+  "aiChatMenuRename": "Rename",
+  "@aiChatMenuRename": {
+    "description": "Menu row that renames the open conversation; also the tooltip of its title."
+  },
+  "aiChatMenuDelete": "Delete this conversation",
+  "@aiChatMenuDelete": {
+    "description": "Menu row that deletes the open conversation."
+  },
+  "aiChatMenuSettings": "AI settings",
+  "@aiChatMenuSettings": {
+    "description": "Menu row that opens the AI settings page."
+  },
+  "aiChatRenameField": "Conversation name",
+  "@aiChatRenameField": {
+    "description": "Label of the name field while renaming."
+  },
+  "aiChatRenameSave": "Save name",
+  "@aiChatRenameSave": {
+    "description": "Tooltip of the button that saves the new name."
+  },
+  "aiChatCloseMobile": "Close chat",
+  "@aiChatCloseMobile": {
+    "description": "Tooltip of the button that closes the chat page on the phone."
+  },
+  "aiChatClosePanel": "Close panel (Ctrl+J)",
+  "@aiChatClosePanel": {
+    "description": "Tooltip of the button that closes the chat panel on desktop."
+  },
+  "aiChatDeleteTitle": "Delete this conversation?",
+  "@aiChatDeleteTitle": {
+    "description": "Title of the confirm dialog before a conversation is deleted."
+  },
+  "aiChatDeleteBody": "Its messages and attached images are removed from this device. This cannot be undone.",
+  "@aiChatDeleteBody": {
+    "description": "Body of the confirm dialog before a conversation is deleted."
+  },
+  "aiChatDeleteConfirm": "Delete",
+  "@aiChatDeleteConfirm": {
+    "description": "Confirm button of the delete dialog."
+  },
+  "aiChatDeleted": "Conversation deleted",
+  "@aiChatDeleted": {
+    "description": "Toast shown after a conversation was deleted."
+  },
+  "aiChatEmptyTitle": "What do you want to ask about your music?",
+  "@aiChatEmptyTitle": {
+    "description": "Greeting of an empty conversation."
+  },
+  "aiChatEmptyBody": "The AI can read your library, the playing song, lyrics and the queue through the tools you turn on in Settings.",
+  "@aiChatEmptyBody": {
+    "description": "Line under the greeting of an empty conversation."
+  },
+  "aiChatGuideTitle": "Choose an AI service",
+  "@aiChatGuideTitle": {
+    "description": "Heading shown when no AI chat plugin is installed."
+  },
+  "aiChatGuideBody": "Kanaru has no AI server of its own. You use your own service; data goes straight to it.",
+  "@aiChatGuideBody": {
+    "description": "Line under the heading shown when no AI chat plugin is installed."
+  },
+  "aiChatGuideCloudTitle": "Cloud service",
+  "@aiChatGuideCloudTitle": {
+    "description": "Title of the cloud option of the no-plugin guide."
+  },
+  "aiChatGuideCloudBody": "Claude, Gemini, OpenAI… Install a plugin, then enter your API key (kept in the plugin's settings).",
+  "@aiChatGuideCloudBody": {
+    "description": "Description of the cloud option of the no-plugin guide."
+  },
+  "aiChatGuideCloudAction": "Open the AI plugin store",
+  "@aiChatGuideCloudAction": {
+    "description": "Button that opens the plugin store on the AI chat plugins."
+  },
+  "aiChatGuideFoot": "Installing a plugin lets it send data to the addresses it declares. The chat does not ask again.",
+  "@aiChatGuideFoot": {
+    "description": "Consent line at the foot of the no-plugin guide."
+  },
+  "aiChatCopy": "Copy",
+  "@aiChatCopy": {
+    "description": "Tooltip of the copy button under a message."
+  },
+  "aiChatStopped": "Stopped",
+  "@aiChatStopped": {
+    "description": "Line under an answer that was stopped."
+  },
+  "aiChatAnswering": "Answering",
+  "@aiChatAnswering": {
+    "description": "Screen-reader status of the three dots shown while an answer streams."
+  },
+  "aiChatToolRunning": "Running: {name}",
+  "@aiChatToolRunning": {
+    "description": "Title of a tool card while the tool runs. {name} is the tool's name.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatToolParams": "Parameters",
+  "@aiChatToolParams": {
+    "description": "Heading of the arguments in an open tool card."
+  },
+  "aiChatToolResult": "Result",
+  "@aiChatToolResult": {
+    "description": "Heading of the result in an open tool card."
+  },
+  "aiChatPluginSwitch": "From here on: {plugin} · {model}",
+  "@aiChatPluginSwitch": {
+    "description": "Divider written when the conversation moves to another plugin and model.",
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      },
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatPluginSwitchNoModel": "From here on: {plugin}",
+  "@aiChatPluginSwitchNoModel": {
+    "description": "Divider written when the conversation moves to another plugin and no model is known.",
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatJumpToEnd": "Jump to the end",
+  "@aiChatJumpToEnd": {
+    "description": "Tooltip of the round button that scrolls the chat to the newest message."
+  },
+  "aiChatMessagesError": "Could not load this conversation.",
+  "@aiChatMessagesError": {
+    "description": "Notice shown in place of the messages when reading them failed."
+  },
+  "aiChatMessagesRetry": "Try again",
+  "@aiChatMessagesRetry": {
+    "description": "Action of the notice shown when the messages could not be read."
+  },
+  "aiChatTrackMenu": "Song menu",
+  "@aiChatTrackMenu": {
+    "description": "Tooltip of the ⋮ button of a song row in an answer."
+  },
+  "aiChatToolPlayTracks": "Play songs",
+  "@aiChatToolPlayTracks": {
+    "description": "Name of the play_tracks tool on a tool card."
+  },
+  "aiChatToolQueueTracks": "Add to queue",
+  "@aiChatToolQueueTracks": {
+    "description": "Name of the queue_tracks tool on a tool card."
+  },
+  "aiChatToolRemoveFromQueue": "Remove from queue",
+  "@aiChatToolRemoveFromQueue": {
+    "description": "Name of the remove_from_queue tool on a tool card."
+  },
+  "aiChatToolListPlaylists": "List playlists",
+  "@aiChatToolListPlaylists": {
+    "description": "Name of the list_playlists tool on a tool card."
+  },
+  "aiChatToolGetPlaylistTracks": "Playlist songs",
+  "@aiChatToolGetPlaylistTracks": {
+    "description": "Name of the get_playlist_tracks tool on a tool card."
+  },
+  "aiChatToolGetLyrics": "Lyrics",
+  "@aiChatToolGetLyrics": {
+    "description": "Name of the get_lyrics tool on a tool card."
+  },
+  "aiChatToolGetListeningStats": "Listening stats",
+  "@aiChatToolGetListeningStats": {
+    "description": "Name of the get_listening_stats tool on a tool card."
+  },
+  "aiChatToolCreatePlaylist": "Create playlist",
+  "@aiChatToolCreatePlaylist": {
+    "description": "Name of the create_playlist tool on a tool card."
+  },
+  "aiChatToolAddToPlaylist": "Add to playlist",
+  "@aiChatToolAddToPlaylist": {
+    "description": "Name of the add_to_playlist tool on a tool card."
+  },
+  "aiChatToolRemoveFromPlaylist": "Remove from playlist",
+  "@aiChatToolRemoveFromPlaylist": {
+    "description": "Name of the remove_from_playlist tool on a tool card."
+  },
+  "aiChatToolGetNowPlaying": "Now playing",
+  "@aiChatToolGetNowPlaying": {
+    "description": "Name of the get_now_playing tool on a tool card."
+  },
+  "aiChatToolGetQueue": "Queue",
+  "@aiChatToolGetQueue": {
+    "description": "Name of the get_queue tool on a tool card."
+  },
+  "aiChatToolSearchLibrary": "Search the library",
+  "@aiChatToolSearchLibrary": {
+    "description": "Name of the search_library tool on a tool card."
+  },
+  "aiChatToolGetTrackInfo": "Song info",
+  "@aiChatToolGetTrackInfo": {
+    "description": "Name of the get_track_info tool on a tool card."
+  },
+  "aiChatComposerLabel": "Message",
+  "@aiChatComposerLabel": {
+    "description": "Screen-reader label of the message field."
+  },
+  "aiChatComposerHint": "Ask about your music…",
+  "@aiChatComposerHint": {
+    "description": "Placeholder of the message field."
+  },
+  "aiChatComposerHintLocked": "Choose a plugin to continue…",
+  "@aiChatComposerHintLocked": {
+    "description": "Placeholder of the message field while the chat's plugin is gone."
+  },
+  "aiChatSend": "Send",
+  "@aiChatSend": {
+    "description": "Tooltip and label of the send button."
+  },
+  "aiChatStop": "Stop",
+  "@aiChatStop": {
+    "description": "Tooltip and label of the stop button while the model answers."
+  },
+  "aiChatStopTools": "Stop (the running tool finishes, later ones do not run)",
+  "@aiChatStopTools": {
+    "description": "Tooltip of the stop button while a tool runs."
+  },
+  "aiChatPluginTooltip": "AI service: {plugin}",
+  "@aiChatPluginTooltip": {
+    "description": "Tooltip and label of the plugin button.",
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatPluginGone": "Plugin removed · choose another",
+  "@aiChatPluginGone": {
+    "description": "Tooltip of the plugin button when the chat's plugin was uninstalled."
+  },
+  "aiChatPermissionTooltip": "Permission: {mode} · {description}",
+  "@aiChatPermissionTooltip": {
+    "description": "Tooltip of the icon-only permission button.",
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      },
+      "description": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatPermissionLabel": "Permission: {mode}",
+  "@aiChatPermissionLabel": {
+    "description": "Screen-reader label of the permission button.",
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatPermissionReadOnly": "Read only",
+  "@aiChatPermissionReadOnly": {
+    "description": "Name of the read-only permission."
+  },
+  "aiChatPermissionAsk": "Ask first",
+  "@aiChatPermissionAsk": {
+    "description": "Name of the ask-first permission."
+  },
+  "aiChatPermissionAuto": "Automatic",
+  "@aiChatPermissionAuto": {
+    "description": "Name of the automatic permission."
+  },
+  "aiChatPermissionReadOnlyHint": "Reads and suggests, never changes data",
+  "@aiChatPermissionReadOnlyHint": {
+    "description": "Description of the read-only permission."
+  },
+  "aiChatPermissionAskHint": "Asks before changing anything",
+  "@aiChatPermissionAskHint": {
+    "description": "Description of the ask-first permission."
+  },
+  "aiChatPermissionAutoHint": "Makes changes without asking",
+  "@aiChatPermissionAutoHint": {
+    "description": "Description of the automatic permission."
+  },
+  "aiChatPermissionPickerCaption": "For this conversation only.",
+  "@aiChatPermissionPickerCaption": {
+    "description": "Caption under the permission picker."
+  },
+  "aiChatModelNeeded": "Choose a model",
+  "@aiChatModelNeeded": {
+    "description": "Text of the model button while no model is chosen."
+  },
+  "aiChatModelLabel": "Model: {model}",
+  "@aiChatModelLabel": {
+    "description": "Screen-reader label of the model button.",
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatModelCustom": "Custom",
+  "@aiChatModelCustom": {
+    "description": "Tag of a model the user added."
+  },
+  "aiChatCapVision": "Images",
+  "@aiChatCapVision": {
+    "description": "Capability tag: the model reads images."
+  },
+  "aiChatCapTools": "Tools",
+  "@aiChatCapTools": {
+    "description": "Capability tag: the model can use tools."
+  },
+  "aiChatPluginPickerCaption": "Applies from the next message. History stays as it is.",
+  "@aiChatPluginPickerCaption": {
+    "description": "Caption under the plugin picker."
+  },
+  "aiChatPluginPickerAdd": "Add an AI service…",
+  "@aiChatPluginPickerAdd": {
+    "description": "Footer button of the plugin picker; opens the plugin store."
+  },
+  "aiChatPluginHasKey": "API key set",
+  "@aiChatPluginHasKey": {
+    "description": "State line of a ready plugin that uses an API key."
+  },
+  "aiChatPluginReady": "Ready",
+  "@aiChatPluginReady": {
+    "description": "State line of a ready plugin without an API key."
+  },
+  "aiChatPluginNeedsKey": "Needs an API key",
+  "@aiChatPluginNeedsKey": {
+    "description": "State line of a plugin with no API key."
+  },
+  "aiChatPluginNeedsModel": "No model chosen",
+  "@aiChatPluginNeedsModel": {
+    "description": "State line of a plugin with no model."
+  },
+  "aiChatPluginNeedsConfig": "Needs setup",
+  "@aiChatPluginNeedsConfig": {
+    "description": "State line of a plugin with required settings empty."
+  },
+  "aiChatNoticeDismiss": "Dismiss",
+  "@aiChatNoticeDismiss": {
+    "description": "Label of the × of a note above the message field."
+  },
+  "aiChatActionOpenPluginSettings": "Open plugin settings",
+  "@aiChatActionOpenPluginSettings": {
+    "description": "Button of a note: opens the plugin's settings page."
+  },
+  "aiChatActionPickModel": "Choose a model",
+  "@aiChatActionPickModel": {
+    "description": "Button of a note: opens the model picker."
+  },
+  "aiChatActionPickPlugin": "Choose a plugin",
+  "@aiChatActionPickPlugin": {
+    "description": "Button of a note: opens the plugin picker."
+  },
+  "aiChatActionFindLyrics": "Find lyrics for this song",
+  "@aiChatActionFindLyrics": {
+    "description": "Button of a note: opens the lyrics search for the playing song."
+  },
+  "aiChatActionCancel": "Cancel",
+  "@aiChatActionCancel": {
+    "description": "Button of a note: drops the pending send."
+  },
+  "aiChatActionSendShort": "Send the short version",
+  "@aiChatActionSendShort": {
+    "description": "Button of a note: sends the shortened values."
+  },
+  "aiChatActionDropChip": "Remove chip",
+  "@aiChatActionDropChip": {
+    "description": "Button of a note: removes the attached chip."
+  },
+  "aiChatActionAiSettings": "AI settings",
+  "@aiChatActionAiSettings": {
+    "description": "Button of a note: opens the AI settings page."
+  },
+  "aiChatNoticeNeedsKey": "{plugin} needs an API key before it can send.",
+  "@aiChatNoticeNeedsKey": {
+    "description": "Note when the chat's plugin has no API key.",
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatNoticeNeedsModel": "{plugin} has no model. Choose a model before sending.",
+  "@aiChatNoticeNeedsModel": {
+    "description": "Note when no model is chosen.",
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatNoticeNeedsConfig": "{plugin} needs setup: {fields}.",
+  "@aiChatNoticeNeedsConfig": {
+    "description": "Note when required settings of the plugin are empty; {fields} are their names.",
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      },
+      "fields": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatNoticeRemoved": "This chat's plugin was removed. Choose another plugin to continue.",
+  "@aiChatNoticeRemoved": {
+    "description": "Note when the chat's plugin was uninstalled."
+  },
+  "aiChatNoticeRemovedNamed": "Plugin “{plugin}” was removed. Choose another plugin to continue.",
+  "@aiChatNoticeRemovedNamed": {
+    "description": "Note when the chat's plugin was uninstalled and its name is known.",
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatNoticeReinstalled": "Plugin “{plugin}” was removed and installed again. Choose a plugin to continue this chat.",
+  "@aiChatNoticeReinstalled": {
+    "description": "Note when the chat's plugin was removed and installed again.",
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatNoticeStruckChip": "The “{group}” tool is off, so this chip cannot be sent.",
+  "@aiChatNoticeStruckChip": {
+    "description": "Note when an attached chip needs a tool group that is off.",
+    "placeholders": {
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatNoticeMissingLyrics": "The playing song has no lyrics, so {variable} cannot be filled. Nothing was sent; your text is still here.",
+  "@aiChatNoticeMissingLyrics": {
+    "description": "Note when a variable needs lyrics the song does not have.",
+    "placeholders": {
+      "variable": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatNoticeMissingPlaying": "Nothing is playing, so {variable} cannot be filled. Nothing was sent; your text is still here.",
+  "@aiChatNoticeMissingPlaying": {
+    "description": "Note when a variable needs a playing song and none plays.",
+    "placeholders": {
+      "variable": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatNoticeMissingQueue": "The queue is empty, so {variable} cannot be filled. Nothing was sent; your text is still here.",
+  "@aiChatNoticeMissingQueue": {
+    "description": "Note when the queue variable has no queue.",
+    "placeholders": {
+      "variable": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatNoticeGroupOff": "The “{group}” tool is off, so {variable} cannot be filled. Nothing was sent.",
+  "@aiChatNoticeGroupOff": {
+    "description": "Note when a variable's tool group is off.",
+    "placeholders": {
+      "group": {
+        "type": "String"
+      },
+      "variable": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatNoticeLeftoverInput": "{variable} is still in the message: type your text in its place, then send. Nothing was sent.",
+  "@aiChatNoticeLeftoverInput": {
+    "description": "Note when the input blank of a prompt was left in the message.",
+    "placeholders": {
+      "variable": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatNoticeChipUnavailable": "Could not read the data of the chip “{chip}”. Nothing was sent.",
+  "@aiChatNoticeChipUnavailable": {
+    "description": "Note when an attached chip has no data now.",
+    "placeholders": {
+      "chip": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatNoticeOversize": "{variables} is too large to send to {model}.",
+  "@aiChatNoticeOversize": {
+    "description": "Note when a filled value is over the model's limit.",
+    "placeholders": {
+      "variables": {
+        "type": "String"
+      },
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatNoticeOversizeQueue": "{variable} has {count} songs, over the limit {model} accepts.",
+  "@aiChatNoticeOversizeQueue": {
+    "description": "Note when the queue is over the model's limit; {count} is the number of songs in it.",
+    "placeholders": {
+      "variable": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatActionSendShortQueue": "Send the short version: {count} songs around the playing one",
+  "@aiChatActionSendShortQueue": {
+    "description": "Button of a note: sends the queue shortened to {count} songs around the playing one.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatNoticeSendFailed": "The message could not be saved. Your text is still here; try again.",
+  "@aiChatNoticeSendFailed": {
+    "description": "Note when storing the message failed."
+  },
+  "aiChatNoticeNoTools": "{model} does not use tools: the AI only sees variables and chips you attach, it does not read the library itself.",
+  "@aiChatNoticeNoTools": {
+    "description": "Gentle note when the model gets no tools.",
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatChipNowPlaying": "Now playing",
+  "@aiChatChipNowPlaying": {
+    "description": "Context chip: the playing song."
+  },
+  "aiChatChipSong": "Song",
+  "@aiChatChipSong": {
+    "description": "Context chip of a song without a name."
+  },
+  "aiChatChipSongs": "{count, plural, one{{count} song} other{{count} songs}}",
+  "@aiChatChipSongs": {
+    "description": "Context chip: several songs.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatChipAlbum": "Album: {label}",
+  "@aiChatChipAlbum": {
+    "description": "Context chip: an album.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatChipArtist": "Artist: {label}",
+  "@aiChatChipArtist": {
+    "description": "Context chip: an artist.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatChipGenre": "Genre: {label}",
+  "@aiChatChipGenre": {
+    "description": "Context chip: a genre.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatChipLanguage": "Language: {label}",
+  "@aiChatChipLanguage": {
+    "description": "Context chip: a language.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatChipPlaylist": "Playlist: {label}",
+  "@aiChatChipPlaylist": {
+    "description": "Context chip: a playlist.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatChipRemove": "Remove chip {label}",
+  "@aiChatChipRemove": {
+    "description": "Tooltip and label of the × of a chip.",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatChipStruckHint": "This chip's tool is off",
+  "@aiChatChipStruckHint": {
+    "description": "Screen-reader hint of a chip that cannot be sent."
+  },
+  "aiChatGroupNowPlaying": "Now playing",
+  "@aiChatGroupNowPlaying": {
+    "description": "Name of the now-playing tool group in a note."
+  },
+  "aiChatGroupTrackInfo": "Song info",
+  "@aiChatGroupTrackInfo": {
+    "description": "Name of the song-info tool group in a note."
+  },
+  "aiChatGroupPlaylists": "Playlists",
+  "@aiChatGroupPlaylists": {
+    "description": "Name of the playlists tool group in a note."
+  },
+  "aiChatGroupLyrics": "Lyrics",
+  "@aiChatGroupLyrics": {
+    "description": "Name of the lyrics tool group in a note."
+  },
+  "aiChatGroupQueue": "Queue",
+  "@aiChatGroupQueue": {
+    "description": "Name of the queue tool group in a note."
+  },
+  "aiChatVarListLabel": "Insert a variable",
+  "@aiChatVarListLabel": {
+    "description": "Screen-reader label of the variable list."
+  },
+  "aiChatVarListTitle": "Insert a variable · the app fills it when you send",
+  "@aiChatVarListTitle": {
+    "description": "Heading of the variable list shown after typing {{."
+  },
+  "aiChatPromptsLabel": "Saved prompts",
+  "@aiChatPromptsLabel": {
+    "description": "Screen-reader label of the group of prompt chips."
+  },
+  "aiChatPromptNoPlaying": "Nothing is playing",
+  "@aiChatPromptNoPlaying": {
+    "description": "Reason under a prompt chip that needs a playing song."
+  },
+  "aiChatPromptEmptyQueue": "The queue is empty",
+  "@aiChatPromptEmptyQueue": {
+    "description": "Reason under a prompt chip that needs the queue."
+  },
+  "aiChatCardAllow": "Allow",
+  "@aiChatCardAllow": {
+    "description": "Button of a confirmation card."
+  },
+  "aiChatCardDeny": "Decline",
+  "@aiChatCardDeny": {
+    "description": "Button of a confirmation card."
+  },
+  "aiChatCardView": "View",
+  "@aiChatCardView": {
+    "description": "Button of a done card: opens the playlist."
+  },
+  "aiChatCardOpenQueue": "Open queue",
+  "@aiChatCardOpenQueue": {
+    "description": "Button of a done card."
+  },
+  "aiChatCardReplayQueue": "Play the old queue again",
+  "@aiChatCardReplayQueue": {
+    "description": "Button of a done card whose call replaced the queue."
+  },
+  "aiChatCardRetryIn": "Try again in {seconds, plural, =1{1 second} other{{seconds} seconds}}",
+  "@aiChatCardRetryIn": {
+    "description": "Locked retry button, under a minute left.",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardRetryInMinutes": "Try again in {minutes, plural, =1{1 minute} other{{minutes} minutes}}",
+  "@aiChatCardRetryInMinutes": {
+    "description": "Locked retry button, whole minutes left.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardRetryInMinutesSeconds": "Try again in {minutes} min {seconds} s",
+  "@aiChatCardRetryInMinutesSeconds": {
+    "description": "Locked retry button, minutes and seconds left.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardRetryAt": "Try again at {time}",
+  "@aiChatCardRetryAt": {
+    "description": "Locked retry button, an hour or more left; {time} is the clock time.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatCardCanRetry": "You can try again now",
+  "@aiChatCardCanRetry": {
+    "description": "Said once to screen readers when the retry countdown ends."
+  },
+  "aiChatCardAddedFold": "{count, plural, =1{1 song} other{{count} songs}} added",
+  "@aiChatCardAddedFold": {
+    "description": "Fold row of the songs a done card added.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardRemovedFold": "{count, plural, =1{1 song} other{{count} songs}} removed",
+  "@aiChatCardRemovedFold": {
+    "description": "Fold row of the songs a done card removed.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardOldQueueFold": "Old queue · {count, plural, =1{1 song} other{{count} songs}}",
+  "@aiChatCardOldQueueFold": {
+    "description": "Fold row of the queue a play call replaced.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardMoreTracks": "+{count, plural, =1{1 song} other{{count} songs}}",
+  "@aiChatCardMoreTracks": {
+    "description": "Button that shows the rest of a short song list.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardTrackList": "{count, plural, =1{1 song} other{{count} songs}}",
+  "@aiChatCardTrackList": {
+    "description": "Accessible name of a song list in a card.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardTrackGone": "No longer in the library",
+  "@aiChatCardTrackGone": {
+    "description": "Second line of a song row whose song is gone."
+  },
+  "aiChatActCreatePlaylist": "create playlist “{name}” · {count, plural, =1{1 song} other{{count} songs}}",
+  "@aiChatActCreatePlaylist": {
+    "description": "What a create_playlist call does.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatActAddToPlaylist": "add {count, plural, =1{1 song} other{{count} songs}} to a playlist",
+  "@aiChatActAddToPlaylist": {
+    "description": "What an add_to_playlist call does, playlist name unknown.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatActAddToPlaylistNamed": "add {count, plural, =1{1 song} other{{count} songs}} to playlist “{name}”",
+  "@aiChatActAddToPlaylistNamed": {
+    "description": "What an add_to_playlist call does.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatActRemoveFromPlaylist": "remove {count, plural, =1{1 song} other{{count} songs}} from a playlist",
+  "@aiChatActRemoveFromPlaylist": {
+    "description": "What a remove_from_playlist call does, playlist name unknown.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatActRemoveFromPlaylistNamed": "remove {count, plural, =1{1 song} other{{count} songs}} from playlist “{name}”",
+  "@aiChatActRemoveFromPlaylistNamed": {
+    "description": "What a remove_from_playlist call does.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatActPlay": "play {count, plural, =1{1 song} other{{count} songs}}",
+  "@aiChatActPlay": {
+    "description": "What a play_tracks call does.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatActQueue": "add {count, plural, =1{1 song} other{{count} songs}} to the queue",
+  "@aiChatActQueue": {
+    "description": "What a queue_tracks call does.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatActRemoveFromQueue": "remove {count, plural, =1{1 song} other{{count} songs}} from the queue",
+  "@aiChatActRemoveFromQueue": {
+    "description": "What a remove_from_queue call does.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatGroupPlay": "Playback control",
+  "@aiChatGroupPlay": {
+    "description": "Tool group shown in a done card."
+  },
+  "aiChatGroupQueueEdit": "Queue edits",
+  "@aiChatGroupQueueEdit": {
+    "description": "Tool group shown in a done card."
+  },
+  "aiChatGroupPlaylistCreate": "Playlist creation",
+  "@aiChatGroupPlaylistCreate": {
+    "description": "Tool group shown in a done card."
+  },
+  "aiChatGroupPlaylistEdit": "Playlist edits",
+  "@aiChatGroupPlaylistEdit": {
+    "description": "Tool group shown in a done card."
+  },
+  "aiChatCardNeedsAllow": "{tool} · needs your OK",
+  "@aiChatCardNeedsAllow": {
+    "description": "Second line of a confirmation card.",
+    "placeholders": {
+      "tool": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatCardAllowedByUser": "You allowed it",
+  "@aiChatCardAllowedByUser": {
+    "description": "Start of the second line of a done card after a confirmation."
+  },
+  "aiChatCardAutomatic": "Automatic",
+  "@aiChatCardAutomatic": {
+    "description": "Start of the second line of a done card made in Auto mode."
+  },
+  "aiChatCardDoneTitle": "Done: {action}",
+  "@aiChatCardDoneTitle": {
+    "description": "Title of a done card.",
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatCardOldQueueReplaced": "the old queue was replaced",
+  "@aiChatCardOldQueueReplaced": {
+    "description": "Part of a done card's second line after play_tracks."
+  },
+  "aiChatCardGoneFromQueue": "{count, plural, =1{1 song} other{{count} songs}} already gone from the queue",
+  "@aiChatCardGoneFromQueue": {
+    "description": "Part of a done card's second line after a removal.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardGoneFromPlaylist": "{count, plural, =1{1 song} other{{count} songs}} already gone from the playlist",
+  "@aiChatCardGoneFromPlaylist": {
+    "description": "Part of a done card's second line after a removal.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardNotInLibrary": "{count, plural, =1{1 song} other{{count} songs}} not in the library",
+  "@aiChatCardNotInLibrary": {
+    "description": "Part of a done card's second line when ids were not songs.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardDenied": "Declined",
+  "@aiChatCardDenied": {
+    "description": "Title of a card the user declined."
+  },
+  "aiChatCardDeniedByNewMessage": "Declined (you sent another message)",
+  "@aiChatCardDeniedByNewMessage": {
+    "description": "Title of a card left open when the user wrote again."
+  },
+  "aiChatCardDeniedNotAllowed": "Declined: no longer allowed",
+  "@aiChatCardDeniedNotAllowed": {
+    "description": "Title of a card Kanaru refused to run after the user allowed it."
+  },
+  "aiChatCardExpired": "Expired",
+  "@aiChatCardExpired": {
+    "description": "Title of a confirmation card that waited too long."
+  },
+  "aiChatCardSkippedStopped": "Not run: you stopped it",
+  "@aiChatCardSkippedStopped": {
+    "description": "Title of a call that did not run after Stop."
+  },
+  "aiChatCardSkipped": "Not run",
+  "@aiChatCardSkipped": {
+    "description": "Title of a call that did not run."
+  },
+  "aiChatCardNothingChanged": "{action} · nothing changed",
+  "@aiChatCardNothingChanged": {
+    "description": "Second line of a card whose call did not run.",
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatCardExpiredWhy": "The card waited over 24 hours. Ask the AI again if you still want it.",
+  "@aiChatCardExpiredWhy": {
+    "description": "Reason line of an expired card."
+  },
+  "aiChatCardWhyReadOnly": "You switched this chat to Read-only before this ran.",
+  "@aiChatCardWhyReadOnly": {
+    "description": "Reason line of a card refused after the user allowed it."
+  },
+  "aiChatCardWhyGroupOff": "You turned this tool group off before this ran.",
+  "@aiChatCardWhyGroupOff": {
+    "description": "Reason line of a card refused after the user allowed it."
+  },
+  "aiChatCardWhyPluginChanged": "This chat's plugin changed before this ran.",
+  "@aiChatCardWhyPluginChanged": {
+    "description": "Reason line of a card refused after the user allowed it."
+  },
+  "aiChatCardWhyModelChanged": "This chat's model changed before this ran.",
+  "@aiChatCardWhyModelChanged": {
+    "description": "Reason line of a card refused after the user allowed it."
+  },
+  "aiChatCardWhyChangedAfterAllow": "This changed after you allowed it, so Kanaru did not run it.",
+  "@aiChatCardWhyChangedAfterAllow": {
+    "description": "Reason line of a card refused after the user allowed it."
+  },
+  "aiChatCardWhyNotAllowed": "This is no longer allowed to run.",
+  "@aiChatCardWhyNotAllowed": {
+    "description": "Reason line of a card refused after the user allowed it."
+  },
+  "aiChatCardWhyTooLarge": "This chat grew too long to send.",
+  "@aiChatCardWhyTooLarge": {
+    "description": "Reason line of a call skipped because the chat grew too large."
+  },
+  "aiChatCardWhyLimit": "The AI reached its change limit for this message.",
+  "@aiChatCardWhyLimit": {
+    "description": "Reason line of a call skipped because of the item limit."
+  },
+  "aiChatCardUnknownTitle": "Result unknown: {action}",
+  "@aiChatCardUnknownTitle": {
+    "description": "Title of a card whose write was cut off.",
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatCardUnknownClosed": "Kanaru was closed while this was running, so it is not known whether it finished.",
+  "@aiChatCardUnknownClosed": {
+    "description": "First sentence of the unknown-result card."
+  },
+  "aiChatCardUnknownTimedOut": "This took too long, so it is not known whether it finished.",
+  "@aiChatCardUnknownTimedOut": {
+    "description": "First sentence of the unknown-result card."
+  },
+  "aiChatCardLookQueue": "Check the queue before asking the AI to do it again.",
+  "@aiChatCardLookQueue": {
+    "description": "Last sentence of the unknown-result card for a queue change."
+  },
+  "aiChatCardLookPlaylist": "Check the playlist before asking the AI to do it again.",
+  "@aiChatCardLookPlaylist": {
+    "description": "Last sentence of the unknown-result card for a playlist change."
+  },
+  "aiChatCardLimitTitle": "The AI reached its change limit for this message",
+  "@aiChatCardLimitTitle": {
+    "description": "Title of the item-cap card."
+  },
+  "aiChatCardLimitBody": "One message may remove at most {removed, plural, =1{1 song} other{{removed} songs}} and add at most {added, plural, =1{1 song} other{{added} songs}}. Send a new message to continue.",
+  "@aiChatCardLimitBody": {
+    "description": "Body of the item-cap card.",
+    "placeholders": {
+      "removed": {
+        "type": "int"
+      },
+      "added": {
+        "type": "int"
+      }
+    }
+  },
+  "aiChatCardLimitBodyAction": "One message may remove at most {removed, plural, =1{1 song} other{{removed} songs}} and add at most {added, plural, =1{1 song} other{{added} songs}}. “{action}” did not run. Send a new message to continue.",
+  "@aiChatCardLimitBodyAction": {
+    "description": "Body of the item-cap card naming the call that did not run.",
+    "placeholders": {
+      "removed": {
+        "type": "int"
+      },
+      "added": {
+        "type": "int"
+      },
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrPluginFallback": "Plugin",
+  "@aiChatErrPluginFallback": {
+    "description": "Name used when the chat's plugin is not installed any more."
+  },
+  "aiChatErrNetworkTitle": "Could not reach {host}",
+  "@aiChatErrNetworkTitle": {
+    "description": "Title of the network error card.",
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrNetworkTitleNoHost": "Could not reach the server",
+  "@aiChatErrNetworkTitleNoHost": {
+    "description": "Title of the network error card when the host is not known."
+  },
+  "aiChatErrNetworkBody": "Check your connection and try again. Your message is still here.",
+  "aiChatErrRateTitle": "{plugin} is limiting requests",
+  "@aiChatErrRateTitle": {
+    "description": "Title of the rate-limit card.",
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrRateBody": "The plugin reported error 429 (too many requests). When the countdown ends, tap Try again; Kanaru never resends on its own.",
+  "aiChatErrRateBodyNoClock": "The plugin reported error 429 (too many requests). Wait a moment, then tap Try again; Kanaru never resends on its own.",
+  "aiChatErrBusyTitle": "The previous turn has not stopped yet",
+  "aiChatErrBusyBody": "Kanaru is still finishing the previous answer. Try again in a moment.",
+  "aiChatErrBusyStuckTitle": "The previous turn still has not stopped",
+  "aiChatErrBusyStuckBody": "Tried 3 times and the previous turn has not ended. Restart Kanaru and try again.",
+  "aiChatErrKeyTitle": "{plugin} did not accept the API key",
+  "@aiChatErrKeyTitle": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrKeyBody": "The API key is wrong or was revoked. Fix it in the plugin's settings, then try again.",
+  "aiChatErrQuotaTitle": "The {plugin} account is out of quota",
+  "@aiChatErrQuotaTitle": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrQuotaBody": "Top up or change your plan on the provider's site, then try again.",
+  "aiChatErrConfigTitle": "The settings of {plugin} are incomplete",
+  "@aiChatErrConfigTitle": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrConfigBody": "The plugin says a setting is missing. Open its settings, fill it in and try again.",
+  "aiChatErrModelGoneTitle": "Model no longer available: {model}",
+  "@aiChatErrModelGoneTitle": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrModelGoneTitleNoModel": "Model no longer available",
+  "aiChatErrModelGoneBody": "{plugin} no longer has this model. Pick another model, then try again.",
+  "@aiChatErrModelGoneBody": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrContextTitle": "This conversation is too long for this model",
+  "aiChatErrContextBody": "{model} cannot take more. Start a new conversation to go on; this one stays readable.",
+  "@aiChatErrContextBody": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrTooLargeTitle": "This conversation is too long to send",
+  "aiChatErrTooLargeBody": "Kanaru shortened the older turns and it is still over the send limit. Start a new conversation, or send a shorter message.",
+  "aiChatErrBlockedTitle": "The model will not answer this request",
+  "aiChatErrBlockedBody": "{model} refused (the provider's reason). Rephrase it, or change the model in the input box.",
+  "@aiChatErrBlockedBody": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrEmptyTitle": "The model gave no answer",
+  "aiChatErrEmptyBody": "{model} returned an empty answer. Try again, or change the model in the input box.",
+  "@aiChatErrEmptyBody": {
+    "placeholders": {
+      "model": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrGenericTitle": "{plugin} ran into an error",
+  "@aiChatErrGenericTitle": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrGenericBody": "The service reported an error (code: {code}). Try again in a few minutes.",
+  "@aiChatErrGenericBody": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrHostTitle": "The plugin is not allowed to call {host}",
+  "@aiChatErrHostTitle": {
+    "placeholders": {
+      "host": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrHostTitleNoHost": "The plugin is not allowed to call this address",
+  "aiChatErrHostBody": "This address is not in the list the plugin declared at install, so Kanaru blocks it.",
+  "aiChatErrUpdatedTitle": "The plugin was just updated",
+  "aiChatErrUpdatedBody": "{plugin} was updated during the answer, so this turn stopped. What was received stays above.",
+  "@aiChatErrUpdatedBody": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrRemovedTitle": "Plugin removed",
+  "aiChatErrRemovedBody": "{plugin} was removed during the answer. Pick another plugin to go on.",
+  "@aiChatErrRemovedBody": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrBrokenTitle": "The plugin is broken and needs reinstalling",
+  "aiChatErrBrokenBody": "The package of {plugin} cannot be read. Open the plugin page to reinstall it.",
+  "@aiChatErrBrokenBody": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrTimeoutTitle": "Timed out",
+  "aiChatErrTimeoutBody": "{plugin} sent nothing more, so this turn stopped. What was received stays above.",
+  "@aiChatErrTimeoutBody": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrCrashTitle": "The plugin ran into an error",
+  "aiChatErrCrashBody": "{plugin} stopped midway because of an error inside the plugin. Try again; if it repeats, check the plugin's log.",
+  "@aiChatErrCrashBody": {
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatErrCutOffTitle": "The answer was cut off when Kanaru closed",
+  "aiChatErrCutOffBody": "What was received stays above. Kanaru does not resend when it opens; tap Try again to let the AI go on.",
+  "aiChatActionOpenPlugin": "Open plugin",
+  "@aiChatActionOpenPlugin": {
+    "description": "Button of the broken-plugin error card."
+  },
+  "aiChatActionChangeModel": "Change model",
+  "@aiChatActionChangeModel": {
+    "description": "Button of the model-not-found error card: opens the model picker."
+  },
+  "aiChatHistoryTitle": "Chat history",
+  "@aiChatHistoryTitle": {
+    "description": "Title of the history page."
+  },
+  "aiChatHistoryBackPanel": "Back to the open conversation",
+  "@aiChatHistoryBackPanel": {
+    "description": "Tooltip of the back button of the history page in the desktop panel."
+  },
+  "aiChatHistoryBackPage": "Back",
+  "@aiChatHistoryBackPage": {
+    "description": "Tooltip of the back button of the history page on the phone."
+  },
+  "aiChatHistorySearch": "Search conversations",
+  "@aiChatHistorySearch": {
+    "description": "Hint and label of the search field of the history page."
+  },
+  "aiChatHistoryToday": "Today",
+  "@aiChatHistoryToday": {
+    "description": "Group heading of the history list."
+  },
+  "aiChatHistoryWeek": "Past 7 days",
+  "@aiChatHistoryWeek": {
+    "description": "Group heading of the history list."
+  },
+  "aiChatHistoryOlder": "Older",
+  "@aiChatHistoryOlder": {
+    "description": "Group heading of the history list."
+  },
+  "aiChatHistoryPluginRemoved": "plugin removed",
+  "@aiChatHistoryPluginRemoved": {
+    "description": "Shown in the error colour on a history row whose plugin is no longer installed."
+  },
+  "aiChatHistoryNoMatch": "No conversation matches “{query}”.",
+  "@aiChatHistoryNoMatch": {
+    "description": "Shown when the history search finds nothing.",
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatHistoryRowOptions": "Options for {title}",
+  "@aiChatHistoryRowOptions": {
+    "description": "Tooltip of the ⋮ button of a history row.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "aiSetServicesTitle": "AI services",
   "aiSetServicesHint": "Tap a service to open its plugin settings (API key, default model). New chats use the service you picked last in the chat.",
   "aiSetServicesEmpty": "No AI service installed. AI chat needs an AI plugin (for example Gemini or OpenAI-compatible) and your own API key.",

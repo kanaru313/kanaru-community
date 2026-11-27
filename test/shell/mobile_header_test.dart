@@ -95,21 +95,21 @@ void main() {
     expect(byIconButton('Gear'), findsNothing);
   });
 
-  testWidgets('the AI placeholder is dimmed with a coming-soon tooltip', (
+  testWidgets('the AI button is enabled and named after the chat', (
     tester,
   ) async {
     await _pump(tester);
     final button = iconButtonAround(tester, find.byIcon(KIcons.ai));
-    expect(button.enabled, isFalse);
-    expect(button.tooltip, contains('Coming soon'));
+    expect(button.enabled, isTrue);
+    expect(button.tooltip, 'AI chat');
   });
 
-  testWidgets('a registered ai action replaces the placeholder', (
+  testWidgets('a registered ai action does not hide the AI button', (
     tester,
   ) async {
     await _pump(tester, ai: true);
     expect(find.text('ai action'), findsOneWidget);
-    expect(find.byIcon(KIcons.ai), findsNothing);
+    expect(find.byIcon(KIcons.ai), findsOneWidget);
   });
 
   testWidgets('Settings in the header pushes the Settings page', (

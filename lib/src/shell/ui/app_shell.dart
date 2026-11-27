@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 
+import '../../ai/state/chat_view/page_suggestions.dart';
+import '../../ai/ui/play_context_label_sync.dart';
 import '../../extension/state/extension_providers.dart';
 import '../../playback/state/now_playing_panel.dart';
 import '../../playback/state/app_cover_seed.dart';
@@ -13,6 +15,8 @@ import '../../playback/state/player_ready.dart';
 import '../../playback/state/playing_cover_colors.dart';
 import '../../screens/now_playing/now_playing_path.dart';
 import '../state/nav_history.dart';
+import '../state/right_panel.dart';
+import 'chat_host_shell.dart';
 import 'desktop_shell.dart';
 import 'mobile_shell.dart';
 import 'playback_notice_listener.dart';
@@ -35,6 +39,13 @@ class _AppShellState extends ConsumerState<AppShell> {
   /// A hand-over of Now Playing from the desktop panel to the mobile page is
   /// under way (set once per width change, cleared after the frame).
   bool _handingOver = false;
+
+  /// The same for the chat, between the right panel and the `/chat` page.
+  bool _handingOverChat = false;
+
+  /// Layout of the previous build, to tell a window that just turned narrow
+  /// from one that started narrow.
+  bool? _wasMobile;
 
   @override
   void initState() {
@@ -63,14 +74,47 @@ class _AppShellState extends ConsumerState<AppShell> {
     });
   }
 
+  GoRouter? _router;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _history ??= NavHistory(GoRouter.of(context));
+    final router = GoRouter.of(context);
+    _history ??= NavHistory(router);
+    if (!identical(router, _router)) {
+      _router?.routerDelegate.removeListener(_onRoute);
+      _router = router..routerDelegate.addListener(_onRoute);
+      _syncChatPageLocation();
+    }
+  }
+
+  /// Tells the chat which page it covers (desktop: the page beside the
+  /// panel, live; phone: the last page before `/chat` was pushed), so it can
+  /// offer that page's chip. After the current work: a route change can
+  /// arrive while the tree builds.
+  void _syncChatPageLocation() {
+    final router = _router;
+    final location = router == null ? null : pageUnderChat(router);
+    if (location == null) return;
+    scheduleMicrotask(() {
+      if (mounted) ref.read(chatPageLocationProvider.notifier).set(location);
+    });
+  }
+
+  /// A page above the phone's chat page was popped while the window is wide:
+  /// the chat page is on top again and the panel takes over.
+  void _onRoute() {
+    final router = _router;
+    if (!mounted || router == null) return;
+    _syncChatPageLocation();
+    if (FormFactor.of(context) == FormFactor.desktop && chatPageOnTop(router)) {
+      _chatToPanel();
+    }
   }
 
   @override
   void dispose() {
+    _router?.routerDelegate.removeListener(_onRoute);
     _coverColors?.close();
     _history?.dispose();
     super.dispose();
@@ -91,10 +135,67 @@ class _AppShellState extends ConsumerState<AppShell> {
     });
   }
 
+  /// The window turned narrow with the chat in the right panel: the page
+  /// takes over (panel closed, `/chat` pushed). Once per change, after the
+  /// frame.
+  void _chatToPage() {
+    if (_handingOverChat) return;
+    _handingOverChat = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _handingOverChat = false;
+      if (!mounted || FormFactor.of(context) != FormFactor.mobile) return;
+      if (ref.read(rightPanelProvider) != RightPanelKind.chat) return;
+      ref.read(rightPanelProvider.notifier).close();
+      openChatPage(GoRouter.of(context));
+    });
+  }
+
+  /// The window is wide while `/chat` is the top page: the panel takes over
+  /// (page popped, chat shown in the panel).
+  void _chatToPanel() {
+    if (_handingOverChat) return;
+    _handingOverChat = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _handingOverChat = false;
+      if (!mounted || FormFactor.of(context) != FormFactor.desktop) return;
+      final router = GoRouter.of(context);
+      if (!chatPageOnTop(router)) return;
+      if (router.canPop()) {
+        router.pop();
+      } else {
+        router.go('/');
+      }
+      ref.read(rightPanelProvider.notifier).show(RightPanelKind.chat);
+    });
+  }
+
+  /// Keeps one chat: a window that turned narrow moves the panel's chat to
+  /// the page, one that turned wide moves the page's chat to the panel. A
+  /// window that starts narrow with the panel saved open on the chat just
+  /// closes the panel: the phone does not open the chat by itself.
+  void _syncChatPlace(bool mobile) {
+    final wasMobile = _wasMobile;
+    _wasMobile = mobile;
+    final panelOnChat = ref.read(rightPanelProvider) == RightPanelKind.chat;
+    if (mobile) {
+      if (!panelOnChat) return;
+      if (wasMobile == false) {
+        _chatToPage();
+      } else {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) ref.read(rightPanelProvider.notifier).close();
+        });
+      }
+    } else if (chatPageOnTop(GoRouter.of(context))) {
+      _chatToPanel();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final registry = ref.watch(extensionRegistryProvider);
     final mobile = FormFactor.of(context) == FormFactor.mobile;
+    _syncChatPlace(mobile);
     // Opened while the window is narrow, or the window just turned narrow
     // with the panel open (this build runs on the width change). A listener
     // plus a read, so the shell does not rebuild on every open and close.
@@ -104,21 +205,23 @@ class _AppShellState extends ConsumerState<AppShell> {
       }
     });
     if (mobile && ref.read(nowPlayingPanelProvider).open) _handOverToMobile();
-    return PlaybackNoticeListener(
-      key: _notices,
-      autoStart: false,
-      child: switch (FormFactor.of(context)) {
-        FormFactor.desktop => DesktopShell(
-          navigationShell: widget.navigationShell,
-          items: registry.navItems,
-          history: _history!,
-        ),
-        FormFactor.mobile => MobileShell(
-          navigationShell: widget.navigationShell,
-          items: registry.branchNavItems,
-          sidebarItems: registry.navItems,
-        ),
-      },
+    return AiPlayContextLabelSync(
+      child: PlaybackNoticeListener(
+        key: _notices,
+        autoStart: false,
+        child: switch (FormFactor.of(context)) {
+          FormFactor.desktop => DesktopShell(
+            navigationShell: widget.navigationShell,
+            items: registry.navItems,
+            history: _history!,
+          ),
+          FormFactor.mobile => MobileShell(
+            navigationShell: widget.navigationShell,
+            items: registry.branchNavItems,
+            sidebarItems: registry.navItems,
+          ),
+        },
+      ),
     );
   }
 }

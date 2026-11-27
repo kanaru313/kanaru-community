@@ -10,11 +10,16 @@ class RightPanelHeader extends StatelessWidget {
     required this.title,
     required this.onClose,
     this.menu,
+    this.closeTooltip,
   });
 
-  final String title;
+  /// The name: a text, or the chat's title that can be renamed in place.
+  final Widget title;
   final Widget? menu;
   final VoidCallback onClose;
+
+  /// Tooltip of ✕; the generic "Đóng khung" when null.
+  final String? closeTooltip;
 
   @override
   Widget build(BuildContext context) {
@@ -24,18 +29,13 @@ class RightPanelHeader extends StatelessWidget {
         padding: const EdgeInsets.only(left: KSpace.x4, right: KSpace.x2),
         child: Row(
           children: [
-            Expanded(
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-            ),
+            Expanded(child: title),
             ?menu,
             KIconButton(
               icon: KIcons.close,
-              tooltip: AppLocalizations.of(context).playbackPanelClose,
+              tooltip:
+                  closeTooltip ??
+                  AppLocalizations.of(context).playbackPanelClose,
               onPressed: onClose,
             ),
           ],
@@ -43,4 +43,19 @@ class RightPanelHeader extends StatelessWidget {
       ),
     );
   }
+}
+
+/// A plain name for a right panel header (the queue's).
+class RightPanelTitle extends StatelessWidget {
+  const RightPanelTitle(this.text, {super.key});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Text(
+    text,
+    maxLines: 1,
+    overflow: TextOverflow.ellipsis,
+    style: Theme.of(context).textTheme.titleMedium,
+  );
 }

@@ -7306,6 +7306,911 @@ class AppLocalizationsVi extends AppLocalizations {
   String get aiChatPlayContextLabel => 'Trợ lý AI';
 
   @override
+  String get aiChatNewTitle => 'Cuộc trò chuyện mới';
+
+  @override
+  String get aiChatMenuTooltip => 'Tuỳ chọn trò chuyện';
+
+  @override
+  String get aiChatMenuHistory => 'Lịch sử trò chuyện';
+
+  @override
+  String get aiChatMenuRename => 'Đổi tên';
+
+  @override
+  String get aiChatMenuDelete => 'Xoá cuộc trò chuyện này';
+
+  @override
+  String get aiChatMenuSettings => 'Cài đặt AI';
+
+  @override
+  String get aiChatRenameField => 'Tên cuộc trò chuyện';
+
+  @override
+  String get aiChatRenameSave => 'Lưu tên';
+
+  @override
+  String get aiChatCloseMobile => 'Đóng trò chuyện';
+
+  @override
+  String get aiChatClosePanel => 'Đóng khung (Ctrl+J)';
+
+  @override
+  String get aiChatDeleteTitle => 'Xoá cuộc trò chuyện này?';
+
+  @override
+  String get aiChatDeleteBody =>
+      'Tin nhắn và ảnh đính kèm của cuộc này bị xoá khỏi máy. Không hoàn tác được.';
+
+  @override
+  String get aiChatDeleteConfirm => 'Xoá';
+
+  @override
+  String get aiChatDeleted => 'Đã xoá cuộc trò chuyện';
+
+  @override
+  String get aiChatEmptyTitle => 'Hỏi gì về nhạc của bạn?';
+
+  @override
+  String get aiChatEmptyBody =>
+      'AI đọc được thư viện, bài đang phát, lời và hàng đợi qua các công cụ bạn bật trong Cài đặt.';
+
+  @override
+  String get aiChatGuideTitle => 'Chọn một dịch vụ AI';
+
+  @override
+  String get aiChatGuideBody =>
+      'Kanaru không có máy chủ AI riêng. Bạn dùng dịch vụ của mình; dữ liệu đi thẳng tới dịch vụ đó.';
+
+  @override
+  String get aiChatGuideCloudTitle => 'Dịch vụ đám mây';
+
+  @override
+  String get aiChatGuideCloudBody =>
+      'Claude, Gemini, OpenAI… Cài plugin rồi nhập API key của bạn (lưu trong cài đặt của plugin).';
+
+  @override
+  String get aiChatGuideCloudAction => 'Mở kho plugin AI';
+
+  @override
+  String get aiChatGuideFoot =>
+      'Cài plugin là đồng ý cho nó gửi dữ liệu tới các địa chỉ nó khai. Chat không hỏi thêm.';
+
+  @override
+  String get aiChatCopy => 'Sao chép';
+
+  @override
+  String get aiChatStopped => 'Đã dừng';
+
+  @override
+  String get aiChatAnswering => 'Đang trả lời';
+
+  @override
+  String aiChatToolRunning(String name) {
+    return 'Đang chạy: $name';
+  }
+
+  @override
+  String get aiChatToolParams => 'Tham số';
+
+  @override
+  String get aiChatToolResult => 'Kết quả';
+
+  @override
+  String aiChatPluginSwitch(String plugin, String model) {
+    return 'Từ đây dùng $plugin · $model';
+  }
+
+  @override
+  String aiChatPluginSwitchNoModel(String plugin) {
+    return 'Từ đây dùng $plugin';
+  }
+
+  @override
+  String get aiChatJumpToEnd => 'Xuống cuối';
+
+  @override
+  String get aiChatMessagesError => 'Không tải được cuộc trò chuyện.';
+
+  @override
+  String get aiChatMessagesRetry => 'Thử lại';
+
+  @override
+  String get aiChatTrackMenu => 'Menu bài';
+
+  @override
+  String get aiChatToolPlayTracks => 'Phát bài';
+
+  @override
+  String get aiChatToolQueueTracks => 'Thêm vào hàng đợi';
+
+  @override
+  String get aiChatToolRemoveFromQueue => 'Bỏ khỏi hàng đợi';
+
+  @override
+  String get aiChatToolListPlaylists => 'Danh sách playlist';
+
+  @override
+  String get aiChatToolGetPlaylistTracks => 'Bài trong playlist';
+
+  @override
+  String get aiChatToolGetLyrics => 'Lời bài hát';
+
+  @override
+  String get aiChatToolGetListeningStats => 'Thống kê nghe';
+
+  @override
+  String get aiChatToolCreatePlaylist => 'Tạo playlist';
+
+  @override
+  String get aiChatToolAddToPlaylist => 'Thêm vào playlist';
+
+  @override
+  String get aiChatToolRemoveFromPlaylist => 'Bỏ khỏi playlist';
+
+  @override
+  String get aiChatToolGetNowPlaying => 'Bài đang phát';
+
+  @override
+  String get aiChatToolGetQueue => 'Hàng đợi';
+
+  @override
+  String get aiChatToolSearchLibrary => 'Tìm trong thư viện';
+
+  @override
+  String get aiChatToolGetTrackInfo => 'Thông tin bài';
+
+  @override
+  String get aiChatComposerLabel => 'Tin nhắn';
+
+  @override
+  String get aiChatComposerHint => 'Hỏi về nhạc của bạn…';
+
+  @override
+  String get aiChatComposerHintLocked => 'Chọn plugin để tiếp tục…';
+
+  @override
+  String get aiChatSend => 'Gửi';
+
+  @override
+  String get aiChatStop => 'Dừng';
+
+  @override
+  String get aiChatStopTools =>
+      'Dừng (việc đang chạy làm xong, việc sau không chạy)';
+
+  @override
+  String aiChatPluginTooltip(String plugin) {
+    return 'Dịch vụ AI: $plugin';
+  }
+
+  @override
+  String get aiChatPluginGone => 'Plugin đã gỡ · chọn plugin khác';
+
+  @override
+  String aiChatPermissionTooltip(String mode, String description) {
+    return 'Quyền: $mode · $description';
+  }
+
+  @override
+  String aiChatPermissionLabel(String mode) {
+    return 'Quyền: $mode';
+  }
+
+  @override
+  String get aiChatPermissionReadOnly => 'Chỉ đọc';
+
+  @override
+  String get aiChatPermissionAsk => 'Hỏi trước';
+
+  @override
+  String get aiChatPermissionAuto => 'Tự động';
+
+  @override
+  String get aiChatPermissionReadOnlyHint =>
+      'Chỉ đọc và gợi ý, không bao giờ thay đổi dữ liệu';
+
+  @override
+  String get aiChatPermissionAskHint => 'Hỏi trước khi thay đổi bất cứ điều gì';
+
+  @override
+  String get aiChatPermissionAutoHint => 'Thực hiện thay đổi mà không cần hỏi';
+
+  @override
+  String get aiChatPermissionPickerCaption => 'Chỉ cho cuộc trò chuyện này.';
+
+  @override
+  String get aiChatModelNeeded => 'Chọn model';
+
+  @override
+  String aiChatModelLabel(String model) {
+    return 'Model: $model';
+  }
+
+  @override
+  String get aiChatModelCustom => 'Tuỳ chỉnh';
+
+  @override
+  String get aiChatCapVision => 'Ảnh';
+
+  @override
+  String get aiChatCapTools => 'Công cụ';
+
+  @override
+  String get aiChatPluginPickerCaption =>
+      'Áp dụng từ tin nhắn tiếp theo. Lịch sử giữ nguyên.';
+
+  @override
+  String get aiChatPluginPickerAdd => 'Thêm dịch vụ AI…';
+
+  @override
+  String get aiChatPluginHasKey => 'Đã có API key';
+
+  @override
+  String get aiChatPluginReady => 'Sẵn sàng';
+
+  @override
+  String get aiChatPluginNeedsKey => 'Cần API key';
+
+  @override
+  String get aiChatPluginNeedsModel => 'Chưa chọn model';
+
+  @override
+  String get aiChatPluginNeedsConfig => 'Cần cài đặt';
+
+  @override
+  String get aiChatNoticeDismiss => 'Đóng thông báo';
+
+  @override
+  String get aiChatActionOpenPluginSettings => 'Mở cài đặt plugin';
+
+  @override
+  String get aiChatActionPickModel => 'Chọn model';
+
+  @override
+  String get aiChatActionPickPlugin => 'Chọn plugin';
+
+  @override
+  String get aiChatActionFindLyrics => 'Tìm lời bài này';
+
+  @override
+  String get aiChatActionCancel => 'Huỷ';
+
+  @override
+  String get aiChatActionSendShort => 'Gửi bản rút gọn';
+
+  @override
+  String get aiChatActionDropChip => 'Bỏ thẻ';
+
+  @override
+  String get aiChatActionAiSettings => 'Cài đặt AI';
+
+  @override
+  String aiChatNoticeNeedsKey(String plugin) {
+    return '$plugin cần API key trước khi gửi.';
+  }
+
+  @override
+  String aiChatNoticeNeedsModel(String plugin) {
+    return '$plugin chưa có model. Chọn model trước khi gửi.';
+  }
+
+  @override
+  String aiChatNoticeNeedsConfig(String plugin, String fields) {
+    return '$plugin cần cài đặt: $fields.';
+  }
+
+  @override
+  String get aiChatNoticeRemoved =>
+      'Plugin của cuộc này đã gỡ. Chọn plugin khác để tiếp tục.';
+
+  @override
+  String aiChatNoticeRemovedNamed(String plugin) {
+    return 'Plugin “$plugin” đã gỡ. Chọn plugin khác để tiếp tục.';
+  }
+
+  @override
+  String aiChatNoticeReinstalled(String plugin) {
+    return 'Plugin “$plugin” đã được gỡ rồi cài lại. Chọn plugin để tiếp tục cuộc này.';
+  }
+
+  @override
+  String aiChatNoticeStruckChip(String group) {
+    return 'Công cụ “$group” đang tắt nên thẻ này không gửi được.';
+  }
+
+  @override
+  String aiChatNoticeMissingLyrics(String variable) {
+    return 'Bài đang phát không có lời nên chưa điền được $variable. Chưa gửi gì; chữ vẫn ở đây.';
+  }
+
+  @override
+  String aiChatNoticeMissingPlaying(String variable) {
+    return 'Không có bài đang phát nên chưa điền được $variable. Chưa gửi gì; chữ vẫn ở đây.';
+  }
+
+  @override
+  String aiChatNoticeMissingQueue(String variable) {
+    return 'Hàng đợi trống nên chưa điền được $variable. Chưa gửi gì; chữ vẫn ở đây.';
+  }
+
+  @override
+  String aiChatNoticeGroupOff(String group, String variable) {
+    return 'Công cụ “$group” đang tắt nên chưa điền được $variable. Chưa gửi gì.';
+  }
+
+  @override
+  String aiChatNoticeLeftoverInput(String variable) {
+    return 'Còn $variable trong tin: gõ nội dung vào chỗ đó rồi gửi. Chưa gửi gì.';
+  }
+
+  @override
+  String aiChatNoticeChipUnavailable(String chip) {
+    return 'Không lấy được dữ liệu của thẻ “$chip”. Chưa gửi gì.';
+  }
+
+  @override
+  String aiChatNoticeOversize(String variables, String model) {
+    return '$variables quá lớn để gửi tới $model.';
+  }
+
+  @override
+  String aiChatNoticeOversizeQueue(String variable, int count, String model) {
+    return '$variable có $count bài, quá giới hạn gửi của $model.';
+  }
+
+  @override
+  String aiChatActionSendShortQueue(int count) {
+    return 'Gửi bản rút gọn: $count bài quanh bài đang phát';
+  }
+
+  @override
+  String get aiChatNoticeSendFailed =>
+      'Chưa lưu được tin nhắn. Chữ vẫn ở đây; thử gửi lại.';
+
+  @override
+  String aiChatNoticeNoTools(String model) {
+    return '$model không dùng công cụ: AI chỉ thấy biến và thẻ bạn gắn, không tự đọc thư viện.';
+  }
+
+  @override
+  String get aiChatChipNowPlaying => 'Bài đang phát';
+
+  @override
+  String get aiChatChipSong => 'Bài hát';
+
+  @override
+  String aiChatChipSongs(int count) {
+    return '$count bài';
+  }
+
+  @override
+  String aiChatChipAlbum(String label) {
+    return 'Album: $label';
+  }
+
+  @override
+  String aiChatChipArtist(String label) {
+    return 'Nghệ sĩ: $label';
+  }
+
+  @override
+  String aiChatChipGenre(String label) {
+    return 'Thể loại: $label';
+  }
+
+  @override
+  String aiChatChipLanguage(String label) {
+    return 'Ngôn ngữ: $label';
+  }
+
+  @override
+  String aiChatChipPlaylist(String label) {
+    return 'Playlist: $label';
+  }
+
+  @override
+  String aiChatChipRemove(String label) {
+    return 'Bỏ thẻ $label';
+  }
+
+  @override
+  String get aiChatChipStruckHint => 'Công cụ của thẻ này đang tắt';
+
+  @override
+  String get aiChatGroupNowPlaying => 'Bài đang phát';
+
+  @override
+  String get aiChatGroupTrackInfo => 'Thông tin bài';
+
+  @override
+  String get aiChatGroupPlaylists => 'Playlist';
+
+  @override
+  String get aiChatGroupLyrics => 'Lời bài hát';
+
+  @override
+  String get aiChatGroupQueue => 'Hàng đợi';
+
+  @override
+  String get aiChatVarListLabel => 'Chèn biến';
+
+  @override
+  String get aiChatVarListTitle => 'Chèn biến · app điền lúc gửi';
+
+  @override
+  String get aiChatPromptsLabel => 'Prompt mẫu';
+
+  @override
+  String get aiChatPromptNoPlaying => 'Không có bài đang phát';
+
+  @override
+  String get aiChatPromptEmptyQueue => 'Hàng đợi trống';
+
+  @override
+  String get aiChatCardAllow => 'Cho phép';
+
+  @override
+  String get aiChatCardDeny => 'Từ chối';
+
+  @override
+  String get aiChatCardView => 'Xem';
+
+  @override
+  String get aiChatCardOpenQueue => 'Mở hàng đợi';
+
+  @override
+  String get aiChatCardReplayQueue => 'Phát lại hàng đợi cũ';
+
+  @override
+  String aiChatCardRetryIn(int seconds) {
+    return 'Thử lại sau $seconds giây';
+  }
+
+  @override
+  String aiChatCardRetryInMinutes(int minutes) {
+    return 'Thử lại sau $minutes phút';
+  }
+
+  @override
+  String aiChatCardRetryInMinutesSeconds(int minutes, int seconds) {
+    return 'Thử lại sau $minutes phút $seconds giây';
+  }
+
+  @override
+  String aiChatCardRetryAt(String time) {
+    return 'Thử lại lúc $time';
+  }
+
+  @override
+  String get aiChatCardCanRetry => 'Có thể thử lại';
+
+  @override
+  String aiChatCardAddedFold(int count) {
+    return '$count bài đã thêm';
+  }
+
+  @override
+  String aiChatCardRemovedFold(int count) {
+    return '$count bài đã bỏ';
+  }
+
+  @override
+  String aiChatCardOldQueueFold(int count) {
+    return 'Hàng đợi cũ · $count bài';
+  }
+
+  @override
+  String aiChatCardMoreTracks(int count) {
+    return '+$count bài';
+  }
+
+  @override
+  String aiChatCardTrackList(int count) {
+    return '$count bài';
+  }
+
+  @override
+  String get aiChatCardTrackGone => 'Không còn trong thư viện';
+
+  @override
+  String aiChatActCreatePlaylist(String name, int count) {
+    return 'tạo playlist “$name” · $count bài';
+  }
+
+  @override
+  String aiChatActAddToPlaylist(int count) {
+    return 'thêm $count bài vào playlist';
+  }
+
+  @override
+  String aiChatActAddToPlaylistNamed(String name, int count) {
+    return 'thêm $count bài vào playlist “$name”';
+  }
+
+  @override
+  String aiChatActRemoveFromPlaylist(int count) {
+    return 'bỏ $count bài khỏi playlist';
+  }
+
+  @override
+  String aiChatActRemoveFromPlaylistNamed(String name, int count) {
+    return 'bỏ $count bài khỏi playlist “$name”';
+  }
+
+  @override
+  String aiChatActPlay(int count) {
+    return 'phát $count bài';
+  }
+
+  @override
+  String aiChatActQueue(int count) {
+    return 'thêm $count bài vào hàng đợi';
+  }
+
+  @override
+  String aiChatActRemoveFromQueue(int count) {
+    return 'bỏ $count bài khỏi hàng đợi';
+  }
+
+  @override
+  String get aiChatGroupPlay => 'Điều khiển phát';
+
+  @override
+  String get aiChatGroupQueueEdit => 'Sửa hàng đợi';
+
+  @override
+  String get aiChatGroupPlaylistCreate => 'Tạo playlist';
+
+  @override
+  String get aiChatGroupPlaylistEdit => 'Sửa playlist';
+
+  @override
+  String aiChatCardNeedsAllow(String tool) {
+    return '$tool · cần bạn cho phép';
+  }
+
+  @override
+  String get aiChatCardAllowedByUser => 'Bạn đã cho phép';
+
+  @override
+  String get aiChatCardAutomatic => 'Tự động';
+
+  @override
+  String aiChatCardDoneTitle(String action) {
+    return 'Đã làm: $action';
+  }
+
+  @override
+  String get aiChatCardOldQueueReplaced => 'hàng đợi cũ đã được thay';
+
+  @override
+  String aiChatCardGoneFromQueue(int count) {
+    return '$count bài đã không còn trong hàng đợi';
+  }
+
+  @override
+  String aiChatCardGoneFromPlaylist(int count) {
+    return '$count bài đã không còn trong playlist';
+  }
+
+  @override
+  String aiChatCardNotInLibrary(int count) {
+    return '$count bài không có trong thư viện';
+  }
+
+  @override
+  String get aiChatCardDenied => 'Đã từ chối';
+
+  @override
+  String get aiChatCardDeniedByNewMessage => 'Đã từ chối (bạn đã gửi tin khác)';
+
+  @override
+  String get aiChatCardDeniedNotAllowed => 'Đã từ chối: không còn được phép';
+
+  @override
+  String get aiChatCardExpired => 'Đã hết hạn';
+
+  @override
+  String get aiChatCardSkippedStopped => 'Không chạy: bạn đã dừng';
+
+  @override
+  String get aiChatCardSkipped => 'Không chạy';
+
+  @override
+  String aiChatCardNothingChanged(String action) {
+    return '$action · không có gì thay đổi';
+  }
+
+  @override
+  String get aiChatCardExpiredWhy =>
+      'Thẻ chờ quá 24 giờ. Muốn làm thì nhắn lại cho AI.';
+
+  @override
+  String get aiChatCardWhyReadOnly =>
+      'Bạn đã chuyển cuộc này sang Chỉ đọc trước khi việc này chạy.';
+
+  @override
+  String get aiChatCardWhyGroupOff =>
+      'Bạn đã tắt nhóm công cụ này trước khi việc này chạy.';
+
+  @override
+  String get aiChatCardWhyPluginChanged =>
+      'Plugin của cuộc này đã đổi trước khi việc này chạy.';
+
+  @override
+  String get aiChatCardWhyModelChanged =>
+      'Model của cuộc này đã đổi trước khi việc này chạy.';
+
+  @override
+  String get aiChatCardWhyChangedAfterAllow =>
+      'Việc này đã thay đổi sau khi bạn cho phép, nên Kanaru không chạy.';
+
+  @override
+  String get aiChatCardWhyNotAllowed => 'Việc này không còn được phép chạy.';
+
+  @override
+  String get aiChatCardWhyTooLarge => 'Cuộc này quá dài để gửi.';
+
+  @override
+  String get aiChatCardWhyLimit => 'AI đã đạt giới hạn thay đổi cho tin này.';
+
+  @override
+  String aiChatCardUnknownTitle(String action) {
+    return 'Không rõ kết quả: $action';
+  }
+
+  @override
+  String get aiChatCardUnknownClosed =>
+      'Kanaru bị đóng khi việc này đang chạy nên không biết đã xong chưa.';
+
+  @override
+  String get aiChatCardUnknownTimedOut =>
+      'Việc này chạy quá lâu nên không biết đã xong chưa.';
+
+  @override
+  String get aiChatCardLookQueue => 'Xem Hàng đợi trước khi nhờ AI làm lại.';
+
+  @override
+  String get aiChatCardLookPlaylist => 'Xem playlist trước khi nhờ AI làm lại.';
+
+  @override
+  String get aiChatCardLimitTitle => 'AI đã đạt giới hạn thay đổi cho tin này';
+
+  @override
+  String aiChatCardLimitBody(int removed, int added) {
+    return 'Mỗi tin chỉ được bỏ tối đa $removed bài và thêm tối đa $added bài. Gửi tin mới nếu muốn làm tiếp.';
+  }
+
+  @override
+  String aiChatCardLimitBodyAction(int removed, int added, String action) {
+    return 'Mỗi tin chỉ được bỏ tối đa $removed bài và thêm tối đa $added bài. Việc “$action” không chạy. Gửi tin mới nếu muốn làm tiếp.';
+  }
+
+  @override
+  String get aiChatErrPluginFallback => 'Plugin';
+
+  @override
+  String aiChatErrNetworkTitle(String host) {
+    return 'Không kết nối được tới $host';
+  }
+
+  @override
+  String get aiChatErrNetworkTitleNoHost => 'Không kết nối được tới máy chủ';
+
+  @override
+  String get aiChatErrNetworkBody =>
+      'Kiểm tra mạng rồi thử lại. Tin của bạn vẫn ở đây.';
+
+  @override
+  String aiChatErrRateTitle(String plugin) {
+    return '$plugin đang giới hạn số yêu cầu';
+  }
+
+  @override
+  String get aiChatErrRateBody =>
+      'Plugin báo lỗi 429 (quá nhiều yêu cầu). Hết đếm ngược thì bấm Thử lại; Kanaru không tự gửi lại.';
+
+  @override
+  String get aiChatErrRateBodyNoClock =>
+      'Plugin báo lỗi 429 (quá nhiều yêu cầu). Đợi một lúc rồi bấm Thử lại; Kanaru không tự gửi lại.';
+
+  @override
+  String get aiChatErrBusyTitle => 'Lượt trước chưa dừng hẳn';
+
+  @override
+  String get aiChatErrBusyBody =>
+      'Kanaru đang kết thúc lượt trả lời trước. Thử lại sau giây lát.';
+
+  @override
+  String get aiChatErrBusyStuckTitle => 'Lượt trước vẫn chưa dừng';
+
+  @override
+  String get aiChatErrBusyStuckBody =>
+      'Đã thử 3 lần mà lượt trước vẫn chưa kết thúc. Khởi động lại Kanaru rồi thử lại.';
+
+  @override
+  String aiChatErrKeyTitle(String plugin) {
+    return '$plugin không nhận API key';
+  }
+
+  @override
+  String get aiChatErrKeyBody =>
+      'API key sai hoặc đã bị thu hồi. Sửa trong cài đặt của plugin rồi thử lại.';
+
+  @override
+  String aiChatErrQuotaTitle(String plugin) {
+    return 'Tài khoản $plugin đã hết hạn mức';
+  }
+
+  @override
+  String get aiChatErrQuotaBody =>
+      'Nạp thêm hoặc đổi gói ở trang của nhà cung cấp, rồi thử lại.';
+
+  @override
+  String aiChatErrConfigTitle(String plugin) {
+    return 'Cài đặt của $plugin chưa đủ';
+  }
+
+  @override
+  String get aiChatErrConfigBody =>
+      'Plugin báo còn thiếu cài đặt. Mở cài đặt của plugin để điền rồi thử lại.';
+
+  @override
+  String aiChatErrModelGoneTitle(String model) {
+    return 'Model không còn: $model';
+  }
+
+  @override
+  String get aiChatErrModelGoneTitleNoModel => 'Model không còn';
+
+  @override
+  String aiChatErrModelGoneBody(String plugin) {
+    return '$plugin không còn model này. Chọn model khác rồi thử lại.';
+  }
+
+  @override
+  String get aiChatErrContextTitle => 'Cuộc trò chuyện quá dài với model này';
+
+  @override
+  String aiChatErrContextBody(String model) {
+    return '$model không nhận thêm được. Mở cuộc mới để tiếp tục; cuộc này vẫn đọc được.';
+  }
+
+  @override
+  String get aiChatErrTooLargeTitle => 'Cuộc này quá dài để gửi';
+
+  @override
+  String get aiChatErrTooLargeBody =>
+      'Kanaru đã rút gọn các lượt cũ mà vẫn quá giới hạn gửi. Mở cuộc mới, hoặc gửi một tin ngắn hơn.';
+
+  @override
+  String get aiChatErrBlockedTitle => 'Model không trả lời yêu cầu này';
+
+  @override
+  String aiChatErrBlockedBody(String model) {
+    return '$model từ chối (lý do của nhà cung cấp). Diễn đạt lại, hoặc đổi model ở ô nhập.';
+  }
+
+  @override
+  String get aiChatErrEmptyTitle => 'Model không trả lời';
+
+  @override
+  String aiChatErrEmptyBody(String model) {
+    return '$model trả về câu trả lời trống. Thử lại, hoặc đổi model ở ô nhập.';
+  }
+
+  @override
+  String aiChatErrGenericTitle(String plugin) {
+    return '$plugin gặp lỗi';
+  }
+
+  @override
+  String aiChatErrGenericBody(String code) {
+    return 'Dịch vụ báo lỗi (mã: $code). Thử lại sau ít phút.';
+  }
+
+  @override
+  String aiChatErrHostTitle(String host) {
+    return 'Plugin không được phép gọi $host';
+  }
+
+  @override
+  String get aiChatErrHostTitleNoHost =>
+      'Plugin không được phép gọi địa chỉ này';
+
+  @override
+  String get aiChatErrHostBody =>
+      'Địa chỉ này không có trong danh sách plugin đã khai khi cài, nên Kanaru chặn.';
+
+  @override
+  String get aiChatErrUpdatedTitle => 'Plugin vừa được cập nhật';
+
+  @override
+  String aiChatErrUpdatedBody(String plugin) {
+    return '$plugin cập nhật trong lúc trả lời nên lượt này dừng. Phần đã nhận vẫn ở trên.';
+  }
+
+  @override
+  String get aiChatErrRemovedTitle => 'Plugin đã gỡ';
+
+  @override
+  String aiChatErrRemovedBody(String plugin) {
+    return '$plugin bị gỡ trong lúc trả lời. Chọn plugin khác để tiếp tục.';
+  }
+
+  @override
+  String get aiChatErrBrokenTitle => 'Plugin hỏng, cần cài lại';
+
+  @override
+  String aiChatErrBrokenBody(String plugin) {
+    return 'Không đọc được gói của $plugin. Mở trang plugin để cài lại.';
+  }
+
+  @override
+  String get aiChatErrTimeoutTitle => 'Hết thời gian chờ';
+
+  @override
+  String aiChatErrTimeoutBody(String plugin) {
+    return '$plugin không gửi thêm gì nên lượt này dừng. Phần đã nhận vẫn ở trên.';
+  }
+
+  @override
+  String get aiChatErrCrashTitle => 'Plugin gặp lỗi';
+
+  @override
+  String aiChatErrCrashBody(String plugin) {
+    return '$plugin dừng giữa chừng vì lỗi bên trong plugin. Thử lại; nếu lặp lại, xem nhật ký của plugin.';
+  }
+
+  @override
+  String get aiChatErrCutOffTitle => 'Lượt trả lời bị ngắt khi đóng Kanaru';
+
+  @override
+  String get aiChatErrCutOffBody =>
+      'Phần đã nhận vẫn ở trên. Kanaru không tự gửi lại khi mở; bấm Thử lại để AI làm tiếp.';
+
+  @override
+  String get aiChatActionOpenPlugin => 'Mở plugin';
+
+  @override
+  String get aiChatActionChangeModel => 'Đổi model';
+
+  @override
+  String get aiChatHistoryTitle => 'Lịch sử trò chuyện';
+
+  @override
+  String get aiChatHistoryBackPanel => 'Quay lại cuộc đang mở';
+
+  @override
+  String get aiChatHistoryBackPage => 'Quay lại';
+
+  @override
+  String get aiChatHistorySearch => 'Tìm cuộc trò chuyện';
+
+  @override
+  String get aiChatHistoryToday => 'Hôm nay';
+
+  @override
+  String get aiChatHistoryWeek => '7 ngày qua';
+
+  @override
+  String get aiChatHistoryOlder => 'Cũ hơn';
+
+  @override
+  String get aiChatHistoryPluginRemoved => 'plugin đã gỡ';
+
+  @override
+  String aiChatHistoryNoMatch(String query) {
+    return 'Không có cuộc trò chuyện nào khớp “$query”.';
+  }
+
+  @override
+  String aiChatHistoryRowOptions(String title) {
+    return 'Tuỳ chọn cho $title';
+  }
+
+  @override
   String get aiSetServicesTitle => 'Dịch vụ AI';
 
   @override

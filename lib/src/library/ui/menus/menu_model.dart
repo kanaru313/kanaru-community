@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart' show IconData;
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../media/domain/track_id.dart';
 import '../../domain/browse/menu_targets.dart';
+import 'ask_ai_entry.dart';
 import 'menu_actions.dart';
 import 'menu_origin.dart';
 
@@ -274,6 +275,7 @@ class MenuEnv {
     required this.canReveal,
     required this.pathOf,
     this.trash = false,
+    this.askAi,
   });
 
   final AppLocalizations l10n;
@@ -286,4 +288,8 @@ class MenuEnv {
 
   /// Desktop: deleting moves the files to the Trash.
   final bool trash;
+
+  /// The "Ask AI" entry; null while the app has none (the rows are "coming
+  /// soon").
+  final AskAiEntry? askAi;
 }

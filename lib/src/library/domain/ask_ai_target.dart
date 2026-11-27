@@ -11,7 +11,11 @@ sealed class AskAiTarget {
   const factory AskAiTarget.song(AskAiTrack track) = AskAiSong;
 
   /// A selection of songs (any list selection).
-  const factory AskAiTarget.songs(List<AskAiTrack> tracks) = AskAiSongs;
+  ///
+  /// [total] is how many songs are selected when [tracks] was cut to
+  /// [askAiMaxSongs]; null = all of them.
+  const factory AskAiTarget.songs(List<AskAiTrack> tracks, {int? total}) =
+      AskAiSongs;
 
   /// An album; [key] is the library's album key text, [label] what the chip
   /// shows.
@@ -29,6 +33,17 @@ sealed class AskAiTarget {
   /// A playlist by its uid (the AI module maps it to the id the model uses).
   const factory AskAiTarget.playlist(String uid, String label) = AskAiPlaylist;
 }
+
+/// Most songs one "Ask AI" chip carries: the chat sends no more than this
+/// (the engine's `chipMaxRows`, kept equal by a test).
+const int askAiMaxSongs = 200;
+
+/// The songs of a selection by id alone, at most [askAiMaxSongs]. No titles:
+/// nothing is read from the library when a menu opens or the selection
+/// changes; the chat reads the rows when the message is sent.
+List<AskAiTrack> askAiTracksOfIds(Iterable<int> ids) => [
+  for (final id in ids.take(askAiMaxSongs)) AskAiTrack(id: id, title: ''),
+];
 
 /// A track a target names: its library id and the text the chip shows.
 class AskAiTrack {
@@ -67,9 +82,12 @@ class AskAiSong extends AskAiTarget {
 }
 
 class AskAiSongs extends AskAiTarget {
-  const AskAiSongs(this.tracks);
+  const AskAiSongs(this.tracks, {this.total});
 
   final List<AskAiTrack> tracks;
+
+  /// The real selection size when [tracks] was cut; null = all of them.
+  final int? total;
 }
 
 class AskAiAlbum extends AskAiTarget {

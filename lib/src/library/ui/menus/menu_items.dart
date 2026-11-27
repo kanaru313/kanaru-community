@@ -4,6 +4,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../media/domain/play_context.dart';
 import '../../../media/domain/track_id.dart';
+import '../../domain/ask_ai_target.dart';
 import '../../domain/playlists/playlist_models.dart';
 import 'menu_model.dart';
 
@@ -62,10 +63,28 @@ MenuItemSpec addToPlaylistRow(
   enabled: ids.isNotEmpty,
 );
 
-/// "Ask AI ...": dimmed "coming soon", no Pro badge (an ordinary row until
-/// the chat exists).
-MenuItemSpec proRow(AppLocalizations l10n, String title) =>
-    MenuItemSpec(MenuItemId.ai, icon: KIcons.ai, title: title, soon: true);
+/// "Ask AI ...": hands [target] to the chat through the env's entry. A soon
+/// row (dimmed, inert) while the app has no entry; dimmed but not "soon" when
+/// [enabled] is false (nothing to ask about).
+MenuItemSpec askAiRow(
+  MenuEnv env,
+  String title,
+  AskAiTarget target, {
+  MenuItemId id = MenuItemId.ai,
+  bool enabled = true,
+}) {
+  final entry = env.askAi;
+  if (entry == null) {
+    return soonRow(id, KIcons.ai, title);
+  }
+  return MenuItemSpec(
+    id,
+    icon: KIcons.ai,
+    title: title,
+    enabled: enabled,
+    action: MenuAction.run((ctx) => entry.ask(ctx, target)),
+  );
+}
 
 /// Adds the "Advanced" row (a group of its own, last) to [groups] when the
 /// sub-page has anything in it.

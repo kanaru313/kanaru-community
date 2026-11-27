@@ -2,6 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
+import '../../../ai/state/chat_view/chat_view_state.dart';
+import '../../../ai/ui/chat_header_title.dart';
+import '../../../ai/ui/chat_menu.dart';
+import '../../../ai/ui/chat_surface.dart';
+import '../../../ai/ui/history_page.dart';
 import '../../../playback/state/queue_view_provider.dart';
 import '../../../screens/now_playing/ui/queue_host.dart';
 import '../../../screens/now_playing/ui/queue_panel.dart';
@@ -10,6 +15,9 @@ import 'right_panel_header.dart';
 
 /// Fixed width of the right panel.
 const double rightPanelWidth = 420;
+
+/// Key of the panel's frame, for tests that look at its room.
+const Key rightPanelFrameKey = Key('right-panel-frame');
 
 /// Time of the sideways slide between the Queue and the Chat content.
 const Duration rightPanelSlideDuration = Duration(milliseconds: 340);
@@ -31,6 +39,7 @@ class RightPanelHost extends ConsumerWidget {
     final scheme = Theme.of(context).colorScheme;
     final reduced = MediaQuery.disableAnimationsOf(context);
     return DecoratedBox(
+      key: rightPanelFrameKey,
       decoration: BoxDecoration(
         color: scheme.surface,
         border: Border(left: BorderSide(color: scheme.outlineVariant)),
@@ -77,7 +86,7 @@ class _QueueContent extends ConsumerWidget {
     return Column(
       children: [
         RightPanelHeader(
-          title: AppLocalizations.of(context).playbackNavQueue,
+          title: RightPanelTitle(AppLocalizations.of(context).playbackNavQueue),
           onClose: ref.read(rightPanelProvider.notifier).close,
         ),
         const Expanded(child: _QueueBody()),
@@ -112,16 +121,25 @@ class _ChatContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Null only while the panel closes after the surface went away.
-    final surface = ref.watch(chatPanelSurfaceProvider);
+    final historyOpen = ref.watch(
+      chatViewProvider.select((s) => s.historyOpen),
+    );
+    final style = Theme.of(context).textTheme.titleMedium;
     return Column(
       children: [
-        RightPanelHeader(
-          title: AppLocalizations.of(context).appAiChat,
-          menu: surface?.menu?.call(context),
-          onClose: ref.read(rightPanelProvider.notifier).close,
-        ),
-        Expanded(child: surface?.body(context) ?? const SizedBox.shrink()),
+        if (historyOpen)
+          ChatHistoryHeader(
+            style: style,
+            onClose: ref.read(rightPanelProvider.notifier).close,
+          )
+        else
+          RightPanelHeader(
+            title: ChatHeaderTitle(style: style),
+            menu: const ChatMenu(),
+            closeTooltip: AppLocalizations.of(context).aiChatClosePanel,
+            onClose: ref.read(rightPanelProvider.notifier).close,
+          ),
+        const Expanded(child: ChatSurface()),
       ],
     );
   }

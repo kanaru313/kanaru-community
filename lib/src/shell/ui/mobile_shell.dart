@@ -14,6 +14,7 @@ import '../../playback/ui/mini_player.dart';
 import '../../screens/now_playing/now_playing_path.dart';
 import '../../screens/now_playing/ui/mobile/queue_sheet.dart';
 import '../state/mobile_sidebar_state.dart';
+import 'chat_host_shell.dart';
 import 'mobile_floating_dock.dart';
 import 'mobile_push_layout.dart';
 import 'mobile_sidebar.dart';
@@ -142,6 +143,8 @@ class MobileShell extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final hasTrack = ref.watch(hasCurrentTrackProvider);
     final flight = ref.watch(miniPlayerFlightProvider);
+    // Extension actions for the header (Pro's own, next to the built-in AI
+    // button).
     final aiActions = [
       for (final a in ref.watch(extensionRegistryProvider).topBarActions)
         if (a.id == 'ai') a,
@@ -205,13 +208,12 @@ class MobileShell extends ConsumerWidget {
                   tooltip: l10n.playbackSidebarOpen,
                   onPressed: ref.read(mobileSidebarOpenProvider.notifier).open,
                 ),
-          // A registered action (Pro chat) replaces the placeholder.
           trailing: [
-            if (!inSettings && aiActions.isEmpty)
+            if (!inSettings)
               KIconButton(
                 icon: KIcons.ai,
-                tooltip: '${l10n.appAiChat} · ${l10n.appComingSoon}',
-                onPressed: null,
+                tooltip: l10n.appAiChat,
+                onPressed: () => openChatPage(GoRouter.of(context)),
               ),
             if (!inSettings)
               for (final a in aiActions) a.builder(context),

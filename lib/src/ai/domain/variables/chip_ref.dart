@@ -50,8 +50,10 @@ ChipRef chipRefOf(AskAiTarget target) => switch (target) {
     label: track.title,
     tracks: [_snap(track)],
   ),
-  AskAiSongs(:final tracks) => ChipRef(
+  AskAiSongs(:final tracks, :final total) => ChipRef(
     kind: ChipKind.songs,
+    // Only a cut selection names its real size (the chip then shows it).
+    label: total != null && total > tracks.length ? '$total' : null,
     tracks: [for (final t in tracks) _snap(t)],
   ),
   AskAiAlbum(:final key, :final label) => ChipRef(

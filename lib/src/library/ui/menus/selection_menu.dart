@@ -2,6 +2,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 
 import '../../../media/domain/play_context.dart';
 import '../../../media/domain/track_id.dart';
+import '../../domain/ask_ai_target.dart';
 import '../browse/library_labels.dart';
 import 'menu_items.dart';
 import 'menu_model.dart';
@@ -61,7 +62,15 @@ MenuSpec buildSelectionMenu(SelectionMenuData data, MenuEnv env) {
             action: MenuAction.favorite(data.ids, on: !data.allFavorite),
             enabled: count > 0,
           ),
-          proRow(l10n, l10n.libraryMenuAskAiSongs),
+          askAiRow(
+            env,
+            l10n.libraryMenuAskAiSongs,
+            AskAiTarget.songs(
+              askAiTracksOfIds([for (final id in data.ids) id.value]),
+              total: count,
+            ),
+            enabled: count > 0,
+          ),
         ],
       ],
       advanced,

@@ -346,19 +346,19 @@ void main() {
       expect(scanner.rescans, 0);
     });
 
-    testWidgets('Keymap and AI buttons are dimmed placeholders', (
+    testWidgets('Keymap is a dimmed placeholder, the AI button works', (
       tester,
     ) async {
       await _pump(tester, 1280);
-      for (final tip in [
-        'Keyboard shortcuts · Coming soon',
-        'AI chat · Coming soon',
+      for (final (tip, enabled) in [
+        ('Keyboard shortcuts · Coming soon', false),
+        ('AI chat (Ctrl+J)', true),
       ]) {
         final glyph = find.descendant(
           of: _byTooltip(tip),
           matching: find.byType(Icon),
         );
-        expect(iconButtonAround(tester, glyph).enabled, isFalse, reason: tip);
+        expect(iconButtonAround(tester, glyph).enabled, enabled, reason: tip);
       }
     });
   });

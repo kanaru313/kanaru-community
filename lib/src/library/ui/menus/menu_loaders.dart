@@ -26,6 +26,7 @@ import '../browse/group_play.dart';
 import '../browse/library_labels.dart';
 import '../folders/folder_play.dart';
 import 'album_menu.dart';
+import 'ask_ai_entry.dart';
 import 'artist_menu.dart';
 import 'folder_menu.dart';
 import 'group_menu.dart';
@@ -79,6 +80,7 @@ Future<MenuEnv> loadMenuEnv(
     l10n: l10n,
     canReveal: container.read(fileManagerProvider).canReveal,
     trash: trash,
+    askAi: container.read(askAiEntryProvider),
     pathOf: (folder) {
       for (final f in folders) {
         if (f.sourceId != folder.sourceId) continue;

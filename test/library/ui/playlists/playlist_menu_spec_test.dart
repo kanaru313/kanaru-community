@@ -1,9 +1,12 @@
+import 'package:flutter/widgets.dart' show BuildContext;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kanaru/src/database/database.dart' show TrackStatus;
+import 'package:kanaru/src/library/domain/ask_ai_target.dart';
 import 'package:kanaru/src/library/domain/playlists/playlist_ids.dart';
 import 'package:kanaru/src/library/domain/playlists/playlist_models.dart';
 import 'package:kanaru/src/library/domain/playlists/playlist_text_rules.dart';
+import 'package:kanaru/src/library/ui/menus/ask_ai_entry.dart';
 import 'package:kanaru/src/library/ui/menus/menu_model.dart';
 import 'package:kanaru/src/library/ui/menus/menu_origin.dart';
 import 'package:kanaru/src/library/ui/playlists/menu/favorites_menu_spec.dart';
@@ -16,6 +19,22 @@ import '../../playlists/support/playlist_fixtures.dart';
 import 'support/playlist_menu_support.dart';
 
 final _today = DateTime(2026, 11, 18);
+
+class _RecordingEntry implements AskAiEntry {
+  _RecordingEntry(this.asked);
+
+  final List<AskAiTarget> asked;
+
+  @override
+  Future<void> ask(BuildContext context, AskAiTarget target) async =>
+      asked.add(target);
+}
+
+/// A context the recording entry never touches.
+class _NoContext implements BuildContext {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
 
 Future<PlaylistDetail> _load(PlaylistFixture fx, String uid) async =>
     (await fx.repo.loadPlaylist(uid))!;
@@ -118,6 +137,28 @@ void main() {
       expect(ai.soon, isTrue);
       expect(ai.pro, isFalse);
       expect(ai.active, isFalse);
+    });
+
+    test('Ask AI hands over the playlist uid and its name', () async {
+      final detail = await playlist();
+      final asked = <AskAiTarget>[];
+      final spec = buildPlaylistMenu(
+        detail,
+        MenuEnv(
+          l10n: enL10n,
+          canReveal: true,
+          pathOf: (_) => null,
+          askAi: _RecordingEntry(asked),
+        ),
+        onOwnPage: false,
+        desktop: false,
+      );
+      final row = rowOf(spec, MenuItemId.playlistAskAi);
+      expect(row.soon, isFalse);
+      await ((row.action! as RunAction).run(_NoContext()));
+      final target = asked.single as AskAiPlaylist;
+      expect(target.uid, detail.summary.uid);
+      expect(target.label, 'Chill');
     });
 
     test('explanations are the rows hint, never the subtitle', () async {

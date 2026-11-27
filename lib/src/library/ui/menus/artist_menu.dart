@@ -3,6 +3,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import '../../../media/domain/library_keys.dart';
 import '../../../media/domain/play_context.dart';
 import '../../../media/domain/track_id.dart';
+import '../../domain/ask_ai_target.dart';
 import '../../domain/browse/browse_items.dart';
 import '../../domain/browse/menu_targets.dart';
 import '../browse/library_labels.dart';
@@ -152,7 +153,11 @@ MenuSpec buildArtistMenu(ArtistMenuData data, MenuOrigin origin, MenuEnv env) {
             l10n.playlistPickerFrom(artist.name),
           ),
           favoriteAllRow(l10n, data.ids),
-          proRow(l10n, l10n.libraryMenuAskAiArtist),
+          askAiRow(
+            env,
+            l10n.libraryMenuAskAiArtist,
+            AskAiTarget.artist(artist.key, artist.name),
+          ),
         ],
       ],
       advanced,

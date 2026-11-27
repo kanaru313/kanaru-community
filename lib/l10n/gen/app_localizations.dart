@@ -11651,6 +11651,1452 @@ abstract class AppLocalizations {
   /// **'AI assistant'**
   String get aiChatPlayContextLabel;
 
+  /// Title of a conversation that has no name yet, and the menu row that starts one.
+  ///
+  /// In en, this message translates to:
+  /// **'New conversation'**
+  String get aiChatNewTitle;
+
+  /// Tooltip of the ⋮ button of the chat header.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat options'**
+  String get aiChatMenuTooltip;
+
+  /// Menu row that opens the list of past conversations.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat history'**
+  String get aiChatMenuHistory;
+
+  /// Menu row that renames the open conversation; also the tooltip of its title.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get aiChatMenuRename;
+
+  /// Menu row that deletes the open conversation.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this conversation'**
+  String get aiChatMenuDelete;
+
+  /// Menu row that opens the AI settings page.
+  ///
+  /// In en, this message translates to:
+  /// **'AI settings'**
+  String get aiChatMenuSettings;
+
+  /// Label of the name field while renaming.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation name'**
+  String get aiChatRenameField;
+
+  /// Tooltip of the button that saves the new name.
+  ///
+  /// In en, this message translates to:
+  /// **'Save name'**
+  String get aiChatRenameSave;
+
+  /// Tooltip of the button that closes the chat page on the phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Close chat'**
+  String get aiChatCloseMobile;
+
+  /// Tooltip of the button that closes the chat panel on desktop.
+  ///
+  /// In en, this message translates to:
+  /// **'Close panel (Ctrl+J)'**
+  String get aiChatClosePanel;
+
+  /// Title of the confirm dialog before a conversation is deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this conversation?'**
+  String get aiChatDeleteTitle;
+
+  /// Body of the confirm dialog before a conversation is deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Its messages and attached images are removed from this device. This cannot be undone.'**
+  String get aiChatDeleteBody;
+
+  /// Confirm button of the delete dialog.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get aiChatDeleteConfirm;
+
+  /// Toast shown after a conversation was deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Conversation deleted'**
+  String get aiChatDeleted;
+
+  /// Greeting of an empty conversation.
+  ///
+  /// In en, this message translates to:
+  /// **'What do you want to ask about your music?'**
+  String get aiChatEmptyTitle;
+
+  /// Line under the greeting of an empty conversation.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI can read your library, the playing song, lyrics and the queue through the tools you turn on in Settings.'**
+  String get aiChatEmptyBody;
+
+  /// Heading shown when no AI chat plugin is installed.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an AI service'**
+  String get aiChatGuideTitle;
+
+  /// Line under the heading shown when no AI chat plugin is installed.
+  ///
+  /// In en, this message translates to:
+  /// **'Kanaru has no AI server of its own. You use your own service; data goes straight to it.'**
+  String get aiChatGuideBody;
+
+  /// Title of the cloud option of the no-plugin guide.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud service'**
+  String get aiChatGuideCloudTitle;
+
+  /// Description of the cloud option of the no-plugin guide.
+  ///
+  /// In en, this message translates to:
+  /// **'Claude, Gemini, OpenAI… Install a plugin, then enter your API key (kept in the plugin\'s settings).'**
+  String get aiChatGuideCloudBody;
+
+  /// Button that opens the plugin store on the AI chat plugins.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the AI plugin store'**
+  String get aiChatGuideCloudAction;
+
+  /// Consent line at the foot of the no-plugin guide.
+  ///
+  /// In en, this message translates to:
+  /// **'Installing a plugin lets it send data to the addresses it declares. The chat does not ask again.'**
+  String get aiChatGuideFoot;
+
+  /// Tooltip of the copy button under a message.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get aiChatCopy;
+
+  /// Line under an answer that was stopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopped'**
+  String get aiChatStopped;
+
+  /// Screen-reader status of the three dots shown while an answer streams.
+  ///
+  /// In en, this message translates to:
+  /// **'Answering'**
+  String get aiChatAnswering;
+
+  /// Title of a tool card while the tool runs. {name} is the tool's name.
+  ///
+  /// In en, this message translates to:
+  /// **'Running: {name}'**
+  String aiChatToolRunning(String name);
+
+  /// Heading of the arguments in an open tool card.
+  ///
+  /// In en, this message translates to:
+  /// **'Parameters'**
+  String get aiChatToolParams;
+
+  /// Heading of the result in an open tool card.
+  ///
+  /// In en, this message translates to:
+  /// **'Result'**
+  String get aiChatToolResult;
+
+  /// Divider written when the conversation moves to another plugin and model.
+  ///
+  /// In en, this message translates to:
+  /// **'From here on: {plugin} · {model}'**
+  String aiChatPluginSwitch(String plugin, String model);
+
+  /// Divider written when the conversation moves to another plugin and no model is known.
+  ///
+  /// In en, this message translates to:
+  /// **'From here on: {plugin}'**
+  String aiChatPluginSwitchNoModel(String plugin);
+
+  /// Tooltip of the round button that scrolls the chat to the newest message.
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to the end'**
+  String get aiChatJumpToEnd;
+
+  /// Notice shown in place of the messages when reading them failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load this conversation.'**
+  String get aiChatMessagesError;
+
+  /// Action of the notice shown when the messages could not be read.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get aiChatMessagesRetry;
+
+  /// Tooltip of the ⋮ button of a song row in an answer.
+  ///
+  /// In en, this message translates to:
+  /// **'Song menu'**
+  String get aiChatTrackMenu;
+
+  /// Name of the play_tracks tool on a tool card.
+  ///
+  /// In en, this message translates to:
+  /// **'Play songs'**
+  String get aiChatToolPlayTracks;
+
+  /// Name of the queue_tracks tool on a tool card.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to queue'**
+  String get aiChatToolQueueTracks;
+
+  /// Name of the remove_from_queue tool on a tool card.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from queue'**
+  String get aiChatToolRemoveFromQueue;
+
+  /// Name of the list_playlists tool on a tool card.
+  ///
+  /// In en, this message translates to:
+  /// **'List playlists'**
+  String get aiChatToolListPlaylists;
+
+  /// Name of the get_playlist_tracks tool on a tool card.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist songs'**
+  String get aiChatToolGetPlaylistTracks;
+
+  /// Name of the get_lyrics tool on a tool card.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics'**
+  String get aiChatToolGetLyrics;
+
+  /// Name of the get_listening_stats tool on a tool card.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening stats'**
+  String get aiChatToolGetListeningStats;
+
+  /// Name of the create_playlist tool on a tool card.
+  ///
+  /// In en, this message translates to:
+  /// **'Create playlist'**
+  String get aiChatToolCreatePlaylist;
+
+  /// Name of the add_to_playlist tool on a tool card.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to playlist'**
+  String get aiChatToolAddToPlaylist;
+
+  /// Name of the remove_from_playlist tool on a tool card.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from playlist'**
+  String get aiChatToolRemoveFromPlaylist;
+
+  /// Name of the get_now_playing tool on a tool card.
+  ///
+  /// In en, this message translates to:
+  /// **'Now playing'**
+  String get aiChatToolGetNowPlaying;
+
+  /// Name of the get_queue tool on a tool card.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue'**
+  String get aiChatToolGetQueue;
+
+  /// Name of the search_library tool on a tool card.
+  ///
+  /// In en, this message translates to:
+  /// **'Search the library'**
+  String get aiChatToolSearchLibrary;
+
+  /// Name of the get_track_info tool on a tool card.
+  ///
+  /// In en, this message translates to:
+  /// **'Song info'**
+  String get aiChatToolGetTrackInfo;
+
+  /// Screen-reader label of the message field.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get aiChatComposerLabel;
+
+  /// Placeholder of the message field.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask about your music…'**
+  String get aiChatComposerHint;
+
+  /// Placeholder of the message field while the chat's plugin is gone.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a plugin to continue…'**
+  String get aiChatComposerHintLocked;
+
+  /// Tooltip and label of the send button.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get aiChatSend;
+
+  /// Tooltip and label of the stop button while the model answers.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get aiChatStop;
+
+  /// Tooltip of the stop button while a tool runs.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop (the running tool finishes, later ones do not run)'**
+  String get aiChatStopTools;
+
+  /// Tooltip and label of the plugin button.
+  ///
+  /// In en, this message translates to:
+  /// **'AI service: {plugin}'**
+  String aiChatPluginTooltip(String plugin);
+
+  /// Tooltip of the plugin button when the chat's plugin was uninstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin removed · choose another'**
+  String get aiChatPluginGone;
+
+  /// Tooltip of the icon-only permission button.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission: {mode} · {description}'**
+  String aiChatPermissionTooltip(String mode, String description);
+
+  /// Screen-reader label of the permission button.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission: {mode}'**
+  String aiChatPermissionLabel(String mode);
+
+  /// Name of the read-only permission.
+  ///
+  /// In en, this message translates to:
+  /// **'Read only'**
+  String get aiChatPermissionReadOnly;
+
+  /// Name of the ask-first permission.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask first'**
+  String get aiChatPermissionAsk;
+
+  /// Name of the automatic permission.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get aiChatPermissionAuto;
+
+  /// Description of the read-only permission.
+  ///
+  /// In en, this message translates to:
+  /// **'Reads and suggests, never changes data'**
+  String get aiChatPermissionReadOnlyHint;
+
+  /// Description of the ask-first permission.
+  ///
+  /// In en, this message translates to:
+  /// **'Asks before changing anything'**
+  String get aiChatPermissionAskHint;
+
+  /// Description of the automatic permission.
+  ///
+  /// In en, this message translates to:
+  /// **'Makes changes without asking'**
+  String get aiChatPermissionAutoHint;
+
+  /// Caption under the permission picker.
+  ///
+  /// In en, this message translates to:
+  /// **'For this conversation only.'**
+  String get aiChatPermissionPickerCaption;
+
+  /// Text of the model button while no model is chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a model'**
+  String get aiChatModelNeeded;
+
+  /// Screen-reader label of the model button.
+  ///
+  /// In en, this message translates to:
+  /// **'Model: {model}'**
+  String aiChatModelLabel(String model);
+
+  /// Tag of a model the user added.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get aiChatModelCustom;
+
+  /// Capability tag: the model reads images.
+  ///
+  /// In en, this message translates to:
+  /// **'Images'**
+  String get aiChatCapVision;
+
+  /// Capability tag: the model can use tools.
+  ///
+  /// In en, this message translates to:
+  /// **'Tools'**
+  String get aiChatCapTools;
+
+  /// Caption under the plugin picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies from the next message. History stays as it is.'**
+  String get aiChatPluginPickerCaption;
+
+  /// Footer button of the plugin picker; opens the plugin store.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an AI service…'**
+  String get aiChatPluginPickerAdd;
+
+  /// State line of a ready plugin that uses an API key.
+  ///
+  /// In en, this message translates to:
+  /// **'API key set'**
+  String get aiChatPluginHasKey;
+
+  /// State line of a ready plugin without an API key.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready'**
+  String get aiChatPluginReady;
+
+  /// State line of a plugin with no API key.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs an API key'**
+  String get aiChatPluginNeedsKey;
+
+  /// State line of a plugin with no model.
+  ///
+  /// In en, this message translates to:
+  /// **'No model chosen'**
+  String get aiChatPluginNeedsModel;
+
+  /// State line of a plugin with required settings empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs setup'**
+  String get aiChatPluginNeedsConfig;
+
+  /// Label of the × of a note above the message field.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get aiChatNoticeDismiss;
+
+  /// Button of a note: opens the plugin's settings page.
+  ///
+  /// In en, this message translates to:
+  /// **'Open plugin settings'**
+  String get aiChatActionOpenPluginSettings;
+
+  /// Button of a note: opens the model picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a model'**
+  String get aiChatActionPickModel;
+
+  /// Button of a note: opens the plugin picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a plugin'**
+  String get aiChatActionPickPlugin;
+
+  /// Button of a note: opens the lyrics search for the playing song.
+  ///
+  /// In en, this message translates to:
+  /// **'Find lyrics for this song'**
+  String get aiChatActionFindLyrics;
+
+  /// Button of a note: drops the pending send.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get aiChatActionCancel;
+
+  /// Button of a note: sends the shortened values.
+  ///
+  /// In en, this message translates to:
+  /// **'Send the short version'**
+  String get aiChatActionSendShort;
+
+  /// Button of a note: removes the attached chip.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove chip'**
+  String get aiChatActionDropChip;
+
+  /// Button of a note: opens the AI settings page.
+  ///
+  /// In en, this message translates to:
+  /// **'AI settings'**
+  String get aiChatActionAiSettings;
+
+  /// Note when the chat's plugin has no API key.
+  ///
+  /// In en, this message translates to:
+  /// **'{plugin} needs an API key before it can send.'**
+  String aiChatNoticeNeedsKey(String plugin);
+
+  /// Note when no model is chosen.
+  ///
+  /// In en, this message translates to:
+  /// **'{plugin} has no model. Choose a model before sending.'**
+  String aiChatNoticeNeedsModel(String plugin);
+
+  /// Note when required settings of the plugin are empty; {fields} are their names.
+  ///
+  /// In en, this message translates to:
+  /// **'{plugin} needs setup: {fields}.'**
+  String aiChatNoticeNeedsConfig(String plugin, String fields);
+
+  /// Note when the chat's plugin was uninstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'This chat\'s plugin was removed. Choose another plugin to continue.'**
+  String get aiChatNoticeRemoved;
+
+  /// Note when the chat's plugin was uninstalled and its name is known.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin “{plugin}” was removed. Choose another plugin to continue.'**
+  String aiChatNoticeRemovedNamed(String plugin);
+
+  /// Note when the chat's plugin was removed and installed again.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin “{plugin}” was removed and installed again. Choose a plugin to continue this chat.'**
+  String aiChatNoticeReinstalled(String plugin);
+
+  /// Note when an attached chip needs a tool group that is off.
+  ///
+  /// In en, this message translates to:
+  /// **'The “{group}” tool is off, so this chip cannot be sent.'**
+  String aiChatNoticeStruckChip(String group);
+
+  /// Note when a variable needs lyrics the song does not have.
+  ///
+  /// In en, this message translates to:
+  /// **'The playing song has no lyrics, so {variable} cannot be filled. Nothing was sent; your text is still here.'**
+  String aiChatNoticeMissingLyrics(String variable);
+
+  /// Note when a variable needs a playing song and none plays.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is playing, so {variable} cannot be filled. Nothing was sent; your text is still here.'**
+  String aiChatNoticeMissingPlaying(String variable);
+
+  /// Note when the queue variable has no queue.
+  ///
+  /// In en, this message translates to:
+  /// **'The queue is empty, so {variable} cannot be filled. Nothing was sent; your text is still here.'**
+  String aiChatNoticeMissingQueue(String variable);
+
+  /// Note when a variable's tool group is off.
+  ///
+  /// In en, this message translates to:
+  /// **'The “{group}” tool is off, so {variable} cannot be filled. Nothing was sent.'**
+  String aiChatNoticeGroupOff(String group, String variable);
+
+  /// Note when the input blank of a prompt was left in the message.
+  ///
+  /// In en, this message translates to:
+  /// **'{variable} is still in the message: type your text in its place, then send. Nothing was sent.'**
+  String aiChatNoticeLeftoverInput(String variable);
+
+  /// Note when an attached chip has no data now.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not read the data of the chip “{chip}”. Nothing was sent.'**
+  String aiChatNoticeChipUnavailable(String chip);
+
+  /// Note when a filled value is over the model's limit.
+  ///
+  /// In en, this message translates to:
+  /// **'{variables} is too large to send to {model}.'**
+  String aiChatNoticeOversize(String variables, String model);
+
+  /// Note when the queue is over the model's limit; {count} is the number of songs in it.
+  ///
+  /// In en, this message translates to:
+  /// **'{variable} has {count} songs, over the limit {model} accepts.'**
+  String aiChatNoticeOversizeQueue(String variable, int count, String model);
+
+  /// Button of a note: sends the queue shortened to {count} songs around the playing one.
+  ///
+  /// In en, this message translates to:
+  /// **'Send the short version: {count} songs around the playing one'**
+  String aiChatActionSendShortQueue(int count);
+
+  /// Note when storing the message failed.
+  ///
+  /// In en, this message translates to:
+  /// **'The message could not be saved. Your text is still here; try again.'**
+  String get aiChatNoticeSendFailed;
+
+  /// Gentle note when the model gets no tools.
+  ///
+  /// In en, this message translates to:
+  /// **'{model} does not use tools: the AI only sees variables and chips you attach, it does not read the library itself.'**
+  String aiChatNoticeNoTools(String model);
+
+  /// Context chip: the playing song.
+  ///
+  /// In en, this message translates to:
+  /// **'Now playing'**
+  String get aiChatChipNowPlaying;
+
+  /// Context chip of a song without a name.
+  ///
+  /// In en, this message translates to:
+  /// **'Song'**
+  String get aiChatChipSong;
+
+  /// Context chip: several songs.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} song} other{{count} songs}}'**
+  String aiChatChipSongs(int count);
+
+  /// Context chip: an album.
+  ///
+  /// In en, this message translates to:
+  /// **'Album: {label}'**
+  String aiChatChipAlbum(String label);
+
+  /// Context chip: an artist.
+  ///
+  /// In en, this message translates to:
+  /// **'Artist: {label}'**
+  String aiChatChipArtist(String label);
+
+  /// Context chip: a genre.
+  ///
+  /// In en, this message translates to:
+  /// **'Genre: {label}'**
+  String aiChatChipGenre(String label);
+
+  /// Context chip: a language.
+  ///
+  /// In en, this message translates to:
+  /// **'Language: {label}'**
+  String aiChatChipLanguage(String label);
+
+  /// Context chip: a playlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist: {label}'**
+  String aiChatChipPlaylist(String label);
+
+  /// Tooltip and label of the × of a chip.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove chip {label}'**
+  String aiChatChipRemove(String label);
+
+  /// Screen-reader hint of a chip that cannot be sent.
+  ///
+  /// In en, this message translates to:
+  /// **'This chip\'s tool is off'**
+  String get aiChatChipStruckHint;
+
+  /// Name of the now-playing tool group in a note.
+  ///
+  /// In en, this message translates to:
+  /// **'Now playing'**
+  String get aiChatGroupNowPlaying;
+
+  /// Name of the song-info tool group in a note.
+  ///
+  /// In en, this message translates to:
+  /// **'Song info'**
+  String get aiChatGroupTrackInfo;
+
+  /// Name of the playlists tool group in a note.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlists'**
+  String get aiChatGroupPlaylists;
+
+  /// Name of the lyrics tool group in a note.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics'**
+  String get aiChatGroupLyrics;
+
+  /// Name of the queue tool group in a note.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue'**
+  String get aiChatGroupQueue;
+
+  /// Screen-reader label of the variable list.
+  ///
+  /// In en, this message translates to:
+  /// **'Insert a variable'**
+  String get aiChatVarListLabel;
+
+  /// Heading of the variable list shown after typing {{.
+  ///
+  /// In en, this message translates to:
+  /// **'Insert a variable · the app fills it when you send'**
+  String get aiChatVarListTitle;
+
+  /// Screen-reader label of the group of prompt chips.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved prompts'**
+  String get aiChatPromptsLabel;
+
+  /// Reason under a prompt chip that needs a playing song.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is playing'**
+  String get aiChatPromptNoPlaying;
+
+  /// Reason under a prompt chip that needs the queue.
+  ///
+  /// In en, this message translates to:
+  /// **'The queue is empty'**
+  String get aiChatPromptEmptyQueue;
+
+  /// Button of a confirmation card.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get aiChatCardAllow;
+
+  /// Button of a confirmation card.
+  ///
+  /// In en, this message translates to:
+  /// **'Decline'**
+  String get aiChatCardDeny;
+
+  /// Button of a done card: opens the playlist.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get aiChatCardView;
+
+  /// Button of a done card.
+  ///
+  /// In en, this message translates to:
+  /// **'Open queue'**
+  String get aiChatCardOpenQueue;
+
+  /// Button of a done card whose call replaced the queue.
+  ///
+  /// In en, this message translates to:
+  /// **'Play the old queue again'**
+  String get aiChatCardReplayQueue;
+
+  /// Locked retry button, under a minute left.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again in {seconds, plural, =1{1 second} other{{seconds} seconds}}'**
+  String aiChatCardRetryIn(int seconds);
+
+  /// Locked retry button, whole minutes left.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again in {minutes, plural, =1{1 minute} other{{minutes} minutes}}'**
+  String aiChatCardRetryInMinutes(int minutes);
+
+  /// Locked retry button, minutes and seconds left.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again in {minutes} min {seconds} s'**
+  String aiChatCardRetryInMinutesSeconds(int minutes, int seconds);
+
+  /// Locked retry button, an hour or more left; {time} is the clock time.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again at {time}'**
+  String aiChatCardRetryAt(String time);
+
+  /// Said once to screen readers when the retry countdown ends.
+  ///
+  /// In en, this message translates to:
+  /// **'You can try again now'**
+  String get aiChatCardCanRetry;
+
+  /// Fold row of the songs a done card added.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song} other{{count} songs}} added'**
+  String aiChatCardAddedFold(int count);
+
+  /// Fold row of the songs a done card removed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song} other{{count} songs}} removed'**
+  String aiChatCardRemovedFold(int count);
+
+  /// Fold row of the queue a play call replaced.
+  ///
+  /// In en, this message translates to:
+  /// **'Old queue · {count, plural, =1{1 song} other{{count} songs}}'**
+  String aiChatCardOldQueueFold(int count);
+
+  /// Button that shows the rest of a short song list.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count, plural, =1{1 song} other{{count} songs}}'**
+  String aiChatCardMoreTracks(int count);
+
+  /// Accessible name of a song list in a card.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song} other{{count} songs}}'**
+  String aiChatCardTrackList(int count);
+
+  /// Second line of a song row whose song is gone.
+  ///
+  /// In en, this message translates to:
+  /// **'No longer in the library'**
+  String get aiChatCardTrackGone;
+
+  /// What a create_playlist call does.
+  ///
+  /// In en, this message translates to:
+  /// **'create playlist “{name}” · {count, plural, =1{1 song} other{{count} songs}}'**
+  String aiChatActCreatePlaylist(String name, int count);
+
+  /// What an add_to_playlist call does, playlist name unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'add {count, plural, =1{1 song} other{{count} songs}} to a playlist'**
+  String aiChatActAddToPlaylist(int count);
+
+  /// What an add_to_playlist call does.
+  ///
+  /// In en, this message translates to:
+  /// **'add {count, plural, =1{1 song} other{{count} songs}} to playlist “{name}”'**
+  String aiChatActAddToPlaylistNamed(String name, int count);
+
+  /// What a remove_from_playlist call does, playlist name unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'remove {count, plural, =1{1 song} other{{count} songs}} from a playlist'**
+  String aiChatActRemoveFromPlaylist(int count);
+
+  /// What a remove_from_playlist call does.
+  ///
+  /// In en, this message translates to:
+  /// **'remove {count, plural, =1{1 song} other{{count} songs}} from playlist “{name}”'**
+  String aiChatActRemoveFromPlaylistNamed(String name, int count);
+
+  /// What a play_tracks call does.
+  ///
+  /// In en, this message translates to:
+  /// **'play {count, plural, =1{1 song} other{{count} songs}}'**
+  String aiChatActPlay(int count);
+
+  /// What a queue_tracks call does.
+  ///
+  /// In en, this message translates to:
+  /// **'add {count, plural, =1{1 song} other{{count} songs}} to the queue'**
+  String aiChatActQueue(int count);
+
+  /// What a remove_from_queue call does.
+  ///
+  /// In en, this message translates to:
+  /// **'remove {count, plural, =1{1 song} other{{count} songs}} from the queue'**
+  String aiChatActRemoveFromQueue(int count);
+
+  /// Tool group shown in a done card.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback control'**
+  String get aiChatGroupPlay;
+
+  /// Tool group shown in a done card.
+  ///
+  /// In en, this message translates to:
+  /// **'Queue edits'**
+  String get aiChatGroupQueueEdit;
+
+  /// Tool group shown in a done card.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist creation'**
+  String get aiChatGroupPlaylistCreate;
+
+  /// Tool group shown in a done card.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlist edits'**
+  String get aiChatGroupPlaylistEdit;
+
+  /// Second line of a confirmation card.
+  ///
+  /// In en, this message translates to:
+  /// **'{tool} · needs your OK'**
+  String aiChatCardNeedsAllow(String tool);
+
+  /// Start of the second line of a done card after a confirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'You allowed it'**
+  String get aiChatCardAllowedByUser;
+
+  /// Start of the second line of a done card made in Auto mode.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get aiChatCardAutomatic;
+
+  /// Title of a done card.
+  ///
+  /// In en, this message translates to:
+  /// **'Done: {action}'**
+  String aiChatCardDoneTitle(String action);
+
+  /// Part of a done card's second line after play_tracks.
+  ///
+  /// In en, this message translates to:
+  /// **'the old queue was replaced'**
+  String get aiChatCardOldQueueReplaced;
+
+  /// Part of a done card's second line after a removal.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song} other{{count} songs}} already gone from the queue'**
+  String aiChatCardGoneFromQueue(int count);
+
+  /// Part of a done card's second line after a removal.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song} other{{count} songs}} already gone from the playlist'**
+  String aiChatCardGoneFromPlaylist(int count);
+
+  /// Part of a done card's second line when ids were not songs.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song} other{{count} songs}} not in the library'**
+  String aiChatCardNotInLibrary(int count);
+
+  /// Title of a card the user declined.
+  ///
+  /// In en, this message translates to:
+  /// **'Declined'**
+  String get aiChatCardDenied;
+
+  /// Title of a card left open when the user wrote again.
+  ///
+  /// In en, this message translates to:
+  /// **'Declined (you sent another message)'**
+  String get aiChatCardDeniedByNewMessage;
+
+  /// Title of a card Kanaru refused to run after the user allowed it.
+  ///
+  /// In en, this message translates to:
+  /// **'Declined: no longer allowed'**
+  String get aiChatCardDeniedNotAllowed;
+
+  /// Title of a confirmation card that waited too long.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get aiChatCardExpired;
+
+  /// Title of a call that did not run after Stop.
+  ///
+  /// In en, this message translates to:
+  /// **'Not run: you stopped it'**
+  String get aiChatCardSkippedStopped;
+
+  /// Title of a call that did not run.
+  ///
+  /// In en, this message translates to:
+  /// **'Not run'**
+  String get aiChatCardSkipped;
+
+  /// Second line of a card whose call did not run.
+  ///
+  /// In en, this message translates to:
+  /// **'{action} · nothing changed'**
+  String aiChatCardNothingChanged(String action);
+
+  /// Reason line of an expired card.
+  ///
+  /// In en, this message translates to:
+  /// **'The card waited over 24 hours. Ask the AI again if you still want it.'**
+  String get aiChatCardExpiredWhy;
+
+  /// Reason line of a card refused after the user allowed it.
+  ///
+  /// In en, this message translates to:
+  /// **'You switched this chat to Read-only before this ran.'**
+  String get aiChatCardWhyReadOnly;
+
+  /// Reason line of a card refused after the user allowed it.
+  ///
+  /// In en, this message translates to:
+  /// **'You turned this tool group off before this ran.'**
+  String get aiChatCardWhyGroupOff;
+
+  /// Reason line of a card refused after the user allowed it.
+  ///
+  /// In en, this message translates to:
+  /// **'This chat\'s plugin changed before this ran.'**
+  String get aiChatCardWhyPluginChanged;
+
+  /// Reason line of a card refused after the user allowed it.
+  ///
+  /// In en, this message translates to:
+  /// **'This chat\'s model changed before this ran.'**
+  String get aiChatCardWhyModelChanged;
+
+  /// Reason line of a card refused after the user allowed it.
+  ///
+  /// In en, this message translates to:
+  /// **'This changed after you allowed it, so Kanaru did not run it.'**
+  String get aiChatCardWhyChangedAfterAllow;
+
+  /// Reason line of a card refused after the user allowed it.
+  ///
+  /// In en, this message translates to:
+  /// **'This is no longer allowed to run.'**
+  String get aiChatCardWhyNotAllowed;
+
+  /// Reason line of a call skipped because the chat grew too large.
+  ///
+  /// In en, this message translates to:
+  /// **'This chat grew too long to send.'**
+  String get aiChatCardWhyTooLarge;
+
+  /// Reason line of a call skipped because of the item limit.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI reached its change limit for this message.'**
+  String get aiChatCardWhyLimit;
+
+  /// Title of a card whose write was cut off.
+  ///
+  /// In en, this message translates to:
+  /// **'Result unknown: {action}'**
+  String aiChatCardUnknownTitle(String action);
+
+  /// First sentence of the unknown-result card.
+  ///
+  /// In en, this message translates to:
+  /// **'Kanaru was closed while this was running, so it is not known whether it finished.'**
+  String get aiChatCardUnknownClosed;
+
+  /// First sentence of the unknown-result card.
+  ///
+  /// In en, this message translates to:
+  /// **'This took too long, so it is not known whether it finished.'**
+  String get aiChatCardUnknownTimedOut;
+
+  /// Last sentence of the unknown-result card for a queue change.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the queue before asking the AI to do it again.'**
+  String get aiChatCardLookQueue;
+
+  /// Last sentence of the unknown-result card for a playlist change.
+  ///
+  /// In en, this message translates to:
+  /// **'Check the playlist before asking the AI to do it again.'**
+  String get aiChatCardLookPlaylist;
+
+  /// Title of the item-cap card.
+  ///
+  /// In en, this message translates to:
+  /// **'The AI reached its change limit for this message'**
+  String get aiChatCardLimitTitle;
+
+  /// Body of the item-cap card.
+  ///
+  /// In en, this message translates to:
+  /// **'One message may remove at most {removed, plural, =1{1 song} other{{removed} songs}} and add at most {added, plural, =1{1 song} other{{added} songs}}. Send a new message to continue.'**
+  String aiChatCardLimitBody(int removed, int added);
+
+  /// Body of the item-cap card naming the call that did not run.
+  ///
+  /// In en, this message translates to:
+  /// **'One message may remove at most {removed, plural, =1{1 song} other{{removed} songs}} and add at most {added, plural, =1{1 song} other{{added} songs}}. “{action}” did not run. Send a new message to continue.'**
+  String aiChatCardLimitBodyAction(int removed, int added, String action);
+
+  /// Name used when the chat's plugin is not installed any more.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin'**
+  String get aiChatErrPluginFallback;
+
+  /// Title of the network error card.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach {host}'**
+  String aiChatErrNetworkTitle(String host);
+
+  /// Title of the network error card when the host is not known.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the server'**
+  String get aiChatErrNetworkTitleNoHost;
+
+  /// No description provided for @aiChatErrNetworkBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your connection and try again. Your message is still here.'**
+  String get aiChatErrNetworkBody;
+
+  /// Title of the rate-limit card.
+  ///
+  /// In en, this message translates to:
+  /// **'{plugin} is limiting requests'**
+  String aiChatErrRateTitle(String plugin);
+
+  /// No description provided for @aiChatErrRateBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin reported error 429 (too many requests). When the countdown ends, tap Try again; Kanaru never resends on its own.'**
+  String get aiChatErrRateBody;
+
+  /// No description provided for @aiChatErrRateBodyNoClock.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin reported error 429 (too many requests). Wait a moment, then tap Try again; Kanaru never resends on its own.'**
+  String get aiChatErrRateBodyNoClock;
+
+  /// No description provided for @aiChatErrBusyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The previous turn has not stopped yet'**
+  String get aiChatErrBusyTitle;
+
+  /// No description provided for @aiChatErrBusyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Kanaru is still finishing the previous answer. Try again in a moment.'**
+  String get aiChatErrBusyBody;
+
+  /// No description provided for @aiChatErrBusyStuckTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The previous turn still has not stopped'**
+  String get aiChatErrBusyStuckTitle;
+
+  /// No description provided for @aiChatErrBusyStuckBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tried 3 times and the previous turn has not ended. Restart Kanaru and try again.'**
+  String get aiChatErrBusyStuckBody;
+
+  /// No description provided for @aiChatErrKeyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{plugin} did not accept the API key'**
+  String aiChatErrKeyTitle(String plugin);
+
+  /// No description provided for @aiChatErrKeyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The API key is wrong or was revoked. Fix it in the plugin\'s settings, then try again.'**
+  String get aiChatErrKeyBody;
+
+  /// No description provided for @aiChatErrQuotaTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The {plugin} account is out of quota'**
+  String aiChatErrQuotaTitle(String plugin);
+
+  /// No description provided for @aiChatErrQuotaBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Top up or change your plan on the provider\'s site, then try again.'**
+  String get aiChatErrQuotaBody;
+
+  /// No description provided for @aiChatErrConfigTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The settings of {plugin} are incomplete'**
+  String aiChatErrConfigTitle(String plugin);
+
+  /// No description provided for @aiChatErrConfigBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin says a setting is missing. Open its settings, fill it in and try again.'**
+  String get aiChatErrConfigBody;
+
+  /// No description provided for @aiChatErrModelGoneTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Model no longer available: {model}'**
+  String aiChatErrModelGoneTitle(String model);
+
+  /// No description provided for @aiChatErrModelGoneTitleNoModel.
+  ///
+  /// In en, this message translates to:
+  /// **'Model no longer available'**
+  String get aiChatErrModelGoneTitleNoModel;
+
+  /// No description provided for @aiChatErrModelGoneBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{plugin} no longer has this model. Pick another model, then try again.'**
+  String aiChatErrModelGoneBody(String plugin);
+
+  /// No description provided for @aiChatErrContextTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This conversation is too long for this model'**
+  String get aiChatErrContextTitle;
+
+  /// No description provided for @aiChatErrContextBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{model} cannot take more. Start a new conversation to go on; this one stays readable.'**
+  String aiChatErrContextBody(String model);
+
+  /// No description provided for @aiChatErrTooLargeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This conversation is too long to send'**
+  String get aiChatErrTooLargeTitle;
+
+  /// No description provided for @aiChatErrTooLargeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Kanaru shortened the older turns and it is still over the send limit. Start a new conversation, or send a shorter message.'**
+  String get aiChatErrTooLargeBody;
+
+  /// No description provided for @aiChatErrBlockedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The model will not answer this request'**
+  String get aiChatErrBlockedTitle;
+
+  /// No description provided for @aiChatErrBlockedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{model} refused (the provider\'s reason). Rephrase it, or change the model in the input box.'**
+  String aiChatErrBlockedBody(String model);
+
+  /// No description provided for @aiChatErrEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The model gave no answer'**
+  String get aiChatErrEmptyTitle;
+
+  /// No description provided for @aiChatErrEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{model} returned an empty answer. Try again, or change the model in the input box.'**
+  String aiChatErrEmptyBody(String model);
+
+  /// No description provided for @aiChatErrGenericTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{plugin} ran into an error'**
+  String aiChatErrGenericTitle(String plugin);
+
+  /// No description provided for @aiChatErrGenericBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The service reported an error (code: {code}). Try again in a few minutes.'**
+  String aiChatErrGenericBody(String code);
+
+  /// No description provided for @aiChatErrHostTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin is not allowed to call {host}'**
+  String aiChatErrHostTitle(String host);
+
+  /// No description provided for @aiChatErrHostTitleNoHost.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin is not allowed to call this address'**
+  String get aiChatErrHostTitleNoHost;
+
+  /// No description provided for @aiChatErrHostBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This address is not in the list the plugin declared at install, so Kanaru blocks it.'**
+  String get aiChatErrHostBody;
+
+  /// No description provided for @aiChatErrUpdatedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin was just updated'**
+  String get aiChatErrUpdatedTitle;
+
+  /// No description provided for @aiChatErrUpdatedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{plugin} was updated during the answer, so this turn stopped. What was received stays above.'**
+  String aiChatErrUpdatedBody(String plugin);
+
+  /// No description provided for @aiChatErrRemovedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugin removed'**
+  String get aiChatErrRemovedTitle;
+
+  /// No description provided for @aiChatErrRemovedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{plugin} was removed during the answer. Pick another plugin to go on.'**
+  String aiChatErrRemovedBody(String plugin);
+
+  /// No description provided for @aiChatErrBrokenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin is broken and needs reinstalling'**
+  String get aiChatErrBrokenTitle;
+
+  /// No description provided for @aiChatErrBrokenBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The package of {plugin} cannot be read. Open the plugin page to reinstall it.'**
+  String aiChatErrBrokenBody(String plugin);
+
+  /// No description provided for @aiChatErrTimeoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Timed out'**
+  String get aiChatErrTimeoutTitle;
+
+  /// No description provided for @aiChatErrTimeoutBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{plugin} sent nothing more, so this turn stopped. What was received stays above.'**
+  String aiChatErrTimeoutBody(String plugin);
+
+  /// No description provided for @aiChatErrCrashTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The plugin ran into an error'**
+  String get aiChatErrCrashTitle;
+
+  /// No description provided for @aiChatErrCrashBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{plugin} stopped midway because of an error inside the plugin. Try again; if it repeats, check the plugin\'s log.'**
+  String aiChatErrCrashBody(String plugin);
+
+  /// No description provided for @aiChatErrCutOffTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The answer was cut off when Kanaru closed'**
+  String get aiChatErrCutOffTitle;
+
+  /// No description provided for @aiChatErrCutOffBody.
+  ///
+  /// In en, this message translates to:
+  /// **'What was received stays above. Kanaru does not resend when it opens; tap Try again to let the AI go on.'**
+  String get aiChatErrCutOffBody;
+
+  /// Button of the broken-plugin error card.
+  ///
+  /// In en, this message translates to:
+  /// **'Open plugin'**
+  String get aiChatActionOpenPlugin;
+
+  /// Button of the model-not-found error card: opens the model picker.
+  ///
+  /// In en, this message translates to:
+  /// **'Change model'**
+  String get aiChatActionChangeModel;
+
+  /// Title of the history page.
+  ///
+  /// In en, this message translates to:
+  /// **'Chat history'**
+  String get aiChatHistoryTitle;
+
+  /// Tooltip of the back button of the history page in the desktop panel.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to the open conversation'**
+  String get aiChatHistoryBackPanel;
+
+  /// Tooltip of the back button of the history page on the phone.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get aiChatHistoryBackPage;
+
+  /// Hint and label of the search field of the history page.
+  ///
+  /// In en, this message translates to:
+  /// **'Search conversations'**
+  String get aiChatHistorySearch;
+
+  /// Group heading of the history list.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get aiChatHistoryToday;
+
+  /// Group heading of the history list.
+  ///
+  /// In en, this message translates to:
+  /// **'Past 7 days'**
+  String get aiChatHistoryWeek;
+
+  /// Group heading of the history list.
+  ///
+  /// In en, this message translates to:
+  /// **'Older'**
+  String get aiChatHistoryOlder;
+
+  /// Shown in the error colour on a history row whose plugin is no longer installed.
+  ///
+  /// In en, this message translates to:
+  /// **'plugin removed'**
+  String get aiChatHistoryPluginRemoved;
+
+  /// Shown when the history search finds nothing.
+  ///
+  /// In en, this message translates to:
+  /// **'No conversation matches “{query}”.'**
+  String aiChatHistoryNoMatch(String query);
+
+  /// Tooltip of the ⋮ button of a history row.
+  ///
+  /// In en, this message translates to:
+  /// **'Options for {title}'**
+  String aiChatHistoryRowOptions(String title);
+
   /// No description provided for @aiSetServicesTitle.
   ///
   /// In en, this message translates to:
