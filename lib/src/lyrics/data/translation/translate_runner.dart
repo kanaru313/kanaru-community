@@ -171,7 +171,12 @@ class TranslateRunner {
         RunErrorKind.rateLimited => _rateLimited(installId, e.retryAfter),
         RunErrorKind.invalidResponse =>
           const TranslationFailure.invalidResponse(),
-        RunErrorKind.server => const TranslationFailure.server(),
+        RunErrorKind.network => const TranslationFailure.network(),
+        // Gone or unservable content has no state of its own: shown as a
+        // server failure.
+        RunErrorKind.server ||
+        RunErrorKind.unavailable ||
+        RunErrorKind.unsupported => const TranslationFailure.server(),
         RunErrorKind.auth => const TranslationFailure.badKey(),
         RunErrorKind.quota => const TranslationFailure.quota(),
       };

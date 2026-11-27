@@ -17,7 +17,23 @@ enum EngineStatus {
 }
 
 /// Kind of a script-reported failure; [none] when the script gave none.
-enum EngineErrorKind { none, rateLimited, invalidResponse, server, auth, quota }
+enum EngineErrorKind {
+  none,
+  rateLimited,
+  invalidResponse,
+  server,
+  auth,
+  quota,
+
+  /// The item is gone: removed, or geo-blocked for this user.
+  unavailable,
+
+  /// A network failure the plugin saw itself.
+  network,
+
+  /// Content the plugin cannot play or serve, e.g. a livestream.
+  unsupported,
+}
 
 /// How the host answered a fetch of the script.
 enum EngineFetchOutcome {

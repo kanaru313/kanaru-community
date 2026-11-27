@@ -8,7 +8,11 @@ import 'package:kanaru/src/plugins/data/logs/plugin_run_log.dart';
 import 'package:kanaru/src/plugins/domain/logs/log_redaction.dart';
 import 'package:kanaru/src/plugins/domain/logs/run_log_limits.dart';
 import 'package:kanaru/src/plugins/state/plugin_actions_provider.dart';
+import 'package:kanaru/src/screens/plugins/logs/log_rows.dart'
+    show logKindLabel;
 import 'package:kanaru_ui/kanaru_ui.dart' show KChip, KIconButton;
+import 'package:kanaru/l10n/gen/app_localizations_en.dart';
+import 'package:kanaru/l10n/gen/app_localizations_vi.dart';
 
 import '../support/install_fixtures.dart';
 import '../support/page_fixtures.dart';
@@ -61,6 +65,18 @@ bool _enabled(WidgetTester tester, String tooltip) =>
     tester.widget<KIconButton>(_button(tooltip)).onPressed != null;
 
 void main() {
+  test('network, unavailable and unsupported kinds read in words', () {
+    final en = AppLocalizationsEn();
+    final vi = AppLocalizationsVi();
+    expect(logKindLabel(en, 'network'), 'network error');
+    expect(logKindLabel(en, 'unavailable'), 'no longer on the source');
+    expect(logKindLabel(en, 'unsupported'), 'not supported');
+    expect(logKindLabel(vi, 'network'), 'lỗi mạng');
+    expect(logKindLabel(vi, 'unavailable'), 'không còn trên nguồn');
+    expect(logKindLabel(vi, 'unsupported'), 'không hỗ trợ');
+    expect(logKindLabel(en, 'weird'), 'weird');
+  });
+
   testWidgets('empty: caption, footer with the file, "No entries yet"', (
     tester,
   ) async {

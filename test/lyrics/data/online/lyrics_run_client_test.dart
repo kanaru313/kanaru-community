@@ -103,6 +103,9 @@ void main() {
         RunErrorKind.auth: SourceFailKind.server,
         RunErrorKind.quota: SourceFailKind.rateLimited,
         RunErrorKind.server: SourceFailKind.server,
+        RunErrorKind.unavailable: SourceFailKind.server,
+        RunErrorKind.unsupported: SourceFailKind.server,
+        RunErrorKind.network: SourceFailKind.network,
         RunErrorKind.invalidResponse: SourceFailKind.invalid,
       };
       for (final e in cases.entries) {

@@ -7181,6 +7181,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pluginsLogsKindInternal => 'lỗi nội bộ';
 
   @override
+  String get pluginsLogsKindNetwork => 'lỗi mạng';
+
+  @override
+  String get pluginsLogsKindUnavailable => 'không còn trên nguồn';
+
+  @override
+  String get pluginsLogsKindUnsupported => 'không hỗ trợ';
+
+  @override
   String pluginsLogsKindOther(String kind) {
     return '$kind';
   }

@@ -404,7 +404,7 @@ Code: `lib/src/plugins/domain/run/{run_outcome,run_request,plugin_engine,run_fai
 | Variant | When |
 |---|---|
 | `RunOk(outputJson, fetchFailure?, rateLimitSeen?)` | the script returned data; never changed by a sticky fetch failure (the caller decides: an empty result with a failure is a failure, a found result counts) |
-| `RunScriptError(kind, message, retryAfter?, fetchFailure?)` | the script reported it; `kind` stays raw (`rateLimited`, `invalidResponse`, `server`, `auth`, `quota`; the runtime's none is `invalidResponse`); `retryAfter` clamped 1 s .. 15 min |
+| `RunScriptError(kind, message, retryAfter?, fetchFailure?)` | the script reported it; `kind` stays raw (`rateLimited`, `invalidResponse`, `server`, `auth`, `quota`, `unavailable`, `network`, `unsupported`; an unknown kind is `server`; the runtime's none is `invalidResponse`); `retryAfter` clamped 1 s .. 15 min |
 | `RunFailed(reason, fetchFailure?)` | `timeout`, `memory`, `stack`, `outputTooLarge`, `internal` (also: the bridge call threw, a refused `configAppend`, an engine error) |
 | `RunCancelled(reason)` | `caller` (its `RunCancel`) or `pluginChanged` (the run gate) |
 | `RunBusy` | the runtime had no worker or queue slot (should not happen behind admission) |

@@ -1194,6 +1194,9 @@
   "pluginsLogsKindStack": "code nested too deep",
   "pluginsLogsKindOutputTooLarge": "result too large",
   "pluginsLogsKindInternal": "internal error",
+  "pluginsLogsKindNetwork": "network error",
+  "pluginsLogsKindUnavailable": "no longer on the source",
+  "pluginsLogsKindUnsupported": "not supported",
   "pluginsLogsKindOther": "{kind}",
   "@pluginsLogsKindOther": {
     "placeholders": {

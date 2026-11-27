@@ -77,6 +77,9 @@ RunErrorKind _kindOf(EngineErrorKind kind) => switch (kind) {
   EngineErrorKind.server => RunErrorKind.server,
   EngineErrorKind.auth => RunErrorKind.auth,
   EngineErrorKind.quota => RunErrorKind.quota,
+  EngineErrorKind.unavailable => RunErrorKind.unavailable,
+  EngineErrorKind.network => RunErrorKind.network,
+  EngineErrorKind.unsupported => RunErrorKind.unsupported,
   EngineErrorKind.invalidResponse ||
   EngineErrorKind.none => RunErrorKind.invalidResponse,
 };

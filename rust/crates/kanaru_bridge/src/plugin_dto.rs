@@ -166,6 +166,9 @@ impl From<rt::ErrorKind> for PluginErrorKind {
             rt::ErrorKind::Server => Self::Server,
             rt::ErrorKind::Auth => Self::Auth,
             rt::ErrorKind::Quota => Self::Quota,
+            rt::ErrorKind::Unavailable => Self::Unavailable,
+            rt::ErrorKind::Network => Self::Network,
+            rt::ErrorKind::Unsupported => Self::Unsupported,
             _ => Self::Server,
         }
     }
@@ -288,6 +291,9 @@ mod tests {
             (R::Server, P::Server),
             (R::Auth, P::Auth),
             (R::Quota, P::Quota),
+            (R::Unavailable, P::Unavailable),
+            (R::Network, P::Network),
+            (R::Unsupported, P::Unsupported),
         ];
         assert_eq!(pairs.len(), R::ALL.len(), "a runtime variant has no pair");
         for runtime in R::ALL {

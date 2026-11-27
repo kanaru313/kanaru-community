@@ -212,6 +212,12 @@ pub enum ErrorKind {
     Auth,
     /// The account's quota is used up; see `retry_after_sec`.
     Quota,
+    /// The item is gone: removed, or geo-blocked for this user.
+    Unavailable,
+    /// A network failure the plugin saw itself.
+    Network,
+    /// Content the plugin cannot play or serve, e.g. a livestream.
+    Unsupported,
 }
 
 impl ErrorKind {
@@ -225,6 +231,9 @@ impl ErrorKind {
         Self::Server,
         Self::Auth,
         Self::Quota,
+        Self::Unavailable,
+        Self::Network,
+        Self::Unsupported,
     ];
 
     /// Exhaustive on purpose (no wildcard): adding a variant: add it here and to ALL.
@@ -236,7 +245,10 @@ impl ErrorKind {
             | Self::InvalidResponse
             | Self::Server
             | Self::Auth
-            | Self::Quota => {}
+            | Self::Quota
+            | Self::Unavailable
+            | Self::Network
+            | Self::Unsupported => {}
         }
     }
 }
@@ -434,7 +446,7 @@ mod all_tests {
     fn all_lists_hold_each_variant_once() {
         assert_unique(FetchOutcome::ALL, 8);
         assert_unique(ScriptStatus::ALL, 9);
-        assert_unique(ErrorKind::ALL, 6);
+        assert_unique(ErrorKind::ALL, 9);
         assert_unique(FetchFailureKind::ALL, 7);
         assert_unique(StreamOp::ALL, 3);
     }

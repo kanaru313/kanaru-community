@@ -5584,6 +5584,9 @@
   "pluginsLogsKindStack": "mã lặp quá sâu",
   "pluginsLogsKindOutputTooLarge": "kết quả quá lớn",
   "pluginsLogsKindInternal": "lỗi nội bộ",
+  "pluginsLogsKindNetwork": "lỗi mạng",
+  "pluginsLogsKindUnavailable": "không còn trên nguồn",
+  "pluginsLogsKindUnsupported": "không hỗ trợ",
   "pluginsLogsKindOther": "{kind}",
   "@pluginsLogsKindOther": {
     "placeholders": {

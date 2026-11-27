@@ -7707,6 +7707,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pluginsLogsKindInternal => 'internal error';
 
   @override
+  String get pluginsLogsKindNetwork => 'network error';
+
+  @override
+  String get pluginsLogsKindUnavailable => 'no longer on the source';
+
+  @override
+  String get pluginsLogsKindUnsupported => 'not supported';
+
+  @override
   String pluginsLogsKindOther(String kind) {
     return '$kind';
   }

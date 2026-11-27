@@ -97,7 +97,7 @@ consumer table (PLUG-02 C3, Translation column):
 | `RunOk` valid | chunk, cached |
 | `RunOk` rejected by the output rules | `reportRejectedOutput(id, 'translate', reason)` + `invalidResponse` (the sticky failure below when there is one) |
 | `RunOk` echo (every text equals its source) + `fetchFailure` / `rateLimitSeen` | failure of that kind, not cached |
-| `RunScriptError` auth / quota / rateLimited / invalidResponse / server | `badKey` / `quota` / `rateLimited(until)` / `invalidResponse` / `server` |
+| `RunScriptError` auth / quota / rateLimited / invalidResponse / network / server, unavailable, unsupported | `badKey` / `quota` / `rateLimited(until)` / `invalidResponse` / `network` / `server` |
 | `RunFailed` timeout / memory, stack, outputTooLarge / internal | `network` / `invalidResponse` / `server` |
 | `RunCancelled(caller)` | nothing |
 | `RunCancelled(pluginChanged)` | sent again |

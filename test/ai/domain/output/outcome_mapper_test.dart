@@ -168,6 +168,16 @@ void main() {
         ChatCardKind.server,
         ChatCardAction.retry,
       );
+      // Kinds the card does not use give the same view as a server error.
+      for (final kind in [
+        RunErrorKind.network,
+        RunErrorKind.unavailable,
+        RunErrorKind.unsupported,
+      ]) {
+        final v = map(RunScriptError(kind, 'ai:server'));
+        expectCard(v, ChatCardKind.server, ChatCardAction.retry);
+        expect(v.errorCode, AiErrorCode.server, reason: kind.name);
+      }
       expect(
         map(const RunScriptError(RunErrorKind.server, 'ai:whatever: text'))
             .errorCode,
