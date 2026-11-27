@@ -312,6 +312,20 @@ void main() {
       expect(setup.view.historyOpen, isFalse);
     });
 
+    testWidgets('New conversation shows no shortcut hint on the phone', (
+      tester,
+    ) async {
+      await _pump(tester, conversations: const []);
+      expect(find.text('Ctrl+Shift+O'), findsNothing);
+    });
+
+    testWidgets('New conversation shows its shortcut hint on desktop', (
+      tester,
+    ) async {
+      await _pump(tester, conversations: const [], size: const Size(1400, 900));
+      expect(find.text('Ctrl+Shift+O'), findsOneWidget);
+    });
+
     testWidgets('Esc steps back to the open conversation', (tester) async {
       final setup = await _pump(
         tester,

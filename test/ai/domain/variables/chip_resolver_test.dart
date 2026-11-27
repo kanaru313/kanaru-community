@@ -125,4 +125,64 @@ void main() {
     );
     expect(r, isA<ChipMissing>());
   });
+
+  test('a cut songs selection tells the model its real total', () async {
+    final r = await _resolver(_Scopes()).resolve(
+      chipRefOf(
+        const AskAiTarget.songs([
+          AskAiTrack(id: 1, title: 'a'),
+          AskAiTrack(id: 2, title: 'b'),
+        ], total: 1340),
+      ),
+    ) as ChipResolved;
+    final lines = r.data.text.split('\n');
+    expect(
+      lines,
+      containsAll([
+        'total: 1340',
+        'listed: 2',
+        'note: only the first 2 selected songs are listed',
+      ]),
+    );
+    expect(lines.where((l) => l.startsWith('2|Song 2|')), hasLength(1));
+  });
+
+  test('a whole songs selection states no total', () async {
+    final r = await _resolver(_Scopes()).resolve(
+      chipRefOf(
+        const AskAiTarget.songs([
+          AskAiTrack(id: 1, title: 'a'),
+          AskAiTrack(id: 2, title: 'b'),
+        ], total: 2),
+      ),
+    ) as ChipResolved;
+    expect(r.data.text, isNot(contains('total:')));
+    expect(r.data.text, isNot(contains('listed:')));
+  });
+
+  test('a song chip with a numeric label is not read as a total', () async {
+    // `_songs` serves song and songs chips alike: only the songs kind may
+    // read the label as a selection size.
+    final base = chipRefOf(
+      const AskAiTarget.song(AskAiTrack(id: 2, title: 'x')),
+    );
+    final r = await _resolver(_Scopes()).resolve(
+      ChipRef(kind: ChipKind.song, label: '1340', tracks: base.tracks),
+    ) as ChipResolved;
+    for (final word in ['total:', 'listed:', 'note:']) {
+      expect(r.data.text, isNot(contains(word)));
+    }
+  });
+
+  test('a songs chip with a non-numeric label states no total', () async {
+    final base = chipRefOf(
+      const AskAiTarget.songs([AskAiTrack(id: 1, title: 'a')]),
+    );
+    final r = await _resolver(_Scopes()).resolve(
+      ChipRef(kind: ChipKind.songs, label: 'abc', tracks: base.tracks),
+    ) as ChipResolved;
+    for (final word in ['total:', 'listed:', 'note:']) {
+      expect(r.data.text, isNot(contains(word)));
+    }
+  });
 }

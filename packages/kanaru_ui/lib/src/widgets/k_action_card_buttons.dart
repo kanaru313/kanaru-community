@@ -16,7 +16,9 @@ class KActionCardAction {
   });
 
   final String label;
-  final VoidCallback onPressed;
+
+  /// Null = disabled (dimmed, not tappable).
+  final VoidCallback? onPressed;
   final bool primary;
 
   /// Longer label for screen readers; defaults to [label].
@@ -120,7 +122,7 @@ class KActionCardButtons extends StatelessWidget {
     return Semantics(
       container: true,
       button: true,
-      enabled: !locked,
+      enabled: onPressed != null,
       label: action.semanticsLabel ?? action.label,
       onTap: onPressed,
       excludeSemantics: true,

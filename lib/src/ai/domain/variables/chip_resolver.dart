@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../conversation/parts.dart';
 import '../settings/tool_groups.dart';
 import '../tools/tool_env.dart';
@@ -122,12 +124,23 @@ class ChipResolver {
           d.language,
         ]),
     ];
+    final total = math.max(
+      r.found.length,
+      chip.kind == ChipKind.songs ? songsChipTotal(chip.label) ?? 0 : 0,
+    );
     return _done(
       chip,
       DataSource.track,
       [
         'rows: id|title|artist|album|year|genre|language',
-        if (r.found.length > rows.length) 'total: ${r.found.length}',
+        // The model must not read a cut list as the whole selection: name the
+        // real size (a selection cut before it got here knows it from its
+        // label) and how many rows follow.
+        if (total > rows.length) ...[
+          'total: $total',
+          'listed: ${rows.length}',
+          'note: only the first ${rows.length} selected songs are listed',
+        ],
         ...rows,
       ].join('\n'),
     );

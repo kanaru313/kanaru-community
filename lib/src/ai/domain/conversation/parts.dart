@@ -305,7 +305,9 @@ class ChipPart extends AiPart {
   /// [ChipKind.songs] (those use [tracks]).
   final String? ref;
 
-  /// Text the chip shows.
+  /// Text the chip shows. For a songs chip whose ids were cut it holds the
+  /// real selection size as a number (read only through `songsChipTotal`);
+  /// a typed field would change this persisted shape, so it is a follow-up.
   final String? label;
 
   /// The tracks of a song or songs chip.

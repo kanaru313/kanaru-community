@@ -161,7 +161,9 @@ list and from the empty search field (a search with text clears first).
   one in the same call; the history stays up on it. While it runs the row is
   disabled (dimmed, taps ignored).
 - **Open:** `ChatSessionController.open(id)` (stops a running turn, Q5), then
-  the history closes. [Cuộc trò chuyện mới] is `startNewConversation()`.
+  the history closes. [Cuộc trò chuyện mới] is `startNewConversation()`, drawn
+  as `KListActionButton` (`kanaru_ui`: 48 dp filled `primaryContainer`, inset 8,
+  icon + bold label; the `Ctrl+Shift+O` hint only on desktop).
 - **Toast:** a delete that succeeded shows "Đã xoá cuộc trò chuyện"
   (`showAppSnackBarOn` on a messenger captured before the awaits); the same
   toast follows "Xoá cuộc trò chuyện này" of the ⋮ menu. A failed delete is only
@@ -377,6 +379,13 @@ One interface, one implementation, no second route:
   soon" tooltip while there is no entry) and the desktop header ✦ after the
   Dịch pill (absent without an entry); both ask `AskAiTarget.nowPlaying()`.
   No ✦ on the lyrics header.
+- **Detail pages (phone):** the ✦ of the mobile shell's `PageHeaderScope.trailing`
+  (`mobile_shell.dart`) shows in every `PageHeader`, so album, artist, genre,
+  language, playlist and Favorites headers are `[←] title [page actions] [✦]`
+  (the playlist's ✏ comes before ✦). It opens the chat page; the page's chip is
+  then offered as a dashed suggestion (`chatSuggestionsProvider` from
+  `chatPageLocationProvider`). Desktop detail headers have no ✦ (the top bar
+  has it). Tested in `test/shell/detail_header_ai_test.dart`.
 - **`AskAiEntryShell.ask`** (`shell/ui/ask_ai_entry_shell.dart`): attaches the
   chip (`chatAttachmentsProvider.attachTarget`), closes the history list, shows
   the chat (desktop: `RightPanelKind.chat`, which also replaces the queue;
@@ -399,7 +408,7 @@ One interface, one implementation, no second route:
 ## Review fixes (behaviour notes)
 
 - Liveness: event rows (plugin or model switch lines) are not a newer turn (`turnEdgesOf`); an error card stays live after a plugin switch.
-- Selection chip and menu: ids only, at most `askAiMaxSongs` (= engine `chipMaxRows`); nothing is read from the library when the menu opens or the selection changes. A selection above the cap keeps its first `askAiMaxSongs` ids but the chip label names the real count (`AskAiSongs.total`, carried in `ChipRef.label`); the model is not told the total yet (engine follow-up: a `total` on the chip part and in `_songs`).
+- Selection chip and menu: ids only, at most `askAiMaxSongs` (= engine `chipMaxRows`); nothing is read from the library when the menu opens or the selection changes. A selection above the cap keeps its first `askAiMaxSongs` ids; the chip label carries the real count (`AskAiSongs.total` in `ChipRef.label`, read back with `songsChipTotal`), and the data the model reads then has `total: <real count>` and `listed: <rows sent>` ahead of the rows (`ChipResolver._songs`), so a cut list is not read as the whole selection.
 - History search: the typed text (`chatHistoryQueryProvider`) is debounced into `chatHistorySearchProvider` (250 ms, `chatHistoryDebounceProvider`); store changes are coalesced with the same delay.
 - `ChatPluginIcon.removed` draws the "?" tile only for an uninstalled plugin; no plugin or plugins still loading shows the AI glyph. History shows "Plugin đã gỡ" only when a plugin id is set but not installed.
 - Skipped cards: the engine result wording is read in one function (`skipFromResultText`); the engine has no reason code for Auto mode yet.

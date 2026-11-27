@@ -213,11 +213,11 @@ class _NewConversationRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final desktop = FormFactor.of(context) == FormFactor.desktop;
-    return SelectionRow.action(
-      title: Text(l10n.aiChatNewTitle),
-      leading: const Icon(KIcons.add),
-      subtitle: desktop ? const Text('Ctrl+Shift+O') : null,
-      onTap: () =>
+    return KListActionButton(
+      label: l10n.aiChatNewTitle,
+      icon: KIcons.add,
+      shortcutHint: desktop ? 'Ctrl+Shift+O' : null,
+      onPressed: () =>
           unawaited(ref.read(chatViewProvider.notifier).startNewConversation()),
     );
   }

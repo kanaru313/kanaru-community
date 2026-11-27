@@ -378,4 +378,29 @@ void main() {
     // A pending timer would fail the test at teardown.
     await tester.pump(const Duration(seconds: 2));
   });
+
+  testWidgets('an action with onPressed null is disabled, not tappable', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(
+      host(
+        _card(
+          actions: [
+            const KActionCardAction(label: 'Cho phép', onPressed: null),
+            _act('Từ chối'),
+          ],
+        ),
+      ),
+    );
+    expect(
+      tester.getSemantics(find.bySemanticsLabel('Cho phép')),
+      isSemantics(isButton: true, hasEnabledState: true, isEnabled: false),
+    );
+    expect(
+      tester.getSemantics(find.bySemanticsLabel('Từ chối')),
+      isSemantics(isButton: true, hasEnabledState: true, isEnabled: true),
+    );
+    semantics.dispose();
+  });
 }

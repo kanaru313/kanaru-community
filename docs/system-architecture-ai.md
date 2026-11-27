@@ -393,6 +393,9 @@ Pure Dart. Values and chip contents reach the model only as fenced
   same `varBypass`), reads data through `ToolEnv` plus `ChipScopePort`
   (album / artist / genre / language tracks and playlist uid -> model id),
   and returns `ChipResolved(chip, data)`, `ChipBlocked` or `ChipMissing`.
+  A songs chip sends at most `chipMaxRows` rows; when the selection was cut its
+  label holds the real count (`songsChipTotal`) and the data starts with
+  `total: <real count>` and `listed: <rows sent>`.
   There is no lyrics chip.
 - **Title** (`title_rule.dart`): `conversationTitle(displayText)`: sanitised,
   first 40 characters, "…" added when cut.
