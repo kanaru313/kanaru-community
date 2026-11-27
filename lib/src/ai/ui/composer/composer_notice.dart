@@ -14,7 +14,7 @@ import '../../state/chat_send.dart';
 import '../../state/chat_view/composer_inputs.dart';
 import '../../state/chat_view/composer_view.dart';
 import '../chat_host.dart';
-import '../chat_links.dart';
+import '../ai_settings_link.dart';
 import 'chip_labels.dart';
 
 /// Opens the lyrics search for the playing song ("Tìm lời bài này"). A

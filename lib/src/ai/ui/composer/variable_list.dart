@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../domain/variables/variable_catalog.dart';
+import '../ai_builtin_texts.dart';
 
 /// The variables the user can insert after typing `{{`, listed above the
 /// field. [selected] is the row Enter would insert.
@@ -64,18 +65,6 @@ class VariableList extends StatelessWidget {
     );
   }
 }
-
-/// What a variable stands for, in one line.
-String variableDescription(AppLocalizations l10n, AiVariable v) => switch (v) {
-  AiVariable.nowPlaying => l10n.aiChatVarDescNowPlaying,
-  AiVariable.title => l10n.aiChatVarDescTitle,
-  AiVariable.artist => l10n.aiChatVarDescArtist,
-  AiVariable.album => l10n.aiChatVarDescAlbum,
-  AiVariable.lyrics => l10n.aiChatVarDescLyrics,
-  AiVariable.queue => l10n.aiChatVarDescQueue,
-  // The prompts' blank is never offered for inserting by hand.
-  AiVariable.input => '',
-};
 
 class _VariableRow extends StatelessWidget {
   const _VariableRow({

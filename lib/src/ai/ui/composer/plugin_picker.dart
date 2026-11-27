@@ -8,7 +8,7 @@ import '../../state/chat_providers.dart';
 import '../../state/chat_session.dart';
 import '../../state/chat_view/composer_view.dart';
 import '../chat_host.dart';
-import '../chat_links.dart';
+import '../ai_settings_link.dart';
 import 'chat_plugin_icon.dart';
 
 /// The state line under a plugin in the picker, from its readiness.

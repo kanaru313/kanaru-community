@@ -6,7 +6,8 @@ import '../../../../l10n/gen/app_localizations.dart';
 import '../../domain/permission.dart';
 import '../../state/chat_session.dart';
 import '../../state/chat_view/composer_view.dart';
-import '../chat_auto_confirm.dart';
+import '../auto_mode_confirm.dart';
+import '../chat_auto_confirm_provider.dart';
 
 /// The glyph of a permission level: an eye, a shield, a bolt.
 IconData permissionIcon(AiPermission permission) => switch (permission) {

@@ -7841,6 +7841,1059 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiChatPlayContextLabel => 'AI assistant';
 
   @override
+  String get aiChatNewTitle => 'New conversation';
+
+  @override
+  String get aiChatMenuTooltip => 'Chat options';
+
+  @override
+  String get aiChatMenuHistory => 'Chat history';
+
+  @override
+  String get aiChatMenuRename => 'Rename';
+
+  @override
+  String get aiChatMenuDelete => 'Delete this conversation';
+
+  @override
+  String get aiChatMenuSettings => 'AI settings';
+
+  @override
+  String get aiChatRenameField => 'Conversation name';
+
+  @override
+  String get aiChatRenameSave => 'Save name';
+
+  @override
+  String get aiChatCloseMobile => 'Close chat';
+
+  @override
+  String get aiChatClosePanel => 'Close panel (Ctrl+J)';
+
+  @override
+  String get aiChatDeleteTitle => 'Delete this conversation?';
+
+  @override
+  String get aiChatDeleteBody =>
+      'Its messages and attached images are removed from this device. This cannot be undone.';
+
+  @override
+  String get aiChatDeleteConfirm => 'Delete';
+
+  @override
+  String get aiChatDeleted => 'Conversation deleted';
+
+  @override
+  String get aiChatEmptyTitle => 'What do you want to ask about your music?';
+
+  @override
+  String get aiChatEmptyBody =>
+      'The AI can read your library, the playing song, lyrics and the queue through the tools you turn on in Settings.';
+
+  @override
+  String get aiChatGuideTitle => 'Choose an AI service';
+
+  @override
+  String get aiChatGuideBody =>
+      'Kanaru has no AI server of its own. You use your own service; data goes straight to it.';
+
+  @override
+  String get aiChatGuideCloudTitle => 'Cloud service';
+
+  @override
+  String get aiChatGuideCloudBody =>
+      'Claude, Gemini, OpenAI… Install a plugin, then enter your API key (kept in the plugin\'s settings).';
+
+  @override
+  String get aiChatGuideCloudAction => 'Open the AI plugin store';
+
+  @override
+  String get aiChatGuideFoot =>
+      'Installing a plugin lets it send data to the addresses it declares. The chat does not ask again.';
+
+  @override
+  String get aiChatCopy => 'Copy';
+
+  @override
+  String get aiChatStopped => 'Stopped';
+
+  @override
+  String get aiChatAnswering => 'Answering';
+
+  @override
+  String aiChatToolRunning(String name) {
+    return 'Running: $name';
+  }
+
+  @override
+  String get aiChatToolParams => 'Parameters';
+
+  @override
+  String get aiChatToolResult => 'Result';
+
+  @override
+  String aiChatPluginSwitch(String plugin, String model) {
+    return 'From here on: $plugin · $model';
+  }
+
+  @override
+  String aiChatPluginSwitchNoModel(String plugin) {
+    return 'From here on: $plugin';
+  }
+
+  @override
+  String get aiChatJumpToEnd => 'Jump to the end';
+
+  @override
+  String get aiChatMessagesError => 'Could not load this conversation.';
+
+  @override
+  String get aiChatMessagesRetry => 'Try again';
+
+  @override
+  String get aiChatTrackMenu => 'Song menu';
+
+  @override
+  String get aiChatToolPlayTracks => 'Play songs';
+
+  @override
+  String get aiChatToolQueueTracks => 'Add to queue';
+
+  @override
+  String get aiChatToolRemoveFromQueue => 'Remove from queue';
+
+  @override
+  String get aiChatToolListPlaylists => 'List playlists';
+
+  @override
+  String get aiChatToolGetPlaylistTracks => 'Playlist songs';
+
+  @override
+  String get aiChatToolGetLyrics => 'Lyrics';
+
+  @override
+  String get aiChatToolGetListeningStats => 'Listening stats';
+
+  @override
+  String get aiChatToolCreatePlaylist => 'Create playlist';
+
+  @override
+  String get aiChatToolAddToPlaylist => 'Add to playlist';
+
+  @override
+  String get aiChatToolRemoveFromPlaylist => 'Remove from playlist';
+
+  @override
+  String get aiChatToolGetNowPlaying => 'Now playing';
+
+  @override
+  String get aiChatToolGetQueue => 'Queue';
+
+  @override
+  String get aiChatToolSearchLibrary => 'Search the library';
+
+  @override
+  String get aiChatToolGetTrackInfo => 'Song info';
+
+  @override
+  String get aiChatComposerLabel => 'Message';
+
+  @override
+  String get aiChatComposerHint => 'Ask about your music…';
+
+  @override
+  String get aiChatComposerHintLocked => 'Choose a plugin to continue…';
+
+  @override
+  String get aiChatSend => 'Send';
+
+  @override
+  String get aiChatStop => 'Stop';
+
+  @override
+  String get aiChatStopTools =>
+      'Stop (the running tool finishes, later ones do not run)';
+
+  @override
+  String aiChatPluginTooltip(String plugin) {
+    return 'AI service: $plugin';
+  }
+
+  @override
+  String get aiChatPluginGone => 'Plugin removed · choose another';
+
+  @override
+  String aiChatPermissionTooltip(String mode, String description) {
+    return 'Permission: $mode · $description';
+  }
+
+  @override
+  String aiChatPermissionLabel(String mode) {
+    return 'Permission: $mode';
+  }
+
+  @override
+  String get aiChatPermissionReadOnly => 'Read only';
+
+  @override
+  String get aiChatPermissionAsk => 'Ask first';
+
+  @override
+  String get aiChatPermissionAuto => 'Automatic';
+
+  @override
+  String get aiChatPermissionReadOnlyHint =>
+      'Reads and suggests, never changes data';
+
+  @override
+  String get aiChatPermissionAskHint => 'Asks before changing anything';
+
+  @override
+  String get aiChatPermissionAutoHint => 'Makes changes without asking';
+
+  @override
+  String get aiChatPermissionPickerCaption => 'For this conversation only.';
+
+  @override
+  String get aiChatModelNeeded => 'Choose a model';
+
+  @override
+  String aiChatModelLabel(String model) {
+    return 'Model: $model';
+  }
+
+  @override
+  String get aiChatModelCustom => 'Custom';
+
+  @override
+  String get aiChatCapVision => 'Images';
+
+  @override
+  String get aiChatCapTools => 'Tools';
+
+  @override
+  String get aiChatPluginPickerCaption =>
+      'Applies from the next message. History stays as it is.';
+
+  @override
+  String get aiChatPluginPickerAdd => 'Add an AI service…';
+
+  @override
+  String get aiChatPluginHasKey => 'API key set';
+
+  @override
+  String get aiChatPluginReady => 'Ready';
+
+  @override
+  String get aiChatPluginNeedsKey => 'Needs an API key';
+
+  @override
+  String get aiChatPluginNeedsModel => 'No model chosen';
+
+  @override
+  String get aiChatPluginNeedsConfig => 'Needs setup';
+
+  @override
+  String get aiChatNoticeDismiss => 'Dismiss';
+
+  @override
+  String get aiChatActionOpenPluginSettings => 'Open plugin settings';
+
+  @override
+  String get aiChatActionPickModel => 'Choose a model';
+
+  @override
+  String get aiChatActionPickPlugin => 'Choose a plugin';
+
+  @override
+  String get aiChatActionFindLyrics => 'Find lyrics for this song';
+
+  @override
+  String get aiChatActionCancel => 'Cancel';
+
+  @override
+  String get aiChatActionSendShort => 'Send the short version';
+
+  @override
+  String get aiChatActionDropChip => 'Remove chip';
+
+  @override
+  String get aiChatActionAiSettings => 'AI settings';
+
+  @override
+  String aiChatNoticeNeedsKey(String plugin) {
+    return '$plugin needs an API key before it can send.';
+  }
+
+  @override
+  String aiChatNoticeNeedsModel(String plugin) {
+    return '$plugin has no model. Choose a model before sending.';
+  }
+
+  @override
+  String aiChatNoticeNeedsConfig(String plugin, String fields) {
+    return '$plugin needs setup: $fields.';
+  }
+
+  @override
+  String get aiChatNoticeRemoved =>
+      'This chat\'s plugin was removed. Choose another plugin to continue.';
+
+  @override
+  String aiChatNoticeRemovedNamed(String plugin) {
+    return 'Plugin “$plugin” was removed. Choose another plugin to continue.';
+  }
+
+  @override
+  String aiChatNoticeReinstalled(String plugin) {
+    return 'Plugin “$plugin” was removed and installed again. Choose a plugin to continue this chat.';
+  }
+
+  @override
+  String aiChatNoticeStruckChip(String group) {
+    return 'The “$group” tool is off, so this chip cannot be sent.';
+  }
+
+  @override
+  String aiChatNoticeMissingLyrics(String variable) {
+    return 'The playing song has no lyrics, so $variable cannot be filled. Nothing was sent; your text is still here.';
+  }
+
+  @override
+  String aiChatNoticeMissingPlaying(String variable) {
+    return 'Nothing is playing, so $variable cannot be filled. Nothing was sent; your text is still here.';
+  }
+
+  @override
+  String aiChatNoticeMissingQueue(String variable) {
+    return 'The queue is empty, so $variable cannot be filled. Nothing was sent; your text is still here.';
+  }
+
+  @override
+  String aiChatNoticeGroupOff(String group, String variable) {
+    return 'The “$group” tool is off, so $variable cannot be filled. Nothing was sent.';
+  }
+
+  @override
+  String aiChatNoticeLeftoverInput(String variable) {
+    return '$variable is still in the message: type your text in its place, then send. Nothing was sent.';
+  }
+
+  @override
+  String aiChatNoticeChipUnavailable(String chip) {
+    return 'Could not read the data of the chip “$chip”. Nothing was sent.';
+  }
+
+  @override
+  String aiChatNoticeOversize(String variables, String model) {
+    return '$variables is too large to send to $model.';
+  }
+
+  @override
+  String aiChatNoticeOversizeQueue(String variable, int count, String model) {
+    return '$variable has $count songs, over the limit $model accepts.';
+  }
+
+  @override
+  String aiChatActionSendShortQueue(int count) {
+    return 'Send the short version: $count songs around the playing one';
+  }
+
+  @override
+  String get aiChatNoticeSendFailed =>
+      'The message could not be saved. Your text is still here; try again.';
+
+  @override
+  String aiChatNoticeNoTools(String model) {
+    return '$model does not use tools: the AI only sees variables and chips you attach, it does not read the library itself.';
+  }
+
+  @override
+  String get aiChatChipNowPlaying => 'Now playing';
+
+  @override
+  String get aiChatChipSong => 'Song';
+
+  @override
+  String aiChatChipSongs(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '$count song',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String aiChatChipAlbum(String label) {
+    return 'Album: $label';
+  }
+
+  @override
+  String aiChatChipArtist(String label) {
+    return 'Artist: $label';
+  }
+
+  @override
+  String aiChatChipGenre(String label) {
+    return 'Genre: $label';
+  }
+
+  @override
+  String aiChatChipLanguage(String label) {
+    return 'Language: $label';
+  }
+
+  @override
+  String aiChatChipPlaylist(String label) {
+    return 'Playlist: $label';
+  }
+
+  @override
+  String aiChatChipRemove(String label) {
+    return 'Remove chip $label';
+  }
+
+  @override
+  String get aiChatChipStruckHint => 'This chip\'s tool is off';
+
+  @override
+  String get aiChatGroupNowPlaying => 'Now playing';
+
+  @override
+  String get aiChatGroupTrackInfo => 'Song info';
+
+  @override
+  String get aiChatGroupPlaylists => 'Playlists';
+
+  @override
+  String get aiChatGroupLyrics => 'Lyrics';
+
+  @override
+  String get aiChatGroupQueue => 'Queue';
+
+  @override
+  String get aiChatVarListLabel => 'Insert a variable';
+
+  @override
+  String get aiChatVarListTitle =>
+      'Insert a variable · the app fills it when you send';
+
+  @override
+  String get aiChatPromptsLabel => 'Saved prompts';
+
+  @override
+  String get aiChatPromptNoPlaying => 'Nothing is playing';
+
+  @override
+  String get aiChatPromptEmptyQueue => 'The queue is empty';
+
+  @override
+  String get aiChatCardAllow => 'Allow';
+
+  @override
+  String get aiChatCardDeny => 'Decline';
+
+  @override
+  String get aiChatCardView => 'View';
+
+  @override
+  String get aiChatCardOpenQueue => 'Open queue';
+
+  @override
+  String get aiChatCardReplayQueue => 'Play the old queue again';
+
+  @override
+  String aiChatCardRetryIn(int seconds) {
+    String _temp0 = intl.Intl.pluralLogic(
+      seconds,
+      locale: localeName,
+      other: '$seconds seconds',
+      one: '1 second',
+    );
+    return 'Try again in $_temp0';
+  }
+
+  @override
+  String aiChatCardRetryInMinutes(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes minutes',
+      one: '1 minute',
+    );
+    return 'Try again in $_temp0';
+  }
+
+  @override
+  String aiChatCardRetryInMinutesSeconds(int minutes, int seconds) {
+    return 'Try again in $minutes min $seconds s';
+  }
+
+  @override
+  String aiChatCardRetryAt(String time) {
+    return 'Try again at $time';
+  }
+
+  @override
+  String get aiChatCardCanRetry => 'You can try again now';
+
+  @override
+  String aiChatCardAddedFold(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return '$_temp0 added';
+  }
+
+  @override
+  String aiChatCardRemovedFold(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return '$_temp0 removed';
+  }
+
+  @override
+  String aiChatCardOldQueueFold(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return 'Old queue · $_temp0';
+  }
+
+  @override
+  String aiChatCardMoreTracks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return '+$_temp0';
+  }
+
+  @override
+  String aiChatCardTrackList(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get aiChatCardTrackGone => 'No longer in the library';
+
+  @override
+  String aiChatActCreatePlaylist(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return 'create playlist “$name” · $_temp0';
+  }
+
+  @override
+  String aiChatActAddToPlaylist(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return 'add $_temp0 to a playlist';
+  }
+
+  @override
+  String aiChatActAddToPlaylistNamed(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return 'add $_temp0 to playlist “$name”';
+  }
+
+  @override
+  String aiChatActRemoveFromPlaylist(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return 'remove $_temp0 from a playlist';
+  }
+
+  @override
+  String aiChatActRemoveFromPlaylistNamed(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return 'remove $_temp0 from playlist “$name”';
+  }
+
+  @override
+  String aiChatActPlay(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return 'play $_temp0';
+  }
+
+  @override
+  String aiChatActQueue(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return 'add $_temp0 to the queue';
+  }
+
+  @override
+  String aiChatActRemoveFromQueue(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return 'remove $_temp0 from the queue';
+  }
+
+  @override
+  String get aiChatGroupPlay => 'Playback control';
+
+  @override
+  String get aiChatGroupQueueEdit => 'Queue edits';
+
+  @override
+  String get aiChatGroupPlaylistCreate => 'Playlist creation';
+
+  @override
+  String get aiChatGroupPlaylistEdit => 'Playlist edits';
+
+  @override
+  String aiChatCardNeedsAllow(String tool) {
+    return '$tool · needs your OK';
+  }
+
+  @override
+  String get aiChatCardAllowedByUser => 'You allowed it';
+
+  @override
+  String get aiChatCardAutomatic => 'Automatic';
+
+  @override
+  String aiChatCardDoneTitle(String action) {
+    return 'Done: $action';
+  }
+
+  @override
+  String get aiChatCardOldQueueReplaced => 'the old queue was replaced';
+
+  @override
+  String aiChatCardGoneFromQueue(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return '$_temp0 already gone from the queue';
+  }
+
+  @override
+  String aiChatCardGoneFromPlaylist(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return '$_temp0 already gone from the playlist';
+  }
+
+  @override
+  String aiChatCardNotInLibrary(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return '$_temp0 not in the library';
+  }
+
+  @override
+  String get aiChatCardDenied => 'Declined';
+
+  @override
+  String get aiChatCardDeniedByNewMessage =>
+      'Declined (you sent another message)';
+
+  @override
+  String get aiChatCardDeniedNotAllowed => 'Declined: no longer allowed';
+
+  @override
+  String get aiChatCardExpired => 'Expired';
+
+  @override
+  String get aiChatCardSkippedStopped => 'Not run: you stopped it';
+
+  @override
+  String get aiChatCardSkipped => 'Not run';
+
+  @override
+  String aiChatCardNothingChanged(String action) {
+    return '$action · nothing changed';
+  }
+
+  @override
+  String get aiChatCardExpiredWhy =>
+      'The card waited over 24 hours. Ask the AI again if you still want it.';
+
+  @override
+  String get aiChatCardWhyReadOnly =>
+      'You switched this chat to Read-only before this ran.';
+
+  @override
+  String get aiChatCardWhyGroupOff =>
+      'You turned this tool group off before this ran.';
+
+  @override
+  String get aiChatCardWhyPluginChanged =>
+      'This chat\'s plugin changed before this ran.';
+
+  @override
+  String get aiChatCardWhyModelChanged =>
+      'This chat\'s model changed before this ran.';
+
+  @override
+  String get aiChatCardWhyChangedAfterAllow =>
+      'This changed after you allowed it, so Kanaru did not run it.';
+
+  @override
+  String get aiChatCardWhyNotAllowed => 'This is no longer allowed to run.';
+
+  @override
+  String get aiChatCardWhyTooLarge => 'This chat grew too long to send.';
+
+  @override
+  String get aiChatCardWhyLimit =>
+      'The AI reached its change limit for this message.';
+
+  @override
+  String aiChatCardUnknownTitle(String action) {
+    return 'Result unknown: $action';
+  }
+
+  @override
+  String get aiChatCardUnknownClosed =>
+      'Kanaru was closed while this was running, so it is not known whether it finished.';
+
+  @override
+  String get aiChatCardUnknownTimedOut =>
+      'This took too long, so it is not known whether it finished.';
+
+  @override
+  String get aiChatCardLookQueue =>
+      'Check the queue before asking the AI to do it again.';
+
+  @override
+  String get aiChatCardLookPlaylist =>
+      'Check the playlist before asking the AI to do it again.';
+
+  @override
+  String get aiChatCardLimitTitle =>
+      'The AI reached its change limit for this message';
+
+  @override
+  String aiChatCardLimitBody(int removed, int added) {
+    String _temp0 = intl.Intl.pluralLogic(
+      removed,
+      locale: localeName,
+      other: '$removed songs',
+      one: '1 song',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      added,
+      locale: localeName,
+      other: '$added songs',
+      one: '1 song',
+    );
+    return 'One message may remove at most $_temp0 and add at most $_temp1. Send a new message to continue.';
+  }
+
+  @override
+  String aiChatCardLimitBodyAction(int removed, int added, String action) {
+    String _temp0 = intl.Intl.pluralLogic(
+      removed,
+      locale: localeName,
+      other: '$removed songs',
+      one: '1 song',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      added,
+      locale: localeName,
+      other: '$added songs',
+      one: '1 song',
+    );
+    return 'One message may remove at most $_temp0 and add at most $_temp1. “$action” did not run. Send a new message to continue.';
+  }
+
+  @override
+  String get aiChatErrPluginFallback => 'Plugin';
+
+  @override
+  String aiChatErrNetworkTitle(String host) {
+    return 'Could not reach $host';
+  }
+
+  @override
+  String get aiChatErrNetworkTitleNoHost => 'Could not reach the server';
+
+  @override
+  String get aiChatErrNetworkBody =>
+      'Check your connection and try again. Your message is still here.';
+
+  @override
+  String aiChatErrRateTitle(String plugin) {
+    return '$plugin is limiting requests';
+  }
+
+  @override
+  String get aiChatErrRateBody =>
+      'The plugin reported error 429 (too many requests). When the countdown ends, tap Try again; Kanaru never resends on its own.';
+
+  @override
+  String get aiChatErrRateBodyNoClock =>
+      'The plugin reported error 429 (too many requests). Wait a moment, then tap Try again; Kanaru never resends on its own.';
+
+  @override
+  String get aiChatErrBusyTitle => 'The previous turn has not stopped yet';
+
+  @override
+  String get aiChatErrBusyBody =>
+      'Kanaru is still finishing the previous answer. Try again in a moment.';
+
+  @override
+  String get aiChatErrBusyStuckTitle =>
+      'The previous turn still has not stopped';
+
+  @override
+  String get aiChatErrBusyStuckBody =>
+      'Tried 3 times and the previous turn has not ended. Restart Kanaru and try again.';
+
+  @override
+  String aiChatErrKeyTitle(String plugin) {
+    return '$plugin did not accept the API key';
+  }
+
+  @override
+  String get aiChatErrKeyBody =>
+      'The API key is wrong or was revoked. Fix it in the plugin\'s settings, then try again.';
+
+  @override
+  String aiChatErrQuotaTitle(String plugin) {
+    return 'The $plugin account is out of quota';
+  }
+
+  @override
+  String get aiChatErrQuotaBody =>
+      'Top up or change your plan on the provider\'s site, then try again.';
+
+  @override
+  String aiChatErrConfigTitle(String plugin) {
+    return 'The settings of $plugin are incomplete';
+  }
+
+  @override
+  String get aiChatErrConfigBody =>
+      'The plugin says a setting is missing. Open its settings, fill it in and try again.';
+
+  @override
+  String aiChatErrModelGoneTitle(String model) {
+    return 'Model no longer available: $model';
+  }
+
+  @override
+  String get aiChatErrModelGoneTitleNoModel => 'Model no longer available';
+
+  @override
+  String aiChatErrModelGoneBody(String plugin) {
+    return '$plugin no longer has this model. Pick another model, then try again.';
+  }
+
+  @override
+  String get aiChatErrContextTitle =>
+      'This conversation is too long for this model';
+
+  @override
+  String aiChatErrContextBody(String model) {
+    return '$model cannot take more. Start a new conversation to go on; this one stays readable.';
+  }
+
+  @override
+  String get aiChatErrTooLargeTitle => 'This conversation is too long to send';
+
+  @override
+  String get aiChatErrTooLargeBody =>
+      'Kanaru shortened the older turns and it is still over the send limit. Start a new conversation, or send a shorter message.';
+
+  @override
+  String get aiChatErrBlockedTitle => 'The model will not answer this request';
+
+  @override
+  String aiChatErrBlockedBody(String model) {
+    return '$model refused (the provider\'s reason). Rephrase it, or change the model in the input box.';
+  }
+
+  @override
+  String get aiChatErrEmptyTitle => 'The model gave no answer';
+
+  @override
+  String aiChatErrEmptyBody(String model) {
+    return '$model returned an empty answer. Try again, or change the model in the input box.';
+  }
+
+  @override
+  String aiChatErrGenericTitle(String plugin) {
+    return '$plugin ran into an error';
+  }
+
+  @override
+  String aiChatErrGenericBody(String code) {
+    return 'The service reported an error (code: $code). Try again in a few minutes.';
+  }
+
+  @override
+  String aiChatErrHostTitle(String host) {
+    return 'The plugin is not allowed to call $host';
+  }
+
+  @override
+  String get aiChatErrHostTitleNoHost =>
+      'The plugin is not allowed to call this address';
+
+  @override
+  String get aiChatErrHostBody =>
+      'This address is not in the list the plugin declared at install, so Kanaru blocks it.';
+
+  @override
+  String get aiChatErrUpdatedTitle => 'The plugin was just updated';
+
+  @override
+  String aiChatErrUpdatedBody(String plugin) {
+    return '$plugin was updated during the answer, so this turn stopped. What was received stays above.';
+  }
+
+  @override
+  String get aiChatErrRemovedTitle => 'Plugin removed';
+
+  @override
+  String aiChatErrRemovedBody(String plugin) {
+    return '$plugin was removed during the answer. Pick another plugin to go on.';
+  }
+
+  @override
+  String get aiChatErrBrokenTitle =>
+      'The plugin is broken and needs reinstalling';
+
+  @override
+  String aiChatErrBrokenBody(String plugin) {
+    return 'The package of $plugin cannot be read. Open the plugin page to reinstall it.';
+  }
+
+  @override
+  String get aiChatErrTimeoutTitle => 'Timed out';
+
+  @override
+  String aiChatErrTimeoutBody(String plugin) {
+    return '$plugin sent nothing more, so this turn stopped. What was received stays above.';
+  }
+
+  @override
+  String get aiChatErrCrashTitle => 'The plugin ran into an error';
+
+  @override
+  String aiChatErrCrashBody(String plugin) {
+    return '$plugin stopped midway because of an error inside the plugin. Try again; if it repeats, check the plugin\'s log.';
+  }
+
+  @override
+  String get aiChatErrCutOffTitle =>
+      'The answer was cut off when Kanaru closed';
+
+  @override
+  String get aiChatErrCutOffBody =>
+      'What was received stays above. Kanaru does not resend when it opens; tap Try again to let the AI go on.';
+
+  @override
+  String get aiChatActionOpenPlugin => 'Open plugin';
+
+  @override
+  String get aiChatActionChangeModel => 'Change model';
+
+  @override
+  String get aiChatHistoryTitle => 'Chat history';
+
+  @override
+  String get aiChatHistoryBackPanel => 'Back to the open conversation';
+
+  @override
+  String get aiChatHistoryBackPage => 'Back';
+
+  @override
+  String get aiChatHistorySearch => 'Search conversations';
+
+  @override
+  String get aiChatHistoryToday => 'Today';
+
+  @override
+  String get aiChatHistoryWeek => 'Past 7 days';
+
+  @override
+  String get aiChatHistoryOlder => 'Older';
+
+  @override
+  String get aiChatHistoryPluginRemoved => 'plugin removed';
+
+  @override
+  String aiChatHistoryNoMatch(String query) {
+    return 'No conversation matches “$query”.';
+  }
+
+  @override
+  String aiChatHistoryRowOptions(String title) {
+    return 'Options for $title';
+  }
+
+  @override
   String get aiSetServicesTitle => 'AI services';
 
   @override

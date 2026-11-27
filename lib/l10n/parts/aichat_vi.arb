@@ -659,30 +659,6 @@
   "@aiChatVarListTitle": {
     "description": "Heading of the variable list shown after typing {{."
   },
-  "aiChatVarDescNowPlaying": "Bài đang phát (tên – nghệ sĩ)",
-  "@aiChatVarDescNowPlaying": {
-    "description": "One-line description of the {{NowPlaying}} variable in the list shown after typing {{."
-  },
-  "aiChatVarDescTitle": "Tên bài đang phát",
-  "@aiChatVarDescTitle": {
-    "description": "One-line description of the {{Title}} variable in the list shown after typing {{."
-  },
-  "aiChatVarDescArtist": "Nghệ sĩ bài đang phát",
-  "@aiChatVarDescArtist": {
-    "description": "One-line description of the {{Artist}} variable in the list shown after typing {{."
-  },
-  "aiChatVarDescAlbum": "Album bài đang phát",
-  "@aiChatVarDescAlbum": {
-    "description": "One-line description of the {{Album}} variable in the list shown after typing {{."
-  },
-  "aiChatVarDescLyrics": "Lời bài đang phát, không có thời gian",
-  "@aiChatVarDescLyrics": {
-    "description": "One-line description of the {{Lyrics}} variable in the list shown after typing {{."
-  },
-  "aiChatVarDescQueue": "Hàng đợi, mỗi bài một dòng",
-  "@aiChatVarDescQueue": {
-    "description": "One-line description of the {{Queue}} variable in the list shown after typing {{."
-  },
   "aiChatPromptsLabel": "Prompt mẫu",
   "@aiChatPromptsLabel": {
     "description": "Screen-reader label of the group of prompt chips."
@@ -694,85 +670,6 @@
   "aiChatPromptEmptyQueue": "Hàng đợi trống",
   "@aiChatPromptEmptyQueue": {
     "description": "Reason under a prompt chip that needs the queue."
-  },
-  "aiChatPromptExplainLyricsLabel": "Giải nghĩa lời",
-  "@aiChatPromptExplainLyricsLabel": {
-    "description": "Built-in prompt chip."
-  },
-  "aiChatPromptExplainLyricsBody": "Giải nghĩa lời bài {nowPlaying}:\n{lyrics}",
-  "@aiChatPromptExplainLyricsBody": {
-    "description": "Text of the built-in prompt. The variable tags are passed in as arguments.",
-    "placeholders": {
-      "nowPlaying": {
-        "type": "String"
-      },
-      "lyrics": {
-        "type": "String"
-      }
-    }
-  },
-  "aiChatPromptSimilarSongsLabel": "Bài tương tự trong thư viện",
-  "@aiChatPromptSimilarSongsLabel": {
-    "description": "Built-in prompt chip."
-  },
-  "aiChatPromptSimilarSongsBody": "Tìm trong thư viện các bài giống {nowPlaying}",
-  "@aiChatPromptSimilarSongsBody": {
-    "description": "Text of the built-in prompt. The variable tags are passed in as arguments.",
-    "placeholders": {
-      "nowPlaying": {
-        "type": "String"
-      }
-    }
-  },
-  "aiChatPromptMoodPlaylistLabel": "Playlist theo mood",
-  "@aiChatPromptMoodPlaylistLabel": {
-    "description": "Built-in prompt chip."
-  },
-  "aiChatPromptMoodPlaylistBody": "Tạo playlist cho tâm trạng: {input}",
-  "@aiChatPromptMoodPlaylistBody": {
-    "description": "Text of the built-in prompt; {{input}} is the blank the user fills. The variable tags are passed in as arguments.",
-    "placeholders": {
-      "input": {
-        "type": "String"
-      }
-    }
-  },
-  "aiChatPromptSongStoryLabel": "Về bài này",
-  "@aiChatPromptSongStoryLabel": {
-    "description": "Built-in prompt chip."
-  },
-  "aiChatPromptSongStoryBody": "Kể cho mình về bài {nowPlaying}",
-  "@aiChatPromptSongStoryBody": {
-    "description": "Text of the built-in prompt. The variable tags are passed in as arguments.",
-    "placeholders": {
-      "nowPlaying": {
-        "type": "String"
-      }
-    }
-  },
-  "aiChatPromptTranslateLyricsLabel": "Dịch lời",
-  "@aiChatPromptTranslateLyricsLabel": {
-    "description": "Built-in prompt chip."
-  },
-  "aiChatPromptTranslateLyricsBody": "Dịch lời bài {nowPlaying} sang tiếng Việt:\n{lyrics}",
-  "@aiChatPromptTranslateLyricsBody": {
-    "description": "Text of the built-in prompt. The variable tags are passed in as arguments.",
-    "placeholders": {
-      "nowPlaying": {
-        "type": "String"
-      },
-      "lyrics": {
-        "type": "String"
-      }
-    }
-  },
-  "aiChatPromptTasteSummaryLabel": "Tóm tắt thói quen nghe",
-  "@aiChatPromptTasteSummaryLabel": {
-    "description": "Built-in prompt chip."
-  },
-  "aiChatPromptTasteSummaryBody": "Tóm tắt thói quen nghe nhạc của mình tháng này",
-  "@aiChatPromptTasteSummaryBody": {
-    "description": "Text of the built-in prompt."
   },
   "aiChatCardAllow": "Cho phép",
   "@aiChatCardAllow": {

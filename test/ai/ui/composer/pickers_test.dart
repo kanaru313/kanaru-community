@@ -2,7 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/ai/domain/loop/loop_state.dart';
 import 'package:kanaru/src/ai/domain/output/chat_readiness.dart';
 import 'package:kanaru/src/ai/state/chat_view/composer_inputs.dart';
-import 'package:kanaru/src/ai/ui/chat_auto_confirm.dart';
+import 'package:kanaru/src/ai/ui/chat_auto_confirm_provider.dart';
+import 'package:kanaru/src/ai/ui/auto_mode_confirm.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../support/icon_button_finders.dart';

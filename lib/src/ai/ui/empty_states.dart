@@ -4,7 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import 'chat_host.dart';
-import 'chat_links.dart';
+import 'ai_settings_link.dart';
 
 /// The body of a conversation with no message yet: the greeting. [chips] is
 /// the place of the prompt chips under it, filled by the composer part.

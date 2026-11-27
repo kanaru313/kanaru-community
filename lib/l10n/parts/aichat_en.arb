@@ -659,30 +659,6 @@
   "@aiChatVarListTitle": {
     "description": "Heading of the variable list shown after typing {{."
   },
-  "aiChatVarDescNowPlaying": "Playing song (title – artist)",
-  "@aiChatVarDescNowPlaying": {
-    "description": "One-line description of the {{NowPlaying}} variable in the list shown after typing {{."
-  },
-  "aiChatVarDescTitle": "Title of the playing song",
-  "@aiChatVarDescTitle": {
-    "description": "One-line description of the {{Title}} variable in the list shown after typing {{."
-  },
-  "aiChatVarDescArtist": "Artist of the playing song",
-  "@aiChatVarDescArtist": {
-    "description": "One-line description of the {{Artist}} variable in the list shown after typing {{."
-  },
-  "aiChatVarDescAlbum": "Album of the playing song",
-  "@aiChatVarDescAlbum": {
-    "description": "One-line description of the {{Album}} variable in the list shown after typing {{."
-  },
-  "aiChatVarDescLyrics": "Lyrics of the playing song, without timestamps",
-  "@aiChatVarDescLyrics": {
-    "description": "One-line description of the {{Lyrics}} variable in the list shown after typing {{."
-  },
-  "aiChatVarDescQueue": "The queue, one song per line",
-  "@aiChatVarDescQueue": {
-    "description": "One-line description of the {{Queue}} variable in the list shown after typing {{."
-  },
   "aiChatPromptsLabel": "Saved prompts",
   "@aiChatPromptsLabel": {
     "description": "Screen-reader label of the group of prompt chips."
@@ -694,85 +670,6 @@
   "aiChatPromptEmptyQueue": "The queue is empty",
   "@aiChatPromptEmptyQueue": {
     "description": "Reason under a prompt chip that needs the queue."
-  },
-  "aiChatPromptExplainLyricsLabel": "Explain the lyrics",
-  "@aiChatPromptExplainLyricsLabel": {
-    "description": "Built-in prompt chip."
-  },
-  "aiChatPromptExplainLyricsBody": "Explain the lyrics of {nowPlaying}:\n{lyrics}",
-  "@aiChatPromptExplainLyricsBody": {
-    "description": "Text of the built-in prompt. The variable tags are passed in as arguments.",
-    "placeholders": {
-      "nowPlaying": {
-        "type": "String"
-      },
-      "lyrics": {
-        "type": "String"
-      }
-    }
-  },
-  "aiChatPromptSimilarSongsLabel": "Similar songs in my library",
-  "@aiChatPromptSimilarSongsLabel": {
-    "description": "Built-in prompt chip."
-  },
-  "aiChatPromptSimilarSongsBody": "Find songs in my library like {nowPlaying}",
-  "@aiChatPromptSimilarSongsBody": {
-    "description": "Text of the built-in prompt. The variable tags are passed in as arguments.",
-    "placeholders": {
-      "nowPlaying": {
-        "type": "String"
-      }
-    }
-  },
-  "aiChatPromptMoodPlaylistLabel": "Playlist by mood",
-  "@aiChatPromptMoodPlaylistLabel": {
-    "description": "Built-in prompt chip."
-  },
-  "aiChatPromptMoodPlaylistBody": "Create a playlist for this mood: {input}",
-  "@aiChatPromptMoodPlaylistBody": {
-    "description": "Text of the built-in prompt; {{input}} is the blank the user fills. The variable tags are passed in as arguments.",
-    "placeholders": {
-      "input": {
-        "type": "String"
-      }
-    }
-  },
-  "aiChatPromptSongStoryLabel": "About this song",
-  "@aiChatPromptSongStoryLabel": {
-    "description": "Built-in prompt chip."
-  },
-  "aiChatPromptSongStoryBody": "Tell me about the song {nowPlaying}",
-  "@aiChatPromptSongStoryBody": {
-    "description": "Text of the built-in prompt. The variable tags are passed in as arguments.",
-    "placeholders": {
-      "nowPlaying": {
-        "type": "String"
-      }
-    }
-  },
-  "aiChatPromptTranslateLyricsLabel": "Translate the lyrics",
-  "@aiChatPromptTranslateLyricsLabel": {
-    "description": "Built-in prompt chip."
-  },
-  "aiChatPromptTranslateLyricsBody": "Translate the lyrics of {nowPlaying} into English:\n{lyrics}",
-  "@aiChatPromptTranslateLyricsBody": {
-    "description": "Text of the built-in prompt. The variable tags are passed in as arguments.",
-    "placeholders": {
-      "nowPlaying": {
-        "type": "String"
-      },
-      "lyrics": {
-        "type": "String"
-      }
-    }
-  },
-  "aiChatPromptTasteSummaryLabel": "Summarise my listening",
-  "@aiChatPromptTasteSummaryLabel": {
-    "description": "Built-in prompt chip."
-  },
-  "aiChatPromptTasteSummaryBody": "Summarise my listening habits this month",
-  "@aiChatPromptTasteSummaryBody": {
-    "description": "Text of the built-in prompt."
   },
   "aiChatCardAllow": "Allow",
   "@aiChatCardAllow": {

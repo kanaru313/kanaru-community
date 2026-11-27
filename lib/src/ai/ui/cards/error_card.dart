@@ -18,7 +18,7 @@ import '../../state/chat_view/composer_inputs.dart';
 import '../../state/chat_view/time_format.dart';
 import '../../state/stored_error_card.dart';
 import '../chat_host.dart';
-import '../chat_links.dart';
+import '../ai_settings_link.dart';
 import '../composer/plugin_picker.dart';
 import 'error_card_spec.dart';
 

@@ -10,7 +10,7 @@ import '../state/chat_session.dart';
 import '../state/chat_view/chat_view_state.dart';
 import 'chat_header_title.dart';
 import 'chat_host.dart';
-import 'chat_links.dart';
+import 'ai_settings_link.dart';
 
 /// The header's buttons: the ⋮ menu, and while the title is being renamed the
 /// ✓ that saves the name. The phone's header has room for one of them

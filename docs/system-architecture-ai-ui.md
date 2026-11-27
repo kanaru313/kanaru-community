@@ -40,9 +40,8 @@ router:
   plugin store). On the phone this also drops the chat page and what is under
   it; the chat is reopened from the ✦ button.
 
-`chat_links.dart` holds the locations the chat links to (`aiSettingsLocation`,
-`aiPluginStoreLocation`, `aiPluginPageLocation(installId)`); the settings work
-replaces it with its own file.
+`ai_settings_link.dart` (settings work) holds the locations the chat links to
+(`aiSettingsLocation`, `aiPluginStoreLocation`, `aiPluginPageLocation`).
 
 `openChatPage(router)` (same file as the host) is the one way to show the phone
 page: pushes `/chat` when absent, pops back to it when it is below other pages,
@@ -269,12 +268,13 @@ messages they are one small scrolling row above the composer.
   (`request()`); the button row takes it after the frame and opens the picker
   anchored to the model button (dropped while the chat is locked). The error
   card's "Đổi model" calls `request()`.
-- **Stand-ins until the settings work merges:** `chat_auto_confirm.dart`
-  (`AutoModeScope`, `confirmAutoMode`, same names as the settings lane's
-  `auto_mode_confirm.dart`; REFUSES, so Tự động cannot be switched on from the
-  chat until the settings dialog replaces it at the rebase), `chat_links.dart`,
-  and the built-in prompt texts and variable descriptions in the chat's own
-  l10n (`aiChatPrompt*`, `aiChatVarDesc*`).
+- **Shared with the settings work:** `auto_mode_confirm.dart` (`AutoModeScope`,
+  `confirmAutoMode`) is the default of `chatAutoModeConfirmProvider`
+  (`chat_auto_confirm_provider.dart`, overridable in tests). Built-in prompt and
+  variable texts come from the `aiset*` strings through `ai_builtin_texts.dart`
+  (`builtinTemplateText`, `variableDescription`); the chat's `{{` list and
+  prompt chips use it. It is a copy of the settings screens' helper, because
+  `ai/ui` cannot import screens.
 - **Tests:** `test/ai/ui/support/chat_ui_support.dart` now also fakes `send`,
   `stop`, `switchPlugin`, `switchModel`, `setPermission` (recorded in `calls`,
   they change `fakeChatBindingProvider`), readiness (`fakeChatReadinessProvider`),
