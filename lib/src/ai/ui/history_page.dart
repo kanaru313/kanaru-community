@@ -215,7 +215,7 @@ class _NewConversationRow extends ConsumerWidget {
     final desktop = FormFactor.of(context) == FormFactor.desktop;
     return KListActionButton(
       label: l10n.aiChatNewTitle,
-      icon: KIcons.add,
+      icon: KIcons.compose,
       shortcutHint: desktop ? 'Ctrl+Shift+O' : null,
       onPressed: () =>
           unawaited(ref.read(chatViewProvider.notifier).startNewConversation()),
