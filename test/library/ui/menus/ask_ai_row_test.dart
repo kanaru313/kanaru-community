@@ -86,15 +86,7 @@ MenuSpec _artist(MenuEnv env) => buildArtistMenu(
 );
 
 MenuSpec _selection(MenuEnv env) => buildSelectionMenu(
-  SelectionMenuData(
-    ids: trackIds(2),
-    durationMs: 360000,
-    allFavorite: false,
-    tracks: const [
-      AskAiTrack(id: 1, title: 'A', artist: 'X'),
-      AskAiTrack(id: 2, title: 'B', artist: 'Y'),
-    ],
-  ),
+  SelectionMenuData(ids: trackIds(2), durationMs: 360000, allFavorite: false),
   env,
 );
 
@@ -150,9 +142,15 @@ void main() {
     });
   });
 
-  test('a selection with no loaded songs has a dimmed row', () {
+  test('a huge selection hands over at most the chip limit', () {
+    final tracks = askAiTracksOfIds(List.generate(500, (i) => i + 1));
+    expect(tracks, hasLength(askAiMaxSongs));
+    expect(tracks.first.id, 1);
+  });
+
+  test('an empty selection has a dimmed row', () {
     final spec = buildSelectionMenu(
-      SelectionMenuData(ids: trackIds(2), durationMs: 0, allFavorite: false),
+      SelectionMenuData(ids: trackIds(0), durationMs: 0, allFavorite: false),
       _env(_Entry()),
     );
     final row = rowOf(spec, MenuItemId.ai);

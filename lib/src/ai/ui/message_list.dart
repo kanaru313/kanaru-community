@@ -335,7 +335,11 @@ class _SwitchDivider extends ConsumerWidget {
         children: [
           rule,
           const SizedBox(width: KSpace.x2),
-          ChatPluginIcon(installId: installId, size: KIconSize.xs),
+          ChatPluginIcon(
+            installId: installId,
+            removed: installId == null,
+            size: KIconSize.xs,
+          ),
           const SizedBox(width: KSpace.x1),
           Flexible(
             child: Text(

@@ -385,6 +385,7 @@ class _RightPanelGate extends ConsumerWidget {
     if (!waiting) return const RightPanelHost();
     final scheme = Theme.of(context).colorScheme;
     return DecoratedBox(
+      key: rightPanelFrameKey,
       decoration: BoxDecoration(
         color: scheme.surface,
         border: Border(left: BorderSide(color: scheme.outlineVariant)),

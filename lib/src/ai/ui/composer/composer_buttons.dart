@@ -60,6 +60,9 @@ class _ComposerButtonsState extends ConsumerState<ComposerButtons> {
     final scheme = Theme.of(context).colorScheme;
     final view = widget.view;
     final plugin = view.plugin;
+    // Only an uninstalled plugin reads as gone; while plugins load, or when
+    // none is installed yet, the button shows the AI glyph.
+    final removed = plugin == null && view.notice is NoticeRemoved;
     final permission = permissionName(l10n, view.permission);
     final modelText = view.modelNeeded || view.model == null
         ? l10n.aiChatModelNeeded
@@ -69,13 +72,18 @@ class _ComposerButtonsState extends ConsumerState<ComposerButtons> {
         KeyedSubtree(
           key: _pluginKey,
           child: KIconButton(
-            tooltip: plugin == null
+            tooltip: plugin != null
+                ? l10n.aiChatPluginTooltip(plugin.name)
+                : removed
                 ? l10n.aiChatPluginGone
-                : l10n.aiChatPluginTooltip(plugin.name),
+                : l10n.aiChatActionPickPlugin,
             onPressed: view.pluginPickerEnabled
                 ? () => showPluginPicker(context, ref, anchor: _pluginKey)
                 : null,
-            child: ChatPluginIcon(installId: plugin?.installId),
+            child: ChatPluginIcon(
+              installId: plugin?.installId,
+              removed: removed,
+            ),
           ),
         ),
         KeyedSubtree(

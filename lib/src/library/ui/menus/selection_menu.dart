@@ -13,7 +13,6 @@ class SelectionMenuData {
     required this.ids,
     required this.durationMs,
     required this.allFavorite,
-    this.tracks = const [],
   });
 
   final List<TrackId> ids;
@@ -21,9 +20,6 @@ class SelectionMenuData {
 
   /// Every selected track is a favourite: the row removes them.
   final bool allFavorite;
-
-  /// The selected songs as the chat names them, in selection order.
-  final List<AskAiTrack> tracks;
 }
 
 /// Menu of the selected songs. Play all, edit and add-to-playlist are on the
@@ -69,8 +65,10 @@ MenuSpec buildSelectionMenu(SelectionMenuData data, MenuEnv env) {
           askAiRow(
             env,
             l10n.libraryMenuAskAiSongs,
-            AskAiTarget.songs(data.tracks),
-            enabled: data.tracks.isNotEmpty,
+            AskAiTarget.songs(
+              askAiTracksOfIds([for (final id in data.ids) id.value]),
+            ),
+            enabled: count > 0,
           ),
         ],
       ],

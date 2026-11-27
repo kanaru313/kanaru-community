@@ -63,7 +63,8 @@ class HistoryRow extends ConsumerWidget {
         selected: current,
         enabled: !busy,
         leading: ChatPluginIcon(
-          installId: pluginRemoved ? null : conversation.installId,
+          installId: conversation.installId,
+          removed: pluginRemoved,
           size: 32,
         ),
         title: renaming

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
@@ -107,7 +109,8 @@ class _TrackListFoldState extends State<TrackListFold> {
         Padding(
           padding: EdgeInsetsDirectional.only(
             top: KSpace.x2,
-            start: _textIndent(context) - KSpace.x2,
+            // Never negative: on the phone the label starts at the card edge.
+            start: math.max(0, _textIndent(context) - KSpace.x2),
           ),
           child: Align(
             alignment: AlignmentDirectional.centerStart,
@@ -122,7 +125,12 @@ class _TrackListFoldState extends State<TrackListFold> {
                 style: TextButton.styleFrom(
                   minimumSize: Size(0, _buttonHeight(context)),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  padding: const EdgeInsets.symmetric(horizontal: KSpace.x2),
+                  // The label lines up with the card text: the tap shape's inset
+                  // only exists where the row is indented.
+                  padding: EdgeInsetsDirectional.only(
+                    start: _textIndent(context) > 0 ? KSpace.x2 : 0,
+                    end: KSpace.x2,
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,

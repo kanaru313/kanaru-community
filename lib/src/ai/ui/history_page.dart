@@ -138,7 +138,8 @@ class _ChatHistoryPageState extends ConsumerState<ChatHistoryPage> {
             pluginName: names?[c.installId],
             pluginRemoved:
                 names != null &&
-                (c.installId == null || !names.containsKey(c.installId)),
+                c.installId != null &&
+                !names.containsKey(c.installId),
             renaming: _renamingId == c.id,
             onRenameStart: () => setState(() => _renamingId = c.id),
             onRenameEnd: () {

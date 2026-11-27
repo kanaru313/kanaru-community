@@ -4,8 +4,6 @@ import '../../../../l10n/gen/app_localizations.dart';
 import '../../../library/domain/ask_ai_target.dart';
 import '../../../library/state/browse/detail_providers.dart';
 import '../../../library/state/browse/selection_providers.dart';
-import '../../../library/state/browse/song_list_providers.dart'
-    show trackRowLoaderProvider;
 import '../../../library/state/playlists/playlist_providers.dart';
 import '../../../library/ui/browse/library_labels.dart';
 import '../../../library/ui/playlist_common/playlist_labels.dart';
@@ -31,22 +29,12 @@ final chatPageLocationProvider = NotifierProvider<ChatPageLocation, String?>(
   ChatPageLocation.new,
 );
 
-/// The selected songs as the chat names them; empty without a selection.
-final selectionTracksProvider = FutureProvider.autoDispose<List<AskAiTrack>>((
-  ref,
-) async {
+/// The selected songs as the chat names them: ids only (at most
+/// `askAiMaxSongs`), so a toggle reads nothing from the library; empty
+/// without a selection.
+final selectionTracksProvider = Provider.autoDispose<List<AskAiTrack>>((ref) {
   final ids = ref.watch(librarySelectionProvider.select((s) => s.ids));
-  if (ids.isEmpty) return const [];
-  final infos = await ref.read(trackRowLoaderProvider)(ids);
-  return [
-    for (final t in infos)
-      AskAiTrack(
-        id: t.id.value,
-        title: t.title,
-        artist: t.artist ?? '',
-        album: t.album,
-      ),
-  ];
+  return askAiTracksOfIds([for (final id in ids) id.value]);
 });
 
 ChipPart _chip(AskAiTarget target) {
@@ -113,7 +101,7 @@ final chatSuggestionsProvider = Provider.autoDispose
     .family<List<ChipPart>, AppLocalizations>((ref, l10n) {
       final location = ref.watch(chatPageLocationProvider);
       final page = location == null ? null : pageTargetOf(ref, l10n, location);
-      final selected = ref.watch(selectionTracksProvider).value ?? const [];
+      final selected = ref.watch(selectionTracksProvider);
       return [
         if (ref.watch(hasCurrentTrackProvider))
           _chip(const AskAiTarget.nowPlaying()),

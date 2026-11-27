@@ -63,6 +63,23 @@ void main() {
       expect(edges.newestSeq, 4);
       expect(turnEdgesOf(const []).latestUserSeq, -1);
     });
+
+    test('an event row (plugin switch line) is not a newer turn', () {
+      final edges = turnEdgesOf([
+        chatMessage(1, role: AiMessageRole.user),
+        chatMessage(2),
+        chatMessage(3, role: AiMessageRole.event),
+      ]);
+      expect(edges.newestSeq, 2);
+      expect(edges.latestUserSeq, 1);
+      final after = turnEdgesOf([
+        chatMessage(1, role: AiMessageRole.user),
+        chatMessage(2),
+        chatMessage(3, role: AiMessageRole.event),
+        chatMessage(4),
+      ]);
+      expect(after.newestSeq, 4);
+    });
   });
 
   group('in the message list', () {

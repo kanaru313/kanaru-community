@@ -24,16 +24,59 @@ final chatHistoryQueryProvider =
       ChatHistoryQuery.new,
     );
 
+/// How long typing and store changes settle before the list is read again;
+/// tests shorten it.
+final chatHistoryDebounceProvider = Provider<Duration>(
+  (ref) => const Duration(milliseconds: 250),
+);
+
+/// The search text the list is read with: [chatHistoryQueryProvider] after
+/// it stopped changing for the debounce time (the first value is instant).
+class ChatHistorySearch extends Notifier<String> {
+  Timer? _timer;
+
+  @override
+  String build() {
+    final delay = ref.watch(chatHistoryDebounceProvider);
+    ref.onDispose(() => _timer?.cancel());
+    ref.listen(chatHistoryQueryProvider, (_, next) {
+      _timer?.cancel();
+      final text = next.trim();
+      if (text.isEmpty) {
+        state = '';
+        return;
+      }
+      _timer = Timer(delay, () => state = text);
+    });
+    return ref.read(chatHistoryQueryProvider).trim();
+  }
+}
+
+final chatHistorySearchProvider =
+    NotifierProvider.autoDispose<ChatHistorySearch, String>(
+      ChatHistorySearch.new,
+    );
+
 /// The conversations the list shows, newest activity first: all of them, or
-/// the ones whose title or text match the search (the store's `search`
-/// does the matching). Reloads when the store reports a change; the list
-/// already on screen stays until the new one is read.
+/// the ones whose title or text match the (debounced) search. Reloads when
+/// the store reports a change, bursts of changes (a running turn writes
+/// often) read once; the list already on screen stays until the new one is
+/// read. The search is not repeated while the text and the store are
+/// unchanged.
 final chatHistoryConversationsProvider =
     FutureProvider.autoDispose<List<AiConversation>>((ref) {
-      final query = ref.watch(chatHistoryQueryProvider).trim();
+      final query = ref.watch(chatHistorySearchProvider);
       final store = ref.watch(aiConversationStoreProvider);
-      final sub = store.changes.listen((_) => ref.invalidateSelf());
-      ref.onDispose(() => unawaited(sub.cancel()));
+      final delay = ref.watch(chatHistoryDebounceProvider);
+      Timer? settle;
+      final sub = store.changes.listen((_) {
+        settle?.cancel();
+        settle = Timer(delay, ref.invalidateSelf);
+      });
+      ref.onDispose(() {
+        settle?.cancel();
+        unawaited(sub.cancel());
+      });
       return query.isEmpty ? store.list() : store.search(query);
     });
 

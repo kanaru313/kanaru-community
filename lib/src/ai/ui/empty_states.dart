@@ -146,9 +146,9 @@ class ChatNoPluginGuide extends ConsumerWidget {
 }
 
 /// [header] and [below] centred as one group in the free space; scrolls when
-/// the window is too short (200 % text, keyboard up). No intrinsic sizes: the
-/// group is laid out at its natural height inside a box at least as tall as
-/// the viewport.
+/// the window is too short (200 % text, keyboard up). A shrink-wrapped list
+/// inside a [Center] is as tall as its content, up to the viewport, so it
+/// needs neither a layout builder nor intrinsic sizes.
 class _EmptyFrame extends StatelessWidget {
   const _EmptyFrame({required this.header, this.below});
 
@@ -157,34 +157,19 @@ class _EmptyFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) => SingleChildScrollView(
+    return Center(
+      child: ListView(
+        shrinkWrap: true,
         padding: const EdgeInsets.fromLTRB(
           KSpace.x4,
           KSpace.x6,
           KSpace.x4,
           KSpace.x2,
         ),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minHeight: (constraints.maxHeight - KSpace.x6 - KSpace.x2).clamp(
-              0.0,
-              double.infinity,
-            ),
-          ),
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                header,
-                if (below != null) ...[
-                  const SizedBox(height: KSpace.x4),
-                  below!,
-                ],
-              ],
-            ),
-          ),
-        ),
+        children: [
+          header,
+          if (below != null) ...[const SizedBox(height: KSpace.x4), below!],
+        ],
       ),
     );
   }

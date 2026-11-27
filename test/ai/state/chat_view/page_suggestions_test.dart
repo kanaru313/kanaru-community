@@ -111,18 +111,15 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         hasCurrentTrackProvider.overrideWithValue(false),
-        selectionTracksProvider.overrideWith(
-          (ref) async => const [
-            AskAiTrack(id: 1, title: 'A'),
-            AskAiTrack(id: 2, title: 'B'),
-          ],
-        ),
+        selectionTracksProvider.overrideWithValue(const [
+          AskAiTrack(id: 1, title: ''),
+          AskAiTrack(id: 2, title: ''),
+        ]),
       ],
     );
     addTearDown(container.dispose);
     final keep = container.listen(chatSuggestionsProvider(_l10n), (_, _) {});
     addTearDown(keep.close);
-    await container.read(selectionTracksProvider.future);
 
     final chips = container.read(chatSuggestionsProvider(_l10n));
 

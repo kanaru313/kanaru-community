@@ -192,6 +192,17 @@ void main() {
     });
   }
 
+  test('the engine result wording maps to a reason in one place', () {
+    expect(skipFromResultText(expiredText).reason, SkipReason.expired);
+    expect(skipFromResultText(limitSkippedText).reason, SkipReason.itemLimit);
+    expect(skipFromResultText(deniedByUserText).reason, SkipReason.declined);
+    expect(skipFromResultText('not run: something new').reason, isNull);
+    expect(skipFromResultText(null).reason, isNull);
+    final refused = skipFromResultText(notAllowedNowText(ExecRefusal.groupOff));
+    expect(refused.reason, SkipReason.refusedNow);
+    expect(refused.refusal, ExecRefusal.groupOff);
+  });
+
   testWidgets('a skipped read names the tool, not an action', (tester) async {
     final read = writeCall('search_library', {'query': 'v-pop'});
     final message = toolRow(

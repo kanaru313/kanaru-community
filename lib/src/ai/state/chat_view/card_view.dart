@@ -23,8 +23,9 @@ final chatCardClockProvider = Provider<DateTime Function()>(
 /// Where a card sits in its conversation.
 typedef ChatCardPosition = ({int conversationId, int seq});
 
-/// The newest user message and the newest message of the loaded window. The
-/// window is always a suffix of the conversation, so a card is older than a
+/// The newest user message and the newest turn row (user, assistant, error or
+/// tool) of the loaded window. Event rows (a plugin or model switch line) are
+/// not a turn: a card stays live after one. The window is always a suffix of the conversation, so a card is older than a
 /// user message exactly when that message is in it.
 typedef ChatTurnEdges = ({int latestUserSeq, int newestSeq});
 
@@ -44,7 +45,7 @@ ChatTurnEdges turnEdgesOf(List<AiMessage> messages) {
   var user = -1;
   var newest = -1;
   for (final m in messages) {
-    if (m.seq > newest) newest = m.seq;
+    if (m.role != AiMessageRole.event && m.seq > newest) newest = m.seq;
     if (m.role == AiMessageRole.user && m.seq > user) user = m.seq;
   }
   return (latestUserSeq: user, newestSeq: newest);

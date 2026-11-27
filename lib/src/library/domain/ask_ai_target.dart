@@ -30,6 +30,17 @@ sealed class AskAiTarget {
   const factory AskAiTarget.playlist(String uid, String label) = AskAiPlaylist;
 }
 
+/// Most songs one "Ask AI" chip carries: the chat sends no more than this
+/// (the engine's `chipMaxRows`, kept equal by a test).
+const int askAiMaxSongs = 200;
+
+/// The songs of a selection by id alone, at most [askAiMaxSongs]. No titles:
+/// nothing is read from the library when a menu opens or the selection
+/// changes; the chat reads the rows when the message is sent.
+List<AskAiTrack> askAiTracksOfIds(Iterable<int> ids) => [
+  for (final id in ids.take(askAiMaxSongs)) AskAiTrack(id: id, title: ''),
+];
+
 /// A track a target names: its library id and the text the chip shows.
 class AskAiTrack {
   const AskAiTrack({

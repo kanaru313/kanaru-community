@@ -84,41 +84,61 @@ String? _resultText(AiMessage m) {
   return null;
 }
 
-/// The engine's refusal behind a "not allowed now" card: the code stored with
-/// the card, else the one the model's result text names (Auto mode keeps no
-/// confirm part).
-ExecRefusal? refusalOf(AiMessage m) {
-  final code = confirmOf(m)?.reason;
-  final text = _resultText(m);
+/// The only place that reads the engine's result wording. A call run in Auto
+/// mode keeps no confirm part, so the text the model was given is all that
+/// says why it did not run; the engine exposes no reason code for it.
+@visibleForTesting
+({SkipReason? reason, ExecRefusal? refusal}) skipFromResultText(String? text) {
+  if (text == null) return (reason: null, refusal: null);
   for (final r in ExecRefusal.values) {
-    if (r.code == code || (text != null && text == notAllowedNowText(r))) {
-      return r;
+    if (text == notAllowedNowText(r)) {
+      return (reason: SkipReason.refusedNow, refusal: r);
     }
   }
-  return null;
+  final reason = switch (text) {
+    expiredText => SkipReason.expired,
+    newMessageText => SkipReason.declinedByNewMessage,
+    stoppedByUserText => SkipReason.stopped,
+    tooLargeSkippedText => SkipReason.tooLarge,
+    limitSkippedText => SkipReason.itemLimit,
+    deniedByUserText => SkipReason.declined,
+    _ => null,
+  };
+  return (reason: reason, refusal: null);
 }
 
-/// Why the skipped card [m] did not run.
+/// The engine's refusal behind a "not allowed now" card: the code stored with
+/// the card, else the one the result text names.
+ExecRefusal? refusalOf(AiMessage m) {
+  final code = confirmOf(m)?.reason;
+  for (final r in ExecRefusal.values) {
+    if (r.code == code) return r;
+  }
+  return skipFromResultText(_resultText(m)).refusal;
+}
+
+/// Why the skipped card [m] did not run: the stored confirm first, the result
+/// text (see [skipFromResultText]) when the call had none.
 SkipReason skipReasonOf(AiMessage m) {
   final confirm = confirmOf(m);
-  final text = _resultText(m);
-  if (confirm?.status == ConfirmStatus.expired || text == expiredText) {
+  final text = skipFromResultText(_resultText(m)).reason;
+  if (confirm?.status == ConfirmStatus.expired || text == SkipReason.expired) {
     return SkipReason.expired;
   }
   if (confirm?.status == ConfirmStatus.deniedByNewMessage ||
-      text == newMessageText) {
+      text == SkipReason.declinedByNewMessage) {
     return SkipReason.declinedByNewMessage;
   }
-  if (confirm?.reason == 'stopped' || text == stoppedByUserText) {
+  if (confirm?.reason == 'stopped' || text == SkipReason.stopped) {
     return SkipReason.stopped;
   }
   if (confirm?.reason == AiErrorCode.tooLarge.wire ||
-      text == tooLargeSkippedText) {
+      text == SkipReason.tooLarge) {
     return SkipReason.tooLarge;
   }
-  if (text == limitSkippedText) return SkipReason.itemLimit;
+  if (text == SkipReason.itemLimit) return SkipReason.itemLimit;
   if (refusalOf(m) != null) return SkipReason.refusedNow;
-  if (confirm?.status == ConfirmStatus.denied || text == deniedByUserText) {
+  if (confirm?.status == ConfirmStatus.denied || text == SkipReason.declined) {
     return SkipReason.declined;
   }
   return SkipReason.other;

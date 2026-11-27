@@ -13,7 +13,6 @@ import '../../data/browse/detail_queries.dart';
 import '../../data/browse/album_artist_queries.dart';
 import '../../data/browse/menu_queries.dart';
 import '../../data/browse/song_ids_query.dart';
-import '../../domain/ask_ai_target.dart';
 import '../../domain/browse/browse_items.dart';
 import '../../domain/browse/list_sort.dart';
 import '../../domain/browse/sort_order.dart';
@@ -21,8 +20,6 @@ import '../../domain/browse/song_scope.dart';
 import '../../domain/music_folder.dart';
 import '../../state/browse/list_prefs_providers.dart';
 import '../../state/browse/selection_providers.dart';
-import '../../state/browse/song_list_providers.dart'
-    show trackRowLoaderProvider;
 import '../../state/favorites_providers.dart';
 import '../../state/music_folders_providers.dart';
 import '../browse/group_play.dart';
@@ -353,21 +350,8 @@ Future<MenuSpec> selectionMenuSpec(
       if (!gone.contains(id)) id,
   ];
   final favorites = await _first(container, favoriteTrackIdsProvider);
-  // Only read the rows when the chat can take them.
-  final infos = container.read(askAiEntryProvider) == null
-      ? const <TrackInfo>[]
-      : await container.read(trackRowLoaderProvider)(ids);
   return buildSelectionMenu(
     SelectionMenuData(
-      tracks: [
-        for (final t in infos)
-          AskAiTrack(
-            id: t.id.value,
-            title: t.title,
-            artist: t.artist ?? '',
-            album: t.album,
-          ),
-      ],
       ids: ids,
       durationMs: measured.durationMs,
       allFavorite: ids.isNotEmpty && ids.every(favorites.contains),

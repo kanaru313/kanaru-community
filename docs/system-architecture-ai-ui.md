@@ -392,3 +392,12 @@ One interface, one implementation, no second route:
   playlist; a root page or a page without a chip adds none), all through
   `chipRefOf`. `ChatSuggestionsSync` (inside `ChatSurface`) copies them into
   `chatAttachmentsProvider.setSuggestions`.
+
+## Review fixes (behaviour notes)
+
+- Liveness: event rows (plugin or model switch lines) are not a newer turn (`turnEdgesOf`); an error card stays live after a plugin switch.
+- Selection chip and menu: ids only, at most `askAiMaxSongs` (= engine `chipMaxRows`); nothing is read from the library when the menu opens or the selection changes. The chip label counts the capped list.
+- History search: the typed text (`chatHistoryQueryProvider`) is debounced into `chatHistorySearchProvider` (250 ms, `chatHistoryDebounceProvider`); store changes are coalesced with the same delay.
+- `ChatPluginIcon.removed` draws the "?" tile only for an uninstalled plugin; no plugin or plugins still loading shows the AI glyph. History shows "Plugin đã gỡ" only when a plugin id is set but not installed.
+- Skipped cards: the engine result wording is read in one function (`skipFromResultText`); the engine has no reason code for Auto mode yet.
+- Empty chat frame: `Center` + shrink-wrapped `ListView` (no `LayoutBuilder`, architecture gate).

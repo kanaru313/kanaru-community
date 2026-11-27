@@ -38,6 +38,10 @@ ChipResolver _resolver(
 );
 
 void main() {
+  test('the library menu limit equals the rows one chip sends', () {
+    expect(askAiMaxSongs, chipMaxRows);
+  });
+
   test('album chip blocked when trackInfo off', () async {
     final scopes = _Scopes();
     final r = await _resolver(
