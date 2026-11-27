@@ -6350,6 +6350,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pluginsKindStreaming => 'Music source';
 
   @override
+  String get pluginsKindNounLyrics => 'Lyrics plugin';
+
+  @override
+  String get pluginsKindNounTranslate => 'Translation plugin';
+
+  @override
+  String get pluginsKindNounStreaming => 'Music source plugin';
+
+  @override
+  String get pluginsKindNounAiChat => 'AI plugin';
+
+  @override
   String get pluginsKindHelpLyrics =>
       'Finds lyrics for the song playing, with lines that follow the song.';
 
@@ -6674,7 +6686,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String pluginsPkgInstallSubtitle(String kind, int version, String author) {
-    return 'Plugin $kind · version $version · $author';
+    return '$kind · version $version · $author';
   }
 
   @override
@@ -7311,12 +7323,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String pluginsPageTypeValue(String kind, int api) {
-    return 'Plugin for $kind · plugin API $api';
+    return '$kind · plugin API $api';
   }
 
   @override
   String pluginsPageTypeValueAi(String kind, int api) {
-    return 'AI plugin for $kind · plugin API $api';
+    return '$kind · AI · plugin API $api';
   }
 
   @override
@@ -8070,6 +8082,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiChatCapTools => 'Tools';
+
+  @override
+  String get aiChatPluginPickerTitle => 'AI service';
+
+  @override
+  String aiChatModelPickerTitle(String plugin) {
+    return 'Model · $plugin';
+  }
+
+  @override
+  String get aiChatModelPickerCaption => 'Applies from the next message.';
+
+  @override
+  String get aiChatPermissionPickerTitle => 'Permission in this chat';
 
   @override
   String get aiChatPluginPickerCaption =>

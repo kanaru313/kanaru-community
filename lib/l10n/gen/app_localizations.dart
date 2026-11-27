@@ -9395,6 +9395,30 @@ abstract class AppLocalizations {
   /// **'Music source'**
   String get pluginsKindStreaming;
 
+  /// No description provided for @pluginsKindNounLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics plugin'**
+  String get pluginsKindNounLyrics;
+
+  /// No description provided for @pluginsKindNounTranslate.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation plugin'**
+  String get pluginsKindNounTranslate;
+
+  /// No description provided for @pluginsKindNounStreaming.
+  ///
+  /// In en, this message translates to:
+  /// **'Music source plugin'**
+  String get pluginsKindNounStreaming;
+
+  /// No description provided for @pluginsKindNounAiChat.
+  ///
+  /// In en, this message translates to:
+  /// **'AI plugin'**
+  String get pluginsKindNounAiChat;
+
   /// No description provided for @pluginsKindHelpLyrics.
   ///
   /// In en, this message translates to:
@@ -9884,7 +9908,7 @@ abstract class AppLocalizations {
   /// No description provided for @pluginsPkgInstallSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Plugin {kind} · version {version} · {author}'**
+  /// **'{kind} · version {version} · {author}'**
   String pluginsPkgInstallSubtitle(String kind, int version, String author);
 
   /// No description provided for @pluginsPkgUpdateSubtitle.
@@ -10826,13 +10850,13 @@ abstract class AppLocalizations {
   /// No description provided for @pluginsPageTypeValue.
   ///
   /// In en, this message translates to:
-  /// **'Plugin for {kind} · plugin API {api}'**
+  /// **'{kind} · plugin API {api}'**
   String pluginsPageTypeValue(String kind, int api);
 
   /// No description provided for @pluginsPageTypeValueAi.
   ///
   /// In en, this message translates to:
-  /// **'AI plugin for {kind} · plugin API {api}'**
+  /// **'{kind} · AI · plugin API {api}'**
   String pluginsPageTypeValueAi(String kind, int api);
 
   /// No description provided for @pluginsPageSourceCode.
@@ -12070,6 +12094,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tools'**
   String get aiChatCapTools;
+
+  /// Title of the plugin picker in the composer.
+  ///
+  /// In en, this message translates to:
+  /// **'AI service'**
+  String get aiChatPluginPickerTitle;
+
+  /// Title of the model picker in the composer. {plugin} is the plugin's name.
+  ///
+  /// In en, this message translates to:
+  /// **'Model · {plugin}'**
+  String aiChatModelPickerTitle(String plugin);
+
+  /// Caption under the model picker title.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies from the next message.'**
+  String get aiChatModelPickerCaption;
+
+  /// Title of the permission picker in the composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission in this chat'**
+  String get aiChatPermissionPickerTitle;
 
   /// Caption under the plugin picker.
   ///

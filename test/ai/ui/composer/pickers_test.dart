@@ -29,6 +29,7 @@ void main() {
       await tester.tap(byIconButton(_pluginButton));
       await tester.pumpAndSettle();
 
+      expect(find.text('AI service'), findsOneWidget);
       expect(bySemanticsSelected('Claude'), findsOneWidget);
       expect(bySemanticsSelected('Gemini'), findsNothing);
       expect(find.text('API key set'), findsOneWidget);
@@ -72,6 +73,7 @@ void main() {
 
       expect(bySemanticsSelected('Ask first'), findsOneWidget);
       expect(bySemanticsSelected('Read only'), findsNothing);
+      expect(find.text('Permission in this chat'), findsOneWidget);
       expect(find.text('For this conversation only.'), findsOneWidget);
 
       // Read only needs no confirmation.
@@ -158,6 +160,8 @@ void main() {
       await tester.tap(find.text('m1'));
       await tester.pumpAndSettle();
 
+      expect(find.text('Model · Claude'), findsOneWidget);
+      expect(find.text('Applies from the next message.'), findsOneWidget);
       expect(find.text('Model 1'), findsOneWidget);
       expect(find.text('Model 2'), findsOneWidget);
       expect(bySemanticsSelected('Model 1'), findsOneWidget);

@@ -5888,6 +5888,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pluginsKindStreaming => 'Nguồn nhạc';
 
   @override
+  String get pluginsKindNounLyrics => 'Plugin lời bài';
+
+  @override
+  String get pluginsKindNounTranslate => 'Plugin dịch';
+
+  @override
+  String get pluginsKindNounStreaming => 'Plugin nguồn nhạc';
+
+  @override
+  String get pluginsKindNounAiChat => 'Plugin AI';
+
+  @override
   String get pluginsKindHelpLyrics =>
       'Tìm lời cho bài đang nghe, có lời chạy theo dòng.';
 
@@ -6206,7 +6218,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String pluginsPkgInstallSubtitle(String kind, int version, String author) {
-    return 'Plugin $kind · bản $version · $author';
+    return '$kind · bản $version · $author';
   }
 
   @override
@@ -6814,12 +6826,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String pluginsPageTypeValue(String kind, int api) {
-    return 'Plugin $kind · API plugin $api';
+    return '$kind · API plugin $api';
   }
 
   @override
   String pluginsPageTypeValueAi(String kind, int api) {
-    return 'Plugin $kind · AI · API plugin $api';
+    return '$kind · AI · API plugin $api';
   }
 
   @override
@@ -7535,6 +7547,20 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get aiChatCapTools => 'Công cụ';
+
+  @override
+  String get aiChatPluginPickerTitle => 'Dịch vụ AI';
+
+  @override
+  String aiChatModelPickerTitle(String plugin) {
+    return 'Model · $plugin';
+  }
+
+  @override
+  String get aiChatModelPickerCaption => 'Áp dụng từ tin nhắn tiếp theo.';
+
+  @override
+  String get aiChatPermissionPickerTitle => 'Quyền trong cuộc này';
 
   @override
   String get aiChatPluginPickerCaption =>

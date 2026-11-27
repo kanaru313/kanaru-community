@@ -4489,6 +4489,10 @@
   "pluginsKindLyrics": "Lời bài",
   "pluginsKindTranslate": "Dịch",
   "pluginsKindStreaming": "Nguồn nhạc",
+  "pluginsKindNounLyrics": "Plugin lời bài",
+  "pluginsKindNounTranslate": "Plugin dịch",
+  "pluginsKindNounStreaming": "Plugin nguồn nhạc",
+  "pluginsKindNounAiChat": "Plugin AI",
   "pluginsKindHelpLyrics": "Tìm lời cho bài đang nghe, có lời chạy theo dòng.",
   "pluginsKindHelpTranslate": "Dịch lời bài sang ngôn ngữ bạn chọn.",
   "pluginsKindHelpStreaming": "Tìm và phát nhạc từ một dịch vụ trực tuyến.",
@@ -4691,7 +4695,7 @@
       }
     }
   },
-  "pluginsPkgInstallSubtitle": "Plugin {kind} · bản {version} · {author}",
+  "pluginsPkgInstallSubtitle": "{kind} · bản {version} · {author}",
   "@pluginsPkgInstallSubtitle": {
     "placeholders": {
       "kind": {
@@ -5295,7 +5299,7 @@
   },
   "pluginsPageDescription": "Mô tả",
   "pluginsPageType": "Loại",
-  "pluginsPageTypeValue": "Plugin {kind} · API plugin {api}",
+  "pluginsPageTypeValue": "{kind} · API plugin {api}",
   "@pluginsPageTypeValue": {
     "placeholders": {
       "kind": {
@@ -5306,7 +5310,7 @@
       }
     }
   },
-  "pluginsPageTypeValueAi": "Plugin {kind} · AI · API plugin {api}",
+  "pluginsPageTypeValueAi": "{kind} · AI · API plugin {api}",
   "@pluginsPageTypeValueAi": {
     "placeholders": {
       "kind": {
@@ -6031,6 +6035,27 @@
   "aiChatCapTools": "Công cụ",
   "@aiChatCapTools": {
     "description": "Capability tag: the model can use tools."
+  },
+  "aiChatPluginPickerTitle": "Dịch vụ AI",
+  "@aiChatPluginPickerTitle": {
+    "description": "Title of the plugin picker in the composer."
+  },
+  "aiChatModelPickerTitle": "Model · {plugin}",
+  "@aiChatModelPickerTitle": {
+    "description": "Title of the model picker in the composer. {plugin} is the plugin's name.",
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatModelPickerCaption": "Áp dụng từ tin nhắn tiếp theo.",
+  "@aiChatModelPickerCaption": {
+    "description": "Caption under the model picker title."
+  },
+  "aiChatPermissionPickerTitle": "Quyền trong cuộc này",
+  "@aiChatPermissionPickerTitle": {
+    "description": "Title of the permission picker in the composer."
   },
   "aiChatPluginPickerCaption": "Áp dụng từ tin nhắn tiếp theo. Lịch sử giữ nguyên.",
   "@aiChatPluginPickerCaption": {

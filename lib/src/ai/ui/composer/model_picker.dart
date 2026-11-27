@@ -66,6 +66,16 @@ Future<void> showModelPicker(
     context,
     anchor: anchor,
     selected: view.model,
+    title: Text(l10n.aiChatModelPickerTitle(plugin.name)),
+    header: Padding(
+      padding: const EdgeInsets.fromLTRB(
+        KSpace.x4,
+        KSpace.x2,
+        KSpace.x4,
+        KSpace.x2,
+      ),
+      child: Text(l10n.aiChatModelPickerCaption),
+    ),
     options: [
       for (final m in plugin.models)
         SelectionOption<String>(

@@ -325,6 +325,27 @@
   "@aiChatCapTools": {
     "description": "Capability tag: the model can use tools."
   },
+  "aiChatPluginPickerTitle": "Dịch vụ AI",
+  "@aiChatPluginPickerTitle": {
+    "description": "Title of the plugin picker in the composer."
+  },
+  "aiChatModelPickerTitle": "Model · {plugin}",
+  "@aiChatModelPickerTitle": {
+    "description": "Title of the model picker in the composer. {plugin} is the plugin's name.",
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatModelPickerCaption": "Áp dụng từ tin nhắn tiếp theo.",
+  "@aiChatModelPickerCaption": {
+    "description": "Caption under the model picker title."
+  },
+  "aiChatPermissionPickerTitle": "Quyền trong cuộc này",
+  "@aiChatPermissionPickerTitle": {
+    "description": "Title of the permission picker in the composer."
+  },
   "aiChatPluginPickerCaption": "Áp dụng từ tin nhắn tiếp theo. Lịch sử giữ nguyên.",
   "@aiChatPluginPickerCaption": {
     "description": "Caption under the plugin picker."

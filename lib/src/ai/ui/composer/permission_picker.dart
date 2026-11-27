@@ -48,6 +48,7 @@ Future<void> showPermissionPicker(
     context,
     anchor: anchor,
     selected: current,
+    title: Text(l10n.aiChatPermissionPickerTitle),
     header: Padding(
       padding: const EdgeInsets.fromLTRB(
         KSpace.x4,

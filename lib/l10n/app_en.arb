@@ -4524,6 +4524,10 @@
   "pluginsKindLyrics": "Lyrics",
   "pluginsKindTranslate": "Translation",
   "pluginsKindStreaming": "Music source",
+  "pluginsKindNounLyrics": "Lyrics plugin",
+  "pluginsKindNounTranslate": "Translation plugin",
+  "pluginsKindNounStreaming": "Music source plugin",
+  "pluginsKindNounAiChat": "AI plugin",
   "pluginsKindHelpLyrics": "Finds lyrics for the song playing, with lines that follow the song.",
   "pluginsKindHelpTranslate": "Translates lyrics into the language you choose.",
   "pluginsKindHelpStreaming": "Searches and plays music from an online service.",
@@ -4726,7 +4730,7 @@
       }
     }
   },
-  "pluginsPkgInstallSubtitle": "Plugin {kind} · version {version} · {author}",
+  "pluginsPkgInstallSubtitle": "{kind} · version {version} · {author}",
   "@pluginsPkgInstallSubtitle": {
     "placeholders": {
       "kind": {
@@ -5330,7 +5334,7 @@
   },
   "pluginsPageDescription": "Description",
   "pluginsPageType": "Type",
-  "pluginsPageTypeValue": "Plugin for {kind} · plugin API {api}",
+  "pluginsPageTypeValue": "{kind} · plugin API {api}",
   "@pluginsPageTypeValue": {
     "placeholders": {
       "kind": {
@@ -5341,7 +5345,7 @@
       }
     }
   },
-  "pluginsPageTypeValueAi": "AI plugin for {kind} · plugin API {api}",
+  "pluginsPageTypeValueAi": "{kind} · AI · plugin API {api}",
   "@pluginsPageTypeValueAi": {
     "placeholders": {
       "kind": {
@@ -6119,6 +6123,27 @@
   "aiChatCapTools": "Tools",
   "@aiChatCapTools": {
     "description": "Capability tag: the model can use tools."
+  },
+  "aiChatPluginPickerTitle": "AI service",
+  "@aiChatPluginPickerTitle": {
+    "description": "Title of the plugin picker in the composer."
+  },
+  "aiChatModelPickerTitle": "Model · {plugin}",
+  "@aiChatModelPickerTitle": {
+    "description": "Title of the model picker in the composer. {plugin} is the plugin's name.",
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatModelPickerCaption": "Applies from the next message.",
+  "@aiChatModelPickerCaption": {
+    "description": "Caption under the model picker title."
+  },
+  "aiChatPermissionPickerTitle": "Permission in this chat",
+  "@aiChatPermissionPickerTitle": {
+    "description": "Title of the permission picker in the composer."
   },
   "aiChatPluginPickerCaption": "Applies from the next message. History stays as it is.",
   "@aiChatPluginPickerCaption": {

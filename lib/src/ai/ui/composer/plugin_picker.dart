@@ -40,6 +40,7 @@ Future<void> showPluginPicker(
     context,
     anchor: anchor,
     selected: current,
+    title: Text(l10n.aiChatPluginPickerTitle),
     header: Padding(
       padding: const EdgeInsets.fromLTRB(
         KSpace.x4,
