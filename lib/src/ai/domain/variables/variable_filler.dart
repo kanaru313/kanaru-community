@@ -143,7 +143,7 @@ Future<FillResult> fillVariables({
     var value = useShort ? found.short : found.full;
     value = clipUtf8(value, maxBytes);
     parts.add(fencedData(s.variable!.source, value));
-    display.write(fenceText(value));
+    display.write(useShort ? clipUtf8(found.display, maxBytes) : found.display);
   }
   literal(text.substring(cursor));
   return FillDone(

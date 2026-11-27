@@ -17,7 +17,18 @@ sealed class VariableRead {
 }
 
 class VariableFound extends VariableRead {
-  const VariableFound({required this.full, required this.short});
+  const VariableFound({
+    required this.full,
+    required this.short,
+    this.displayText,
+  });
+
+  /// Readable form, when it differs from [full].
+  final String? displayText;
+
+  /// How a person reads the value (conversation title): "title · artist" for
+  /// a song, not the tool-line form sent to the model. Defaults to [full].
+  String get display => displayText ?? full;
 
   /// The whole value.
   final String full;
@@ -85,8 +96,15 @@ Future<VariableRead> readNowPlaying(ToolEnv env) async {
         'position_ms: ${now.positionMs}'
         '${now.durationMs == null ? '' : '; duration_ms: ${now.durationMs}'}',
   ].join('\n');
-  return VariableFound(full: text, short: text);
+  return VariableFound(
+    full: text,
+    short: text,
+    displayText: _songDisplay(row.title, row.artist),
+  );
 }
+
+String _songDisplay(String title, String? artist) =>
+    artist == null || artist.trim().isEmpty ? title : '$title · $artist';
 
 Future<VariableRead> _readQueue(ToolEnv env) async {
   final queue = await env.playback.queue();
@@ -117,7 +135,11 @@ Future<VariableRead> _readQueue(ToolEnv env) async {
     to = items.length;
     from = (to - queueShortEntries).clamp(0, to);
   }
-  return VariableFound(full: render(0, items.length), short: render(from, to));
+  return VariableFound(
+    full: render(0, items.length),
+    short: render(from, to),
+    displayText: 'queue (${items.length})',
+  );
 }
 
 Future<VariableRead> _readLyrics(ToolEnv env) async {

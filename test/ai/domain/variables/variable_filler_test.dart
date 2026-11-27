@@ -3,6 +3,7 @@ import 'package:kanaru/src/ai/domain/conversation/parts.dart';
 import 'package:kanaru/src/ai/domain/settings/tool_groups.dart';
 import 'package:kanaru/src/ai/domain/tools/tool_env.dart';
 import 'package:kanaru/src/ai/domain/variables/variable_catalog.dart';
+import 'package:kanaru/src/ai/domain/variables/title_rule.dart';
 import 'package:kanaru/src/ai/domain/variables/variable_filler.dart';
 
 import '../tools/fake_tool_env.dart';
@@ -63,6 +64,28 @@ void main() {
       const TextPart('.'),
     ]);
     expect(done.displayText, 'Who is Artist? Title: Song 3.');
+  });
+
+  test('now_playing shows as "title · artist" in the display text', () async {
+    final env = fakeEnv(playback: FakePlayback(now: _now(3)));
+    final done = await _fill('Tell me about {{now_playing}}', env) as FillDone;
+    expect(done.displayText, 'Tell me about Song 3 · Artist');
+    expect(done.displayText, isNot(contains('|')));
+    expect(done.displayText, isNot(contains("3|")));
+  });
+
+  test('long lyrics value gives a cut title without line breaks', () async {
+    final env = fakeEnv(
+      playback: FakePlayback(now: _now(1)),
+      lyrics: FakeLyrics(
+        LyricsFound(lines: List.filled(50, 'la la la'), synced: false),
+      ),
+    );
+    final done = await _fill('{{lyrics}}', env) as FillDone;
+    final title = conversationTitle(done.displayText);
+    expect(title.runes.length, lessThanOrEqualTo(41));
+    expect(title, endsWith('…'));
+    expect(title, isNot(contains('\n')));
   });
 
   test('lyrics missing -> not sent with reason', () async {
