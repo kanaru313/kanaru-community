@@ -65,7 +65,7 @@ class ChatMenu extends ConsumerWidget {
           [
             KMenuRow(
               title: l10n.aiChatNewTitle,
-              icon: KIcons.add,
+              icon: KIcons.compose,
               shortcutLabel: desktop ? 'Ctrl+Shift+O' : null,
               onTap: () => unawaited(view.startNewConversation()),
             ),

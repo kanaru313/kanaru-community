@@ -144,6 +144,9 @@ abstract final class KIcons {
   // First-run setup.
   static const IconData dragIndicator =
       FluentIcons.re_order_dots_vertical_24_regular;
+
+  /// New conversation / write a new message.
+  static const IconData compose = FluentIcons.compose_24_regular;
   static const IconData add = FluentIcons.add_24_regular;
   static const IconData download = FluentIcons.arrow_download_24_regular;
   static const IconData upload = FluentIcons.arrow_upload_24_regular;
