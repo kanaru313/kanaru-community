@@ -214,6 +214,41 @@ void main() {
   });
 
   group('rename', () {
+    testWidgets('closing the chat mid-rename ends rename mode', (tester) async {
+      final setup = await _pump(tester);
+      await tester.tap(find.text('New conversation'));
+      await tester.pump();
+      expect(setup.view.renaming, isTrue);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: setup.container,
+          child: const MaterialApp(home: _Frame(mounted: false)),
+        ),
+      );
+      await tester.pump();
+
+      expect(setup.view.renaming, isFalse);
+    });
+
+    test(
+      'opening another conversation ends rename mode without a chat',
+      () async {
+        final fake = FakeChatSession()..used.add(1);
+        final container = ProviderContainer(
+          overrides: chatUiOverrides(session: fake),
+        );
+        addTearDown(container.dispose);
+        container.read(chatViewProvider);
+        container.read(chatViewProvider.notifier).startRename('Old');
+        expect(container.read(chatViewProvider).renaming, isTrue);
+
+        await container.read(chatSessionProvider.notifier).newConversation();
+
+        expect(container.read(chatViewProvider).renaming, isFalse);
+      },
+    );
+
     testWidgets('tap title edits, Enter saves, Esc cancels', (tester) async {
       final setup = await _pump(tester);
       await tester.tap(find.text('New conversation'));
