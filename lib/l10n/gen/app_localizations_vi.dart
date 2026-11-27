@@ -738,6 +738,100 @@ class AppLocalizationsVi extends AppLocalizations {
   String get playbackQueueEmpty => 'Hàng đợi trống';
 
   @override
+  String get playbackNoticeRetry => 'Thử lại';
+
+  @override
+  String get playbackNoticeOpenSettings => 'Mở cài đặt';
+
+  @override
+  String playbackNoticeFailedLink(String title, String source, String code) {
+    return 'Không phát được “$title”: $source không trả link phát ($code)';
+  }
+
+  @override
+  String playbackNoticeFailedFormat(String title, String source) {
+    return 'Không phát được “$title”: Kanaru chưa phát được định dạng của $source';
+  }
+
+  @override
+  String playbackNoticeFailedGone(String title, String source) {
+    return 'Bỏ qua “$title”: không còn trên $source';
+  }
+
+  @override
+  String playbackNoticeFailedCode(String title, String code) {
+    return 'Không phát được “$title” ($code)';
+  }
+
+  @override
+  String get playbackNoticePausedOffline =>
+      'Không có mạng: chưa phát được bài trực tuyến';
+
+  @override
+  String playbackNoticePausedRateLimited(
+    String source,
+    String length,
+    String time,
+  ) {
+    return '$source tạm dừng $length (429). Phát tiếp được sau $time.';
+  }
+
+  @override
+  String playbackNoticePauseEnded(String source) {
+    return '$source đã hết tạm dừng.';
+  }
+
+  @override
+  String playbackNoticePauseMinutes(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n phút',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String playbackNoticePauseSeconds(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n giây',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String playbackNoticePausedNeedsConfig(String source) {
+    return '$source cần cấu hình trước khi phát.';
+  }
+
+  @override
+  String playbackNoticePausedBusy(String source) {
+    return '$source chưa trả lời: tạm dừng ở bài này.';
+  }
+
+  @override
+  String playbackNoticeSkippedRemoved(String title) {
+    return 'Bỏ qua “$title”: plugin đã gỡ';
+  }
+
+  @override
+  String playbackNoticeSkippedRemovedMany(String title, String others) {
+    return 'Bỏ qua “$title” và $others bài nữa: plugin đã gỡ';
+  }
+
+  @override
+  String playbackNoticeSkippedLocked(String title) {
+    return 'Bỏ qua “$title”: cần Kanaru Pro';
+  }
+
+  @override
+  String playbackNoticeSkippedLockedMany(String title, String others) {
+    return 'Bỏ qua “$title” và $others bài nữa: cần Kanaru Pro';
+  }
+
+  @override
   String get libraryTabSongs => 'Bài hát';
 
   @override
@@ -8830,4 +8924,79 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get aiSetEdDiscardConfirm => 'Bỏ';
+
+  @override
+  String get onlineTitle => 'Trực tuyến';
+
+  @override
+  String onlineSearchTooltip(String source) {
+    return 'Tìm trên $source hoặc dán link';
+  }
+
+  @override
+  String get onlineNoSourceTitle => 'Chưa có nguồn trực tuyến nào.';
+
+  @override
+  String get onlineNoSourceMessage =>
+      'Cài một plugin nguồn nhạc (Audius, ZingMP3, Radio Browser…) để tìm và nghe nhạc trực tuyến.';
+
+  @override
+  String get onlineAddSource => 'Thêm nguồn nhạc';
+
+  @override
+  String get onlineOfflineTitle => 'Không có mạng.';
+
+  @override
+  String get onlineOfflineMessage =>
+      'Trực tuyến cần mạng. Nhạc trong máy vẫn nghe được ở Thư viện.';
+
+  @override
+  String get onlineRetry => 'Thử lại';
+
+  @override
+  String onlineRetryIn(String time) {
+    return 'Thử lại sau $time';
+  }
+
+  @override
+  String onlineServerDownTitle(String source) {
+    return 'Không kết nối được $source.';
+  }
+
+  @override
+  String get onlineServerDownMessage =>
+      'Máy chủ của nguồn không trả lời. Thử lại sau ít phút.';
+
+  @override
+  String onlineNeedsConfigTitle(String field) {
+    return 'Cần cấu hình: $field';
+  }
+
+  @override
+  String onlineNeedsConfigMessage(String source) {
+    return '$source cần ô này trước khi tải được nội dung.';
+  }
+
+  @override
+  String get onlineOpenPluginSettings => 'Mở cài đặt plugin';
+
+  @override
+  String onlineRateLimitedTitle(String length) {
+    return 'Tạm dừng $length: máy chủ báo quá nhiều yêu cầu (429)';
+  }
+
+  @override
+  String get onlineRateLimitedMessage => 'Đang hiện nội dung đã tải trước đó.';
+
+  @override
+  String onlineInvalidDataTitle(String source) {
+    return '$source trả về dữ liệu không đọc được';
+  }
+
+  @override
+  String get onlineInvalidDataMessage =>
+      'Trang của nguồn có thể đã đổi. Bản cập nhật plugin thường sửa được.';
+
+  @override
+  String get onlineCheckUpdates => 'Kiểm tra cập nhật';
 }

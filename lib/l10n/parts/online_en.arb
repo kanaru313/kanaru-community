@@ -1,0 +1,70 @@
+{
+  "onlineTitle": "Online",
+  "onlineSearchTooltip": "Search {source} or paste a link",
+  "@onlineSearchTooltip": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineNoSourceTitle": "No online sources yet.",
+  "onlineNoSourceMessage": "Install a music source plugin (Audius, ZingMP3, Radio Browser…) to search and play music online.",
+  "onlineAddSource": "Add a music source",
+  "onlineOfflineTitle": "No network.",
+  "onlineOfflineMessage": "Online needs a network. Music on this device still plays from Library.",
+  "onlineRetry": "Retry",
+  "onlineRetryIn": "Retry in {time}",
+  "@onlineRetryIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineServerDownTitle": "Could not reach {source}.",
+  "@onlineServerDownTitle": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineServerDownMessage": "The source's server is not answering. Try again in a few minutes.",
+  "onlineNeedsConfigTitle": "Needs setting up: {field}",
+  "@onlineNeedsConfigTitle": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineNeedsConfigMessage": "{source} needs this field before it can load anything.",
+  "@onlineNeedsConfigMessage": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineOpenPluginSettings": "Open plugin settings",
+  "onlineRateLimitedTitle": "Paused for {length}: the server reported too many requests (429)",
+  "@onlineRateLimitedTitle": {
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineRateLimitedMessage": "Showing what was loaded before.",
+  "onlineInvalidDataTitle": "{source} returned data Kanaru cannot read",
+  "@onlineInvalidDataTitle": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineInvalidDataMessage": "The source's site may have changed. A plugin update usually fixes this.",
+  "onlineCheckUpdates": "Check for updates"
+}

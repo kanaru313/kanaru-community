@@ -20,6 +20,7 @@ class PageHeader extends StatelessWidget {
     this.actions = const [],
     this.backTooltip,
     this.titleInContent = false,
+    this.shellActions = true,
   });
 
   final String title;
@@ -33,6 +34,11 @@ class PageHeader extends StatelessWidget {
   /// while that name is scrolled out of sight (see [KDetailTitleHost]) and
   /// stays empty otherwise.
   final bool titleInContent;
+
+  /// False: the page shows only [actions], none of the enclosing
+  /// [PageHeaderScope]'s `trailing` / `rootTrailing` (pages whose header holds
+  /// their own search and source buttons). The root page's `leading` stays.
+  final bool shellActions;
 
   @override
   Widget build(BuildContext context) {
@@ -66,8 +72,8 @@ class PageHeader extends StatelessWidget {
                   ),
           ),
           ...actions,
-          ...?scope?.trailing,
-          if (isRoot) ...?scope?.rootTrailing,
+          if (shellActions) ...?scope?.trailing,
+          if (isRoot && shellActions) ...?scope?.rootTrailing,
         ],
       ),
     );

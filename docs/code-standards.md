@@ -109,6 +109,7 @@ same keys.
 | `scan` | `scan…` | scanner lane |
 | `playback` | `playback…` | playback lane |
 | `library` | `library…` | library UI lane |
+| `online` | `online…` | online lane (other parts: see `arbParts` in `tool/merge_arb.dart`) |
 
 Workflow:
 

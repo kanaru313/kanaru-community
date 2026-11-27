@@ -806,6 +806,102 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playbackQueueEmpty => 'The queue is empty';
 
   @override
+  String get playbackNoticeRetry => 'Retry';
+
+  @override
+  String get playbackNoticeOpenSettings => 'Open settings';
+
+  @override
+  String playbackNoticeFailedLink(String title, String source, String code) {
+    return 'Could not play “$title”: $source returned no stream link ($code)';
+  }
+
+  @override
+  String playbackNoticeFailedFormat(String title, String source) {
+    return 'Could not play “$title”: Kanaru cannot play $source\'s format yet';
+  }
+
+  @override
+  String playbackNoticeFailedGone(String title, String source) {
+    return 'Skipped “$title”: no longer on $source';
+  }
+
+  @override
+  String playbackNoticeFailedCode(String title, String code) {
+    return 'Could not play “$title” ($code)';
+  }
+
+  @override
+  String get playbackNoticePausedOffline =>
+      'No network: online tracks cannot play';
+
+  @override
+  String playbackNoticePausedRateLimited(
+    String source,
+    String length,
+    String time,
+  ) {
+    return '$source paused for $length (429). Playback can resume in $time.';
+  }
+
+  @override
+  String playbackNoticePauseEnded(String source) {
+    return '$source is no longer paused.';
+  }
+
+  @override
+  String playbackNoticePauseMinutes(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n minutes',
+      one: '1 minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String playbackNoticePauseSeconds(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n seconds',
+      one: '1 second',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String playbackNoticePausedNeedsConfig(String source) {
+    return '$source needs setting up before it can play.';
+  }
+
+  @override
+  String playbackNoticePausedBusy(String source) {
+    return '$source is not answering: paused at this track.';
+  }
+
+  @override
+  String playbackNoticeSkippedRemoved(String title) {
+    return 'Skipped “$title”: its plugin was removed';
+  }
+
+  @override
+  String playbackNoticeSkippedRemovedMany(String title, String others) {
+    return 'Skipped “$title” and $others more: their plugin was removed';
+  }
+
+  @override
+  String playbackNoticeSkippedLocked(String title) {
+    return 'Skipped “$title”: needs Kanaru Pro';
+  }
+
+  @override
+  String playbackNoticeSkippedLockedMany(String title, String others) {
+    return 'Skipped “$title” and $others more: need Kanaru Pro';
+  }
+
+  @override
   String get libraryTabSongs => 'Songs';
 
   @override
@@ -9517,4 +9613,79 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiSetEdDiscardConfirm => 'Discard';
+
+  @override
+  String get onlineTitle => 'Online';
+
+  @override
+  String onlineSearchTooltip(String source) {
+    return 'Search $source or paste a link';
+  }
+
+  @override
+  String get onlineNoSourceTitle => 'No online sources yet.';
+
+  @override
+  String get onlineNoSourceMessage =>
+      'Install a music source plugin (Audius, ZingMP3, Radio Browser…) to search and play music online.';
+
+  @override
+  String get onlineAddSource => 'Add a music source';
+
+  @override
+  String get onlineOfflineTitle => 'No network.';
+
+  @override
+  String get onlineOfflineMessage =>
+      'Online needs a network. Music on this device still plays from Library.';
+
+  @override
+  String get onlineRetry => 'Retry';
+
+  @override
+  String onlineRetryIn(String time) {
+    return 'Retry in $time';
+  }
+
+  @override
+  String onlineServerDownTitle(String source) {
+    return 'Could not reach $source.';
+  }
+
+  @override
+  String get onlineServerDownMessage =>
+      'The source\'s server is not answering. Try again in a few minutes.';
+
+  @override
+  String onlineNeedsConfigTitle(String field) {
+    return 'Needs setting up: $field';
+  }
+
+  @override
+  String onlineNeedsConfigMessage(String source) {
+    return '$source needs this field before it can load anything.';
+  }
+
+  @override
+  String get onlineOpenPluginSettings => 'Open plugin settings';
+
+  @override
+  String onlineRateLimitedTitle(String length) {
+    return 'Paused for $length: the server reported too many requests (429)';
+  }
+
+  @override
+  String get onlineRateLimitedMessage => 'Showing what was loaded before.';
+
+  @override
+  String onlineInvalidDataTitle(String source) {
+    return '$source returned data Kanaru cannot read';
+  }
+
+  @override
+  String get onlineInvalidDataMessage =>
+      'The source\'s site may have changed. A plugin update usually fixes this.';
+
+  @override
+  String get onlineCheckUpdates => 'Check for updates';
 }

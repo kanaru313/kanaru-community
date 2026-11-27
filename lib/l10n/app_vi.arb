@@ -475,6 +475,148 @@
     }
   },
   "playbackQueueEmpty": "Hàng đợi trống",
+  "playbackNoticeRetry": "Thử lại",
+  "playbackNoticeOpenSettings": "Mở cài đặt",
+  "playbackNoticeFailedLink": "Không phát được “{title}”: {source} không trả link phát ({code})",
+  "@playbackNoticeFailedLink": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "source": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeFailedFormat": "Không phát được “{title}”: Kanaru chưa phát được định dạng của {source}",
+  "@playbackNoticeFailedFormat": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeFailedGone": "Bỏ qua “{title}”: không còn trên {source}",
+  "@playbackNoticeFailedGone": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeFailedCode": "Không phát được “{title}” ({code})",
+  "@playbackNoticeFailedCode": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticePausedOffline": "Không có mạng: chưa phát được bài trực tuyến",
+  "playbackNoticePausedRateLimited": "{source} tạm dừng {length} (429). Phát tiếp được sau {time}.",
+  "@playbackNoticePausedRateLimited": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      },
+      "length": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticePauseEnded": "{source} đã hết tạm dừng.",
+  "@playbackNoticePauseEnded": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticePauseMinutes": "{n, plural, other{{n} phút}}",
+  "@playbackNoticePauseMinutes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "playbackNoticePauseSeconds": "{n, plural, other{{n} giây}}",
+  "@playbackNoticePauseSeconds": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "playbackNoticePausedNeedsConfig": "{source} cần cấu hình trước khi phát.",
+  "@playbackNoticePausedNeedsConfig": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticePausedBusy": "{source} chưa trả lời: tạm dừng ở bài này.",
+  "@playbackNoticePausedBusy": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeSkippedRemoved": "Bỏ qua “{title}”: plugin đã gỡ",
+  "@playbackNoticeSkippedRemoved": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeSkippedRemovedMany": "Bỏ qua “{title}” và {others} bài nữa: plugin đã gỡ",
+  "@playbackNoticeSkippedRemovedMany": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "others": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeSkippedLocked": "Bỏ qua “{title}”: cần Kanaru Pro",
+  "@playbackNoticeSkippedLocked": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeSkippedLockedMany": "Bỏ qua “{title}” và {others} bài nữa: cần Kanaru Pro",
+  "@playbackNoticeSkippedLockedMany": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "others": {
+        "type": "String"
+      }
+    }
+  },
   "libraryTabSongs": "Bài hát",
   "libraryTabAlbums": "Album",
   "libraryShelfSeeAll": "Xem tất cả",
@@ -7393,5 +7535,73 @@
   "aiSetEdDiscardTitle": "Bỏ thay đổi?",
   "aiSetEdDiscardBody": "Thay đổi của prompt này chưa được lưu.",
   "aiSetEdDiscardKeep": "Tiếp tục sửa",
-  "aiSetEdDiscardConfirm": "Bỏ"
+  "aiSetEdDiscardConfirm": "Bỏ",
+  "onlineTitle": "Trực tuyến",
+  "onlineSearchTooltip": "Tìm trên {source} hoặc dán link",
+  "@onlineSearchTooltip": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineNoSourceTitle": "Chưa có nguồn trực tuyến nào.",
+  "onlineNoSourceMessage": "Cài một plugin nguồn nhạc (Audius, ZingMP3, Radio Browser…) để tìm và nghe nhạc trực tuyến.",
+  "onlineAddSource": "Thêm nguồn nhạc",
+  "onlineOfflineTitle": "Không có mạng.",
+  "onlineOfflineMessage": "Trực tuyến cần mạng. Nhạc trong máy vẫn nghe được ở Thư viện.",
+  "onlineRetry": "Thử lại",
+  "onlineRetryIn": "Thử lại sau {time}",
+  "@onlineRetryIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineServerDownTitle": "Không kết nối được {source}.",
+  "@onlineServerDownTitle": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineServerDownMessage": "Máy chủ của nguồn không trả lời. Thử lại sau ít phút.",
+  "onlineNeedsConfigTitle": "Cần cấu hình: {field}",
+  "@onlineNeedsConfigTitle": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineNeedsConfigMessage": "{source} cần ô này trước khi tải được nội dung.",
+  "@onlineNeedsConfigMessage": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineOpenPluginSettings": "Mở cài đặt plugin",
+  "onlineRateLimitedTitle": "Tạm dừng {length}: máy chủ báo quá nhiều yêu cầu (429)",
+  "@onlineRateLimitedTitle": {
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineRateLimitedMessage": "Đang hiện nội dung đã tải trước đó.",
+  "onlineInvalidDataTitle": "{source} trả về dữ liệu không đọc được",
+  "@onlineInvalidDataTitle": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineInvalidDataMessage": "Trang của nguồn có thể đã đổi. Bản cập nhật plugin thường sửa được.",
+  "onlineCheckUpdates": "Kiểm tra cập nhật"
 }

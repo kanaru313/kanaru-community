@@ -475,6 +475,148 @@
     }
   },
   "playbackQueueEmpty": "The queue is empty",
+  "playbackNoticeRetry": "Retry",
+  "playbackNoticeOpenSettings": "Open settings",
+  "playbackNoticeFailedLink": "Could not play “{title}”: {source} returned no stream link ({code})",
+  "@playbackNoticeFailedLink": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "source": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeFailedFormat": "Could not play “{title}”: Kanaru cannot play {source}'s format yet",
+  "@playbackNoticeFailedFormat": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeFailedGone": "Skipped “{title}”: no longer on {source}",
+  "@playbackNoticeFailedGone": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeFailedCode": "Could not play “{title}” ({code})",
+  "@playbackNoticeFailedCode": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticePausedOffline": "No network: online tracks cannot play",
+  "playbackNoticePausedRateLimited": "{source} paused for {length} (429). Playback can resume in {time}.",
+  "@playbackNoticePausedRateLimited": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      },
+      "length": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticePauseEnded": "{source} is no longer paused.",
+  "@playbackNoticePauseEnded": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticePauseMinutes": "{n, plural, =1{1 minute} other{{n} minutes}}",
+  "@playbackNoticePauseMinutes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "playbackNoticePauseSeconds": "{n, plural, =1{1 second} other{{n} seconds}}",
+  "@playbackNoticePauseSeconds": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "playbackNoticePausedNeedsConfig": "{source} needs setting up before it can play.",
+  "@playbackNoticePausedNeedsConfig": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticePausedBusy": "{source} is not answering: paused at this track.",
+  "@playbackNoticePausedBusy": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeSkippedRemoved": "Skipped “{title}”: its plugin was removed",
+  "@playbackNoticeSkippedRemoved": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeSkippedRemovedMany": "Skipped “{title}” and {others} more: their plugin was removed",
+  "@playbackNoticeSkippedRemovedMany": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "others": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeSkippedLocked": "Skipped “{title}”: needs Kanaru Pro",
+  "@playbackNoticeSkippedLocked": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackNoticeSkippedLockedMany": "Skipped “{title}” and {others} more: need Kanaru Pro",
+  "@playbackNoticeSkippedLockedMany": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "others": {
+        "type": "String"
+      }
+    }
+  },
   "libraryTabSongs": "Songs",
   "libraryTabAlbums": "Albums",
   "libraryShelfSeeAll": "See all",
@@ -7533,5 +7675,73 @@
   "aiSetEdDiscardTitle": "Discard changes?",
   "aiSetEdDiscardBody": "The changes to this prompt are not saved.",
   "aiSetEdDiscardKeep": "Keep editing",
-  "aiSetEdDiscardConfirm": "Discard"
+  "aiSetEdDiscardConfirm": "Discard",
+  "onlineTitle": "Online",
+  "onlineSearchTooltip": "Search {source} or paste a link",
+  "@onlineSearchTooltip": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineNoSourceTitle": "No online sources yet.",
+  "onlineNoSourceMessage": "Install a music source plugin (Audius, ZingMP3, Radio Browser…) to search and play music online.",
+  "onlineAddSource": "Add a music source",
+  "onlineOfflineTitle": "No network.",
+  "onlineOfflineMessage": "Online needs a network. Music on this device still plays from Library.",
+  "onlineRetry": "Retry",
+  "onlineRetryIn": "Retry in {time}",
+  "@onlineRetryIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineServerDownTitle": "Could not reach {source}.",
+  "@onlineServerDownTitle": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineServerDownMessage": "The source's server is not answering. Try again in a few minutes.",
+  "onlineNeedsConfigTitle": "Needs setting up: {field}",
+  "@onlineNeedsConfigTitle": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineNeedsConfigMessage": "{source} needs this field before it can load anything.",
+  "@onlineNeedsConfigMessage": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineOpenPluginSettings": "Open plugin settings",
+  "onlineRateLimitedTitle": "Paused for {length}: the server reported too many requests (429)",
+  "@onlineRateLimitedTitle": {
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineRateLimitedMessage": "Showing what was loaded before.",
+  "onlineInvalidDataTitle": "{source} returned data Kanaru cannot read",
+  "@onlineInvalidDataTitle": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineInvalidDataMessage": "The source's site may have changed. A plugin update usually fixes this.",
+  "onlineCheckUpdates": "Check for updates"
 }

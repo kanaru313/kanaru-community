@@ -1,0 +1,70 @@
+{
+  "onlineTitle": "Trực tuyến",
+  "onlineSearchTooltip": "Tìm trên {source} hoặc dán link",
+  "@onlineSearchTooltip": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineNoSourceTitle": "Chưa có nguồn trực tuyến nào.",
+  "onlineNoSourceMessage": "Cài một plugin nguồn nhạc (Audius, ZingMP3, Radio Browser…) để tìm và nghe nhạc trực tuyến.",
+  "onlineAddSource": "Thêm nguồn nhạc",
+  "onlineOfflineTitle": "Không có mạng.",
+  "onlineOfflineMessage": "Trực tuyến cần mạng. Nhạc trong máy vẫn nghe được ở Thư viện.",
+  "onlineRetry": "Thử lại",
+  "onlineRetryIn": "Thử lại sau {time}",
+  "@onlineRetryIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineServerDownTitle": "Không kết nối được {source}.",
+  "@onlineServerDownTitle": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineServerDownMessage": "Máy chủ của nguồn không trả lời. Thử lại sau ít phút.",
+  "onlineNeedsConfigTitle": "Cần cấu hình: {field}",
+  "@onlineNeedsConfigTitle": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineNeedsConfigMessage": "{source} cần ô này trước khi tải được nội dung.",
+  "@onlineNeedsConfigMessage": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineOpenPluginSettings": "Mở cài đặt plugin",
+  "onlineRateLimitedTitle": "Tạm dừng {length}: máy chủ báo quá nhiều yêu cầu (429)",
+  "@onlineRateLimitedTitle": {
+    "placeholders": {
+      "length": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineRateLimitedMessage": "Đang hiện nội dung đã tải trước đó.",
+  "onlineInvalidDataTitle": "{source} trả về dữ liệu không đọc được",
+  "@onlineInvalidDataTitle": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "onlineInvalidDataMessage": "Trang của nguồn có thể đã đổi. Bản cập nhật plugin thường sửa được.",
+  "onlineCheckUpdates": "Kiểm tra cập nhật"
+}
