@@ -31,7 +31,10 @@ class SeekbarFactsBlock extends StatelessWidget {
           label: l10n.pluginsSkFactPackage,
           lines: [
             DetailLine(
-              l10n.pluginsSkPackageSize(files, formatPackageSize(package.size)),
+              l10n.pluginsSkPackageSize(
+                files,
+                formatPackageSize(package.keptBytes),
+              ),
             ),
           ],
         ),

@@ -80,6 +80,7 @@ class _UpdateBandState extends ConsumerState<UpdateBand> {
       ref.read(installOpsProvider),
       installId: widget.data.row.installId,
       name: widget.data.row.name,
+      kind: widget.data.kind,
     ),
   );
 

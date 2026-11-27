@@ -30,6 +30,7 @@ String encodeCatalog(Catalog catalog) => jsonEncode({
         'description': e.description,
         'author': e.author,
         'languages': e.languages,
+        if (e.features.isNotEmpty) 'features': e.features,
         if (e.sha256 != null) 'sha256': e.sha256,
         if (e.size != null) 'size': e.size,
       },

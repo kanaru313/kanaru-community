@@ -9,6 +9,8 @@ import 'package:kanaru/src/plugins/domain/install/prepare_result.dart';
 import 'package:kanaru/src/plugins/domain/package/plugin_kind.dart';
 import 'package:kanaru/src/screens/plugins/install/install_progress.dart';
 import 'package:kanaru/src/screens/plugins/install/package_flow.dart';
+import 'package:kanaru/src/screens/plugins/install/source_card.dart'
+    show formatPackageSize;
 import 'package:material_ui/material_ui.dart' show MaterialApp, Scaffold;
 
 import '../support/install_fixtures.dart';
@@ -69,6 +71,28 @@ void main() {
         // There is no code to read, so no AI review.
         expect(find.text('Ask AI about this plugin'), findsNothing);
         expect(find.text('Coming soon'), findsNothing);
+      });
+
+      testWidgets('the package size is the unpacked size of the kept files', (
+        tester,
+      ) async {
+        final held = heldSeekbar();
+        final pkg = held.package;
+        final kept =
+            pkg.manifestBytes.length +
+            pkg.assets.values.fold<int>(0, (n, b) => n + b.length);
+        expect(pkg.keptBytes, kept);
+        final ops = FakeInstallOps()..onPrepare = () async => Ok(held);
+        await pumpFlowHost(
+          tester,
+          ops: ops,
+          size: size,
+          onTap: (c) => _open(c, ops),
+        );
+        expect(
+          find.text('plugin.json + 1 PNG image · ${formatPackageSize(kept)}'),
+          findsOneWidget,
+        );
       });
 
       testWidgets('a wave base cannot hold the ★', (tester) async {

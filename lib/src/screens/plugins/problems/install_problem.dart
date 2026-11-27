@@ -7,10 +7,6 @@ import 'problem_reasons.dart';
 
 export 'problem_reasons.dart';
 
-/// The format feature a package uses that this app cannot draw yet: an
-/// animated Lottie thumb.
-const lottieFeature = 'seekbar.thumb.lottie';
-
 /// Which dialog explains a package that cannot be installed.
 enum InstallProblemKind {
   /// "Không cài được" with a box of reasons.

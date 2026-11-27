@@ -127,12 +127,15 @@ List<StoreItem> buildStoreItems(
 /// name, author, repository name and hosts; every word must be found.
 bool storeItemMatches(StoreItem item, StoreFilter filter) {
   final entry = item.entry;
+  // An entry that needs a newer app has no row, only the footer count: the
+  // default hiding of cosmetic kinds does not apply to it (explicit Loại
+  // chips and `#tag` still do).
   final installed =
       item.state == StoreItemState.installed ||
       item.state == StoreItemState.updateAvailable;
   if (!storeKindVisible(
     kind: entry.kind,
-    installed: installed,
+    installed: installed || item.state == StoreItemState.needsNewerApp,
     filter: filter,
   )) {
     return false;

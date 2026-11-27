@@ -46,4 +46,11 @@ class PluginPackage {
 
   /// Size of the zip file in bytes.
   final int size;
+
+  /// Unpacked size of the files an install keeps: `plugin.json`, the icon and
+  /// the assets (the same files `PluginFiles.packageBytes` adds up on disk).
+  int get keptBytes =>
+      manifestBytes.length +
+      (icon?.length ?? 0) +
+      assets.values.fold(0, (sum, bytes) => sum + bytes.length);
 }

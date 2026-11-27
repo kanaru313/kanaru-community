@@ -5256,7 +5256,7 @@
       }
     }
   },
-  "pluginsRemoveTitle": "Gỡ {name}?",
+  "pluginsRemoveTitle": "Gỡ “{name}”?",
   "@pluginsRemoveTitle": {
     "placeholders": {
       "name": {
@@ -5279,7 +5279,7 @@
   "pluginsRemoveCode": "Code của plugin",
   "pluginsRemoveSettings": "Cài đặt của plugin",
   "pluginsRemoveConfirm": "Gỡ",
-  "pluginsRemoved": "Đã gỡ {name}",
+  "pluginsRemoved": "Đã gỡ “{name}”",
   "@pluginsRemoved": {
     "placeholders": {
       "name": {

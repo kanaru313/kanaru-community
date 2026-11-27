@@ -49,6 +49,7 @@ final pluginAssetProvider = FutureProvider.autoDispose
       (ref, key) => ref
           .watch(pluginFilesProvider)
           .readAssetAt(key.installId, key.packageDir, key.name),
+      retry: _noRetry,
     );
 
 Duration? _noRetry(int count, Object error) => null;

@@ -122,11 +122,12 @@ Future<void> reviewPluginUpdate(
   InstallOps ops, {
   required String installId,
   required String name,
+  PluginKind? kind,
 }) => runPackageFlow(
   context,
   ops: ops,
   start: () => ops.prepareUpdate(installId),
-  subject: PackageSubject(name),
+  subject: PackageSubject(name, kind: kind),
   expectUpdate: true,
 );
 

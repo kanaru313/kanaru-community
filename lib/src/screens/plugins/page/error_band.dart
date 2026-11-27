@@ -98,6 +98,7 @@ class _PluginErrorBandState extends ConsumerState<PluginErrorBand> {
       ref.read(installOpsProvider),
       installId: widget.data.row.installId,
       name: widget.data.row.name,
+      kind: widget.data.kind,
     );
     if (mounted) setState(() => _repairing = false);
   }

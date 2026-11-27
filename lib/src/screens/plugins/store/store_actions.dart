@@ -77,6 +77,7 @@ StoreActions _wiredStoreActions(Ref ref) {
       ops(),
       installId: row.installId,
       name: row.name,
+      kind: row.kind,
     ),
     onUpdate: (context, row) => updatePlugin(
       context,

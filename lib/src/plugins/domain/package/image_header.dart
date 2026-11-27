@@ -4,7 +4,8 @@ import 'package_limits.dart';
 
 /// Why an asset image is refused (`InvalidAsset.reason`).
 abstract final class ImageProblem {
-  /// Not a PNG or WebP, truncated, or a chunk the reader does not know.
+  /// Not a PNG or WebP, a PNG whose first chunk is not a complete IHDR, a
+  /// WebP whose header is short or has an unknown format tag.
   static const format = 'format';
 
   /// An animated PNG or WebP.
@@ -32,10 +33,13 @@ class ImageHeader {
 const _pngSignature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 
 /// Reads the dimensions of the PNG or WebP [bytes] from its header only; the
-/// image is never decoded. A PNG cut off after its IHDR chunk passes here
-/// (install) and fails to decode at load, where the part that uses it is
-/// dropped. [fileName] (`t.png`) must end in the extension
-/// that matches the data. Anything unknown is refused (fail closed).
+/// image is never decoded. Refused: a wrong signature, a PNG without a
+/// complete IHDR first, an animated PNG (`acTL` before `IDAT`) or WebP, a
+/// WebP with an unknown tag or short header, a wrong extension, a side of 0 or
+/// over the limit. Accepted: unknown PNG chunks (only `acTL` and `IDAT` are
+/// looked for) and a PNG cut off after its IHDR; such a file fails to decode
+/// at load, where the part that uses it is dropped. [fileName] (`t.png`) must
+/// end in the extension that matches the data.
 ImageHeader readImageHeader(String fileName, Uint8List bytes) {
   final String type;
   final int width;

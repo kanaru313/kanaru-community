@@ -289,14 +289,14 @@ void main() {
       locale: const Locale('vi'),
       onTap: (c) => removePluginFlow(c, ops, 'id-demo'),
     );
-    expect(find.text('Gỡ Demo?'), findsOneWidget);
+    expect(find.text('Gỡ “Demo”?'), findsOneWidget);
     expect(find.widgetWithText(FilledButton, 'Gỡ'), findsOneWidget);
     // The box lists files that are deleted: still "xoá".
     expect(find.text('Sẽ bị xoá'), findsOneWidget);
     await tester.tap(find.widgetWithText(FilledButton, 'Gỡ'));
     await tester.pumpAndSettle();
     expect(ops.removed, ['id-demo']);
-    expect(find.text('Đã gỡ Demo'), findsOneWidget);
+    expect(find.text('Đã gỡ “Demo”'), findsOneWidget);
   });
 
   testWidgets('Vietnamese failure and tooltip say gỡ', (tester) async {

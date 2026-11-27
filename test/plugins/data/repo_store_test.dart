@@ -203,6 +203,10 @@ void main() {
             'size': 1234,
             'languages': ['vi', 'en'],
           }),
+          entryJson({
+            'slug': 'vinyl',
+            'features': ['seekbar.lottie'],
+          }),
         ]),
       );
       final back = decodeCatalog(
@@ -211,7 +215,7 @@ void main() {
         AddressKind.public,
       ).fold((c) => c, (e) => fail('$e'));
       expect(back.name, catalog.name);
-      expect(back.entries, hasLength(2));
+      expect(back.entries, hasLength(3));
       expect(
         back.entries[0].path.toString(),
         'https://repo.example.com/netease/plugin.zip',
@@ -224,6 +228,9 @@ void main() {
       expect(back.entries[1].sha256, 'a' * 64);
       expect(back.entries[1].size, 1234);
       expect(back.entries[1].languages, catalog.entries[1].languages);
+      expect(back.entries[2].features, ['seekbar.lottie']);
+      expect(back.entries[2].needsNewerApp, isTrue);
+      expect(back.entries[0].features, isEmpty);
     });
   });
 }

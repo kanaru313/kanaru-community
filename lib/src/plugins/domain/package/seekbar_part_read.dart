@@ -1,5 +1,6 @@
 import 'json_read.dart';
 import 'package_problem.dart';
+import 'seekbar_features.dart';
 import 'seekbar_field_read.dart';
 import 'seekbar_limits.dart';
 import 'seekbar_spec.dart';
@@ -105,7 +106,7 @@ SeekbarThumb _lottie(
         : f.refuse('$path.paused', 0);
   }
   if (f.strict) {
-    throw const PackageProblemError(UnsupportedFeature(_lottiePath));
+    throw const PackageProblemError(UnsupportedFeature(lottieFeature));
   }
   return LottieThumb(
     lottie: file,
@@ -117,8 +118,6 @@ SeekbarThumb _lottie(
     pausedFrame: pausedFrame,
   );
 }
-
-const _lottiePath = 'seekbar.thumb.lottie';
 
 /// Reads `seekbar.emitter`; same strict / lenient contract as the thumb.
 SeekbarEmitter readSeekbarEmitter(Object? value, SeekbarFields f) {

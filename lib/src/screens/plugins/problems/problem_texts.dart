@@ -4,6 +4,7 @@ import '../../../plugins/domain/install/update_diff.dart';
 import '../../../plugins/domain/package/host_rules.dart';
 import '../../../plugins/domain/package/image_header.dart' show ImageProblem;
 import '../../../plugins/domain/package/package_problem.dart';
+import '../../../plugins/domain/package/seekbar_features.dart';
 import 'install_problem.dart';
 
 /// The line of the "Lý do" box for [reason].

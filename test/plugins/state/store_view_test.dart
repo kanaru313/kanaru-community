@@ -251,8 +251,8 @@ void main() {
       expect(_names(view.notInstalled), ['Lyr']);
       expect(
         view.needsNewerAppCount,
-        0,
-        reason: 'a hidden entry is not counted',
+        1,
+        reason: 'the default hides only the row, the footer still counts it',
       );
       expect(c.read(storeFilterProvider).isEmpty, isTrue);
     });

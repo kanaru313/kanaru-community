@@ -6747,7 +6747,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String pluginsRemoveTitle(String name) {
-    return 'Gỡ $name?';
+    return 'Gỡ “$name”?';
   }
 
   @override
@@ -6769,7 +6769,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String pluginsRemoved(String name) {
-    return 'Đã gỡ $name';
+    return 'Đã gỡ “$name”';
   }
 
   @override

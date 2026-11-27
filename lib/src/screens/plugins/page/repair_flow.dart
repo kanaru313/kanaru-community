@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
 import '../../../plugins/domain/install/install_result.dart';
+import '../../../plugins/domain/package/plugin_kind.dart';
 import '../../../plugins/state/install_ops.dart';
 import '../install/package_flow.dart';
 import '../updates/update_reasons.dart';
@@ -16,6 +17,7 @@ Future<bool> repairPluginFlow(
   InstallOps ops, {
   required String installId,
   required String name,
+  PluginKind? kind,
 }) async {
   final messenger = ScaffoldMessenger.of(context);
   final l10n = AppLocalizations.of(context);
@@ -27,7 +29,13 @@ Future<bool> repairPluginFlow(
     case InstallNeedsReview() ||
         InstallRefused(failure: InstallFailure.needsReview):
       if (!context.mounted) return false;
-      await reviewPluginUpdate(context, ops, installId: installId, name: name);
+      await reviewPluginUpdate(
+        context,
+        ops,
+        installId: installId,
+        name: name,
+        kind: kind,
+      );
       return false;
     default:
       showAppSnackBarOn(

@@ -88,7 +88,7 @@ images, no code runs and nothing is fetched.
 
 | Field | Rule |
 |---|---|
-| `script`, `config`, `hosts` | `script` refused (`InvalidManifest('script')`); `config` and `hosts` absent or empty only (`requireNoConfig`, `seekbarHosts`); the catalog entry has no hosts either |
+| `script`, `config`, `hosts` | `script` refused (`InvalidManifest('script')`); `config` and `hosts` absent or empty only (`requireNoConfig`, `readNoHosts`); the catalog entry has no hosts either |
 | `metadata.license` | required, <= 64 code points |
 | `seekbar` | required block, refused on any other kind. **Strict at install** (`readSeekbarSpec(strict: true)`: a value outside its range, `seekbar_limits.dart`, is a problem) and **lenient at load** (the same reader clamps, so a stored spec from an older range still draws) |
 
@@ -105,7 +105,7 @@ fallback). The plugin page and install screen show the static facts
 Package layout: `plugin.json`, optional `icon.png`, and `assets/<name>.png|webp`
 (`^assets/[A-Za-z0-9_.-]{1,64}\.(png|webp)$`; a Lottie `.json` is named the
 same way). Only the assets the spec references are kept (`seekbar_assets.dart`,
-`referencedAssets`); other entries are never decoded. Image rules
+`referencedAssets`); other entries are never inflated. Image rules
 (`image_header.dart`, header only, no decode): PNG or WebP signature checked,
 not animated (APNG `acTL`, animated WebP refused), at most 2048 px a side, at
 most 512 KiB each. The zip and the unpacked total are at most 1 MiB
@@ -210,10 +210,10 @@ Order of work in `readZip`:
    A nested stray `plugin.zip` is not opened but counts.
 6. One top folder is stripped when `plugin.json` sits at `<dir>/plugin.json`
    and every entry is under `<dir>/` (Finder's `__MACOSX/` entries and
-   `.DS_Store` files are left out of that test and never decoded; they still
+   `.DS_Store` files are left out of that test and never inflated; they still
    count in the names, duplicate and size checks).
 7. Only `plugin.json` (64 KiB), `icon.png` (64 KiB) and flat `src/<name>.js`
-   (1 MiB each) are inflated; every other entry is never decoded. An entry
+   (1 MiB each) are inflated; every other entry is never inflated. An entry
    whose declared size is over its cap is refused before decoding.
 8. Inflating (`capped_output.dart`): stored or deflate only, not encrypted
    (`NotAZip`). Deflate goes through `ZLibDecoder().decodeStream(..., raw:
