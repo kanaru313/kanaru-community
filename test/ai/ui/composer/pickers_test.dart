@@ -4,10 +4,12 @@ import 'package:kanaru/src/ai/domain/output/chat_readiness.dart';
 import 'package:kanaru/src/ai/state/chat_view/composer_inputs.dart';
 import 'package:kanaru/src/ai/ui/chat_auto_confirm_provider.dart';
 import 'package:kanaru/src/ai/ui/auto_mode_confirm.dart';
+import 'package:kanaru/src/platform/state/settings_providers.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../support/icon_button_finders.dart';
 import '../../../support/kanaru_ui_finders.dart';
+import '../../../support/memory_settings_store.dart';
 import 'composer_harness.dart';
 
 const _pluginButton = 'AI service: Claude';
@@ -119,22 +121,32 @@ void main() {
     });
   });
 
-  group('permission picker without the settings dialog', () {
-    testWidgets('Tự động is refused until the shared confirm exists', (
-      tester,
-    ) async {
-      final setup = await pumpComposer(tester);
-      await tester.tap(byIconButton(_permissionButton));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Automatic'));
-      await tester.pumpAndSettle();
-      // The stand-in confirm says no: nothing changed, the picker stays.
-      expect(
-        setup.session.calls.where((c) => c.startsWith('permission')),
-        isEmpty,
-      );
-      expect(find.text('For this conversation only.'), findsOneWidget);
-    });
+  group('permission picker with the default confirm', () {
+    testWidgets(
+      'Tự động asks through the shared dialog; cancel changes nothing',
+      (tester) async {
+        final store = MemorySettingsStore();
+        final setup = await pumpComposer(
+          tester,
+          overrides: [settingsStoreProvider.overrideWithValue(store)],
+        );
+        await tester.tap(byIconButton(_permissionButton));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Automatic'));
+        await tester.pumpAndSettle();
+        expect(find.byType(AlertDialog), findsOneWidget);
+
+        await tester.tap(find.text('Cancel'));
+        await tester.pumpAndSettle();
+        expect(find.byType(AlertDialog), findsNothing);
+        expect(find.text('For this conversation only.'), findsOneWidget);
+        expect(
+          setup.session.calls.where((c) => c.startsWith('permission')),
+          isEmpty,
+        );
+        expect(store.read('ai.auto_ask'), isNull);
+      },
+    );
   });
 
   group('model picker', () {

@@ -145,7 +145,16 @@ void main() {
       expect(_kind(host), RightPanelKind.chat);
       expect(host.chat.calls, contains('new'));
       expect(host.container.read(chatSessionProvider).conversationId, 2);
-      expect(host.container.read(composerFocusRequestProvider), isTrue);
+      // The mounted composer takes the cursor request and consumes it.
+      expect(host.container.read(composerFocusRequestProvider), isFalse);
+      final field = find.descendant(
+        of: find.byType(ChatSurface),
+        matching: find.byType(EditableText),
+      );
+      expect(
+        tester.widget<EditableText>(field.first).focusNode.hasFocus,
+        isTrue,
+      );
       // Without Shift it is not the shortcut.
       await _ctrl(tester, LogicalKeyboardKey.keyO);
       expect(host.chat.calls.where((c) => c == 'new'), hasLength(1));

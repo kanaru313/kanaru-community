@@ -46,6 +46,10 @@ ProviderContainer _container({bool playing = true}) {
 Future<List<ChipPart>> _suggestions(ProviderContainer container) async {
   final keep = container.listen(chatSuggestionsProvider(_l10n), (_, _) {});
   addTearDown(keep.close);
+  // Held open: the autoDispose album stream is dropped while loading when
+  // nothing (a root page) listens to it.
+  final album = container.listen(albumDetailProvider(_album), (_, _) {});
+  addTearDown(album.close);
   await container.read(albumDetailProvider(_album).future);
   return container.read(chatSuggestionsProvider(_l10n));
 }

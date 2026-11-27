@@ -177,11 +177,10 @@ void expectNoButtons() {
   expect(find.byType(FilledButton), findsNothing);
 }
 
-/// The button labelled [label] is the card's only action: on a row of its own
-/// and, like every one-button card, at the end of it.
+/// The button labelled [label] is the card's only action and, like every
+/// one-button card, sits at the end of it (its width follows the label).
 void expectButtonAtEnd(WidgetTester tester, String label) {
   final card = tester.getRect(find.byType(KActionCard));
   final button = tester.getRect(find.widgetWithText(OutlinedButton, label));
-  expect(button.width, lessThan(card.width / 2));
   expect(card.right - button.right, closeTo(KSpace.x3, 0.01));
 }
