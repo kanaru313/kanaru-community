@@ -6040,7 +6040,9 @@
   "@aiChatCapUnavailable": {
     "description": "Spoken form of a capability the model lacks.",
     "placeholders": {
-      "cap": {"type": "String"}
+      "cap": {
+        "type": "String"
+      }
     }
   },
   "aiChatPluginPickerTitle": "Dịch vụ AI",

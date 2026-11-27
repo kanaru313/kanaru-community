@@ -325,6 +325,13 @@
   "@aiChatCapTools": {
     "description": "Capability tag: the model can use tools."
   },
+  "aiChatCapUnavailable": "{cap}: không dùng được",
+  "@aiChatCapUnavailable": {
+    "description": "Spoken form of a capability the model lacks.",
+    "placeholders": {
+      "cap": {"type": "String"}
+    }
+  },
   "aiChatPluginPickerTitle": "Dịch vụ AI",
   "@aiChatPluginPickerTitle": {
     "description": "Title of the plugin picker in the composer."
