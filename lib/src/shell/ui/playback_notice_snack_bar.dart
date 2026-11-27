@@ -43,6 +43,8 @@ void showCountdownSnackBar(
       duration: remaining + lingerAfterEnd,
       persist: false,
       behavior: SnackBarBehavior.floating,
+      // Start padding only: the action sits flush at the end like SnackBarAction.
+      padding: const EdgeInsetsDirectional.only(start: 16),
     ),
   );
 }
@@ -68,6 +70,11 @@ class _CountdownContent extends StatefulWidget {
 
 class _CountdownContentState extends State<_CountdownContent> {
   static const _tick = Duration(seconds: 1);
+  // SnackBar's floating metrics.
+  static const _barPadding = 16.0;
+  static const _actionMargin = 8.0;
+  static const _verticalPadding = 14.0;
+  static const _defaultThreshold = 0.25;
   late final Duration _deadline;
   late Duration _remaining = widget.remaining;
   Timer? _timer;
@@ -106,40 +113,47 @@ class _CountdownContentState extends State<_CountdownContent> {
       liveRegion: enabled,
       child: Text(widget.sentence(_remaining)),
     );
-    final sentence = widget.sentence(_remaining);
-    final button = TextButton(
-      onPressed: enabled ? widget.onAction : null,
-      style: TextButton.styleFrom(
-        foregroundColor: color,
-        disabledForegroundColor: color.withValues(alpha: 0.38),
-        textStyle: const TextStyle(fontWeight: FontWeight.w700),
+    final button = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: _actionMargin),
+      child: TextButton(
+        onPressed: enabled ? widget.onAction : null,
+        style: TextButton.styleFrom(
+          foregroundColor: color,
+          disabledForegroundColor: color.withValues(alpha: 0.38),
+          padding: const EdgeInsets.symmetric(horizontal: _barPadding),
+          textStyle: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+        child: Text(widget.actionLabel),
       ),
-      child: Text(widget.actionLabel),
     );
-    // Sentence and button on one line while they fit, the button below (at
-    // the end) when the text is long, the window narrow or the font large.
+    final threshold =
+        SnackBarTheme.of(context).actionOverflowThreshold ?? _defaultThreshold;
+    // Material's own rule (SnackBar): the action goes below the sentence only
+    // when its width is above [threshold] of the bar's width, so a wrapped
+    // sentence keeps the action on its right. The bar has start padding only;
+    // the end of the bar is the end of this content.
     return LayoutBuilder(
       builder: (context, box) {
-        final style = DefaultTextStyle.of(context).style;
-        final scaler = MediaQuery.textScalerOf(context);
-        final painter = TextPainter(
-          text: TextSpan(text: sentence, style: style),
-          textDirection: Directionality.of(context),
-          textScaler: scaler,
-        )..layout();
         final label = TextPainter(
-          text: TextSpan(text: widget.actionLabel, style: style),
+          text: TextSpan(
+            text: widget.actionLabel,
+            style: theme.textTheme.labelLarge,
+          ),
+          maxLines: 1,
           textDirection: Directionality.of(context),
-          textScaler: scaler,
+          textScaler: MediaQuery.textScalerOf(context),
         )..layout();
-        final buttonWidth = label.width + 24 + 16;
-        final fits = painter.width + buttonWidth <= box.maxWidth;
-        painter.dispose();
+        final actionWidth = label.width + _actionMargin;
         label.dispose();
-        if (fits) {
+        final barWidth = box.maxWidth + _barPadding;
+        final below = actionWidth / barWidth > threshold;
+        const vertical = EdgeInsets.symmetric(vertical: _verticalPadding);
+        if (!below) {
           return Row(
             children: [
-              Expanded(child: text),
+              Expanded(
+                child: Padding(padding: vertical, child: text),
+              ),
               button,
             ],
           );
@@ -148,8 +162,11 @@ class _CountdownContentState extends State<_CountdownContent> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            text,
-            Align(alignment: Alignment.centerRight, child: button),
+            Padding(padding: vertical.copyWith(bottom: 0), child: text),
+            Padding(
+              padding: const EdgeInsets.only(bottom: _verticalPadding),
+              child: Align(alignment: Alignment.centerRight, child: button),
+            ),
           ],
         );
       },

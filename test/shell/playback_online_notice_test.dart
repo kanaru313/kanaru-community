@@ -465,8 +465,20 @@ void main() {
       expect(calls, 1);
     });
 
+    testWidgets('412 px, 100 %: retry stays right of a wrapped sentence', (
+      tester,
+    ) async {
+      await _show(tester, _limited(), size: const Size(412, 800));
+      expect(tester.takeException(), isNull);
+      final text = tester.getRect(find.textContaining('paused for'));
+      final button = tester.getRect(find.widgetWithText(TextButton, 'Retry'));
+      // The sentence wraps to two lines, the button stays on its right.
+      expect(text.height, greaterThan(24));
+      expect(button.left, greaterThanOrEqualTo(text.right));
+    });
+
     testWidgets('countdown at 200 % does not overflow', (tester) async {
-      await _show(tester, _limited(), textScale: 2);
+      await _show(tester, _limited(), textScale: 2, size: const Size(412, 800));
       expect(tester.takeException(), isNull);
       final button = tester.getRect(find.widgetWithText(TextButton, 'Retry'));
       final text = tester.getRect(find.textContaining('paused for'));
