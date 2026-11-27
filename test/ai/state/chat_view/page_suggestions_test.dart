@@ -30,10 +30,11 @@ AlbumSummary _summary() => AlbumSummary(
   addedAt: 1,
 );
 
-ProviderContainer _container({bool playing = true}) {
+ProviderContainer _container({bool playing = true, String? title}) {
   final container = ProviderContainer(
     overrides: [
       hasCurrentTrackProvider.overrideWithValue(playing),
+      currentTrackTitleProvider.overrideWithValue(title),
       albumDetailProvider.overrideWith((ref, key) => Stream.value(_summary())),
       playlistDetailProvider.overrideWith(
         (ref, uid) => Stream.value(
@@ -76,6 +77,13 @@ Future<List<ChipPart>> _suggestions(ProviderContainer container) async {
 }
 
 void main() {
+  test('the playing song suggestion carries its title', () async {
+    final container = _container(title: 'Lạc trôi');
+    final chips = await _suggestions(container);
+    expect(chips.single.kind, ChipKind.nowPlaying);
+    expect(chips.single.label, 'Lạc trôi');
+  });
+
   test('album detail suggests album chip', () async {
     final container = _container();
     container

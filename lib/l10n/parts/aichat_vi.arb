@@ -581,6 +581,15 @@
   "@aiChatChipNowPlaying": {
     "description": "Context chip: the playing song."
   },
+  "aiChatChipNowPlayingNamed": "Bài đang phát: {title}",
+  "@aiChatChipNowPlayingNamed": {
+    "description": "Context chip: the playing song, with its title.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "aiChatChipSong": "Bài hát",
   "@aiChatChipSong": {
     "description": "Context chip of a song without a name."

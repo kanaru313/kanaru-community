@@ -9,6 +9,7 @@ import '../../../library/ui/browse/library_labels.dart';
 import '../../../library/ui/playlist_common/playlist_labels.dart';
 import '../../../media/domain/library_keys.dart';
 import '../../../playback/state/playback_providers.dart';
+import '../../../playback/state/track_info_providers.dart';
 import '../../domain/conversation/parts.dart';
 import '../../domain/variables/chip_ref.dart';
 
@@ -42,12 +43,12 @@ final selectionCountProvider = Provider.autoDispose<int>(
   (ref) => ref.watch(librarySelectionProvider.select((s) => s.ids.length)),
 );
 
-ChipPart _chip(AskAiTarget target) {
+ChipPart _chip(AskAiTarget target, {String? label}) {
   final ref = chipRefOf(target);
   return ChipPart(
     kind: ref.kind,
     ref: ref.ref,
-    label: ref.label,
+    label: label ?? ref.label,
     tracks: ref.tracks,
   );
 }
@@ -97,6 +98,16 @@ AskAiTarget? pageTargetOf(Ref ref, AppLocalizations l10n, String location) {
   return null;
 }
 
+/// The title of the playing song, null while none is loaded or its row has
+/// not arrived. Follows the player, so the "now playing" suggestion stays
+/// current when the song changes.
+final currentTrackTitleProvider = Provider.autoDispose<String?>((ref) {
+  if (!ref.watch(hasCurrentTrackProvider)) return null;
+  final id = ref.watch(nowPlayingProvider.select((n) => n.value?.trackId));
+  if (id == null) return null;
+  return ref.watch(trackInfoProvider(id).select((t) => t.value?.title));
+});
+
 /// The chips offered under the composer, in order: the playing song, the
 /// selected songs ("N bài đã chọn"), then the page the chat opened over
 /// (album, artist, genre, language or playlist). A root page has no page
@@ -109,7 +120,10 @@ final chatSuggestionsProvider = Provider.autoDispose
       final selected = ref.watch(selectionTracksProvider);
       return [
         if (ref.watch(hasCurrentTrackProvider))
-          _chip(const AskAiTarget.nowPlaying()),
+          _chip(
+            const AskAiTarget.nowPlaying(),
+            label: ref.watch(currentTrackTitleProvider),
+          ),
         if (selected.isNotEmpty)
           _chip(
             AskAiTarget.songs(

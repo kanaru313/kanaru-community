@@ -6380,6 +6380,15 @@
   "@aiChatChipNowPlaying": {
     "description": "Context chip: the playing song."
   },
+  "aiChatChipNowPlayingNamed": "Now playing: {title}",
+  "@aiChatChipNowPlayingNamed": {
+    "description": "Context chip: the playing song, with its title.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "aiChatChipSong": "Song",
   "@aiChatChipSong": {
     "description": "Context chip of a song without a name."

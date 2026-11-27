@@ -7703,6 +7703,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get aiChatChipNowPlaying => 'Bài đang phát';
 
   @override
+  String aiChatChipNowPlayingNamed(String title) {
+    return 'Bài đang phát: $title';
+  }
+
+  @override
   String get aiChatChipSong => 'Bài hát';
 
   @override

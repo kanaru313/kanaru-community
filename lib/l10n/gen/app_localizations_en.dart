@@ -8238,6 +8238,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiChatChipNowPlaying => 'Now playing';
 
   @override
+  String aiChatChipNowPlayingNamed(String title) {
+    return 'Now playing: $title';
+  }
+
+  @override
   String get aiChatChipSong => 'Song';
 
   @override

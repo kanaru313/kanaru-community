@@ -31,4 +31,18 @@ void main() {
 
     expect(chipLabel(_l10n, chip), _l10n.aiChatChipSongs(2));
   });
+
+  test('the now playing chip names the song when it is known', () {
+    const chip = ChipPart(kind: ChipKind.nowPlaying, label: 'Lạc trôi');
+
+    expect(chipLabel(_l10n, chip), 'Now playing: Lạc trôi');
+  });
+
+  test('the now playing chip falls back to its plain name', () {
+    const bare = ChipPart(kind: ChipKind.nowPlaying);
+    const empty = ChipPart(kind: ChipKind.nowPlaying, label: '');
+
+    expect(chipLabel(_l10n, bare), _l10n.aiChatChipNowPlaying);
+    expect(chipLabel(_l10n, empty), _l10n.aiChatChipNowPlaying);
+  });
 }

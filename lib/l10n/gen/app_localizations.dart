@@ -12329,6 +12329,12 @@ abstract class AppLocalizations {
   /// **'Now playing'**
   String get aiChatChipNowPlaying;
 
+  /// Context chip: the playing song, with its title.
+  ///
+  /// In en, this message translates to:
+  /// **'Now playing: {title}'**
+  String aiChatChipNowPlayingNamed(String title);
+
   /// Context chip of a song without a name.
   ///
   /// In en, this message translates to:
