@@ -364,6 +364,7 @@ List<Override> chatUiOverrides({
   required FakeChatSession session,
   bool withPlugin = true,
   List<ChatPluginInfo>? plugins,
+  DateTime Function()? historyClock,
 }) => [
   chatSessionProvider.overrideWith(() => session),
   chatPluginsProvider.overrideWithValue(
@@ -379,7 +380,7 @@ List<Override> chatUiOverrides({
     (ref) => ref.watch(fakePromptDataProvider),
   ),
   pluginIconProvider.overrideWith((ref, id) async => null),
-  chatHistoryClockProvider.overrideWithValue(() => historyNow),
+  chatHistoryClockProvider.overrideWithValue(historyClock ?? () => historyNow),
   chatHistoryConversationsProvider.overrideWith((ref) async {
     final query = ref.watch(chatHistoryQueryProvider).trim().toLowerCase();
     final all = ref.watch(fakeHistoryProvider);

@@ -155,8 +155,10 @@ void main() {
       var now = historyNow;
       final container = ProviderContainer(
         overrides: [
-          ...chatUiOverrides(session: FakeChatSession()),
-          chatHistoryClockProvider.overrideWithValue(() => now),
+          ...chatUiOverrides(
+            session: FakeChatSession(),
+            historyClock: () => now,
+          ),
         ],
       );
       container.read(fakeHistoryProvider.notifier).set([

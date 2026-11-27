@@ -130,4 +130,26 @@ void main() {
     expect(chips.single.kind, ChipKind.songs);
     expect(chips.single.tracks, hasLength(2));
   });
+
+  test('a cut selection still states its real count', () async {
+    final ids = [
+      for (var i = 1; i <= askAiMaxSongs; i++) AskAiTrack(id: i, title: ''),
+    ];
+    final container = ProviderContainer(
+      overrides: [
+        hasCurrentTrackProvider.overrideWithValue(false),
+        selectionTracksProvider.overrideWithValue(ids),
+        selectionCountProvider.overrideWithValue(250),
+      ],
+    );
+    addTearDown(container.dispose);
+    final keep = container.listen(chatSuggestionsProvider(_l10n), (_, _) {});
+    addTearDown(keep.close);
+
+    final chip = container.read(chatSuggestionsProvider(_l10n)).single;
+
+    expect(chip.kind, ChipKind.songs);
+    expect(chip.label, '250');
+    expect(chip.tracks, hasLength(askAiMaxSongs));
+  });
 }
