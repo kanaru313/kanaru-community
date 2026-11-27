@@ -124,7 +124,7 @@ class DetailsBlock extends ConsumerWidget {
       DateFormat('dd/MM/yyyy', l10n.localeName).format(day);
 
   DetailLine _type(AppLocalizations l10n) {
-    final kind = (kindLabel(l10n, data.kind) ?? '').toLowerCase();
+    final kind = kindPluginLabel(l10n, data.kind) ?? '';
     final api = data.row.apiVersion;
     return DetailLine(
       data.kind == PluginKind.aiTranslate

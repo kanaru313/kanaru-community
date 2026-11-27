@@ -2,9 +2,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/ai/domain/loop/loop_state.dart';
 import 'package:kanaru/src/ai/domain/output/chat_readiness.dart';
 import 'package:kanaru/src/ai/state/chat_view/composer_inputs.dart';
-import 'package:kanaru/src/ai/ui/chat_auto_confirm_provider.dart';
 import 'package:kanaru/src/ai/ui/auto_mode_confirm.dart';
+import 'package:kanaru/src/ai/ui/chat_auto_confirm_provider.dart';
 import 'package:kanaru/src/platform/state/settings_providers.dart';
+import 'package:kanaru_ui/kanaru_ui.dart' show KChip, SelectionRow;
 import 'package:material_ui/material_ui.dart';
 
 import '../../../support/icon_button_finders.dart';
@@ -29,6 +30,7 @@ void main() {
       await tester.tap(byIconButton(_pluginButton));
       await tester.pumpAndSettle();
 
+      expect(find.text('AI service'), findsOneWidget);
       expect(bySemanticsSelected('Claude'), findsOneWidget);
       expect(bySemanticsSelected('Gemini'), findsNothing);
       expect(find.text('API key set'), findsOneWidget);
@@ -72,6 +74,7 @@ void main() {
 
       expect(bySemanticsSelected('Ask first'), findsOneWidget);
       expect(bySemanticsSelected('Read only'), findsNothing);
+      expect(find.text('Permission in this chat'), findsOneWidget);
       expect(find.text('For this conversation only.'), findsOneWidget);
 
       // Read only needs no confirmation.
@@ -158,12 +161,30 @@ void main() {
       await tester.tap(find.text('m1'));
       await tester.pumpAndSettle();
 
+      expect(find.text('Model · Claude'), findsOneWidget);
+      expect(find.text('Applies from the next message.'), findsOneWidget);
       expect(find.text('Model 1'), findsOneWidget);
       expect(find.text('Model 2'), findsOneWidget);
       expect(bySemanticsSelected('Model 1'), findsOneWidget);
       // Tags: images, tools, context; a custom model says so.
-      expect(find.textContaining('Images · Tools · 200K'), findsOneWidget);
-      expect(find.textContaining('32K · Custom'), findsOneWidget);
+      expect(find.widgetWithText(KChip, 'Images'), findsNWidgets(2));
+      expect(find.widgetWithText(KChip, 'Tools'), findsNWidgets(2));
+      expect(find.widgetWithText(KChip, '200K'), findsOneWidget);
+      expect(find.widgetWithText(KChip, '32K'), findsOneWidget);
+      expect(find.widgetWithText(KChip, 'Custom'), findsOneWidget);
+      // The model without images / tools shows those chips dimmed, said aloud.
+      // The tags are spoken once, in the label; no second copy as a hint.
+      final row = tester.getSemantics(
+        find.ancestor(
+          of: find.text('Model 2'),
+          matching: find.byType(SelectionRow),
+        ),
+      );
+      expect(
+        row.label,
+        'Model 2\nImages: unavailable\nTools: unavailable\n32K\nCustom',
+      );
+      expect(row.hint, isEmpty);
 
       await tester.tap(find.text('Model 2'));
       await tester.pumpAndSettle();

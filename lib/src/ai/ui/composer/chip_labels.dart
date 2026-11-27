@@ -10,7 +10,10 @@ import '../../domain/variables/chip_ref.dart';
 String chipLabel(AppLocalizations l10n, ChipPart chip) {
   final label = chip.label ?? '';
   return switch (chip.kind) {
-    ChipKind.nowPlaying => l10n.aiChatChipNowPlaying,
+    ChipKind.nowPlaying =>
+      label.isEmpty
+          ? l10n.aiChatChipNowPlaying
+          : l10n.aiChatChipNowPlayingNamed(label),
     ChipKind.song => label.isEmpty ? l10n.aiChatChipSong : label,
     ChipKind.songs => l10n.aiChatChipSongs(
       songsChipTotal(label) ?? chip.tracks.length,

@@ -11,8 +11,8 @@ import '../../state/chat_view/composer_view.dart';
 import '../../state/chat_view/prompt_apply.dart';
 import 'prompt_text.dart';
 
-/// The saved prompts as chips: big under the greeting of an empty chat
-/// ([large]), small and scrolling sideways above the composer once the chat
+/// The saved prompts: a column of outlined buttons under the greeting of an
+/// empty chat ([large]), chips small and scrolling sideways above the composer once the chat
 /// has messages. They lock with the pickers (the lock table). A prompt whose
 /// variable has no data now is dimmed with its reason.
 class PromptChips extends ConsumerWidget {
@@ -42,25 +42,21 @@ class PromptChips extends ConsumerWidget {
     Widget chip((ResolvedPrompt, PromptLack?) entry) {
       final (prompt, lack) = entry;
       final why = reason(lack);
-      final button = KChip(
+      if (large) {
+        return KPromptButton(
+          label: prompt.label,
+          reason: why,
+          enabled: enabled && lack == null,
+          onTap: () => usePrompt(ref, prompt.body),
+        );
+      }
+      return KChip(
         label: Text(prompt.label),
-        dense: !large,
+        dense: true,
+        outlined: true,
         enabled: enabled && lack == null,
         semanticLabel: why == null ? null : '${prompt.label}. $why',
         onTap: () => usePrompt(ref, prompt.body),
-      );
-      if (!large || why == null) return button;
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          button,
-          Text(
-            why,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
       );
     }
 
@@ -68,10 +64,9 @@ class PromptChips extends ConsumerWidget {
       container: true,
       label: l10n.aiChatPromptsLabel,
       child: large
-          ? Wrap(
-              alignment: WrapAlignment.center,
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               spacing: KSpace.x2,
-              runSpacing: KSpace.x2,
               children: [for (final p in prompts) chip(p)],
             )
           : KChipLine(children: [for (final p in prompts) chip(p)]),

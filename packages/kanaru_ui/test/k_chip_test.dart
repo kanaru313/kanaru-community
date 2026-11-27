@@ -97,6 +97,69 @@ void main() {
     semantics.dispose();
   });
 
+  testWidgets('tag with icon shows it and enabled false is outlined', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(
+        const Column(
+          children: [
+            KChip.tag(label: Text('Ảnh'), icon: Icon(Icons.image)),
+            KChip.tag(
+              label: Text('Cụ'),
+              icon: Icon(Icons.build),
+              enabled: false,
+            ),
+          ],
+        ),
+      ),
+    );
+    expect(find.byIcon(Icons.image), findsOneWidget);
+    expect(tester.getSize(find.widgetWithText(KChip, 'Cụ')).height, 20);
+    DecoratedBox box(String l) => tester.widget<DecoratedBox>(
+      find
+          .descendant(
+            of: find.widgetWithText(KChip, l),
+            matching: find.byType(DecoratedBox),
+          )
+          .first,
+    );
+    expect((box('Ảnh').decoration as ShapeDecoration).color, isNotNull);
+    expect((box('Cụ').decoration as ShapeDecoration).color, isNull);
+    expect(
+      find.descendant(
+        of: find.widgetWithText(KChip, 'Cụ'),
+        matching: find.byType(Opacity),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('outlined chip has no fill and stays a button', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(
+      host(
+        const KChip(
+          label: Text('Gợi ý'),
+          dense: true,
+          outlined: true,
+          onTap: _noop,
+        ),
+      ),
+    );
+    final mat = tester.widget<Material>(
+      find
+          .descendant(of: find.byType(KChip), matching: find.byType(Material))
+          .first,
+    );
+    expect(mat.color, Colors.transparent);
+    expect(
+      tester.getSemantics(find.byType(KChip)),
+      isSemantics(isButton: true, isEnabled: true),
+    );
+    semantics.dispose();
+  });
+
   testWidgets('tag tone picks the fill', (tester) async {
     await tester.pumpWidget(
       host(
@@ -213,4 +276,57 @@ void main() {
       greaterThan(tester.getTopLeft(kind).dy),
     );
   });
+
+  for (final (name, width) in [('touch', 400.0), ('desktop', 1400.0)]) {
+    testWidgets(
+      'token chip is 28 tall, outlined, r8, mono; tap area is the chip on $name',
+      (tester) async {
+        var taps = 0;
+        tester.view.physicalSize = Size(width, 800);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          host(
+            Center(
+              child: KChip.token(
+                label: const Text('{title}'),
+                onTap: () => taps++,
+              ),
+            ),
+          ),
+        );
+        final chip = find.byType(KChip);
+        expect(tester.getSize(chip).height, 28);
+        final material = tester.widget<Material>(
+          find.descendant(of: chip, matching: find.byType(Material)),
+        );
+        final shape = material.shape! as RoundedRectangleBorder;
+        expect(shape.borderRadius, BorderRadius.circular(8));
+        expect(shape.side.width, 1);
+        expect(material.type, MaterialType.transparency);
+        expect(
+          tester
+              .getSize(
+                find.descendant(of: chip, matching: find.byType(Material)),
+              )
+              .height,
+          28,
+        );
+        final style = tester.widget<DefaultTextStyle>(
+          find
+              .ancestor(
+                of: find.text('{title}'),
+                matching: find.byType(DefaultTextStyle),
+              )
+              .first,
+        );
+        expect(style.style.fontSize, 12);
+        expect(style.style.fontFamily, KFont.mono);
+        await tester.tapAt(tester.getTopLeft(chip) + const Offset(20, 1));
+        expect(taps, 1);
+      },
+    );
+  }
 }
+
+void _noop() {}

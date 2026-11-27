@@ -9395,6 +9395,30 @@ abstract class AppLocalizations {
   /// **'Music source'**
   String get pluginsKindStreaming;
 
+  /// No description provided for @pluginsKindNounLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics plugin'**
+  String get pluginsKindNounLyrics;
+
+  /// No description provided for @pluginsKindNounTranslate.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation plugin'**
+  String get pluginsKindNounTranslate;
+
+  /// No description provided for @pluginsKindNounStreaming.
+  ///
+  /// In en, this message translates to:
+  /// **'Music source plugin'**
+  String get pluginsKindNounStreaming;
+
+  /// No description provided for @pluginsKindNounAiChat.
+  ///
+  /// In en, this message translates to:
+  /// **'AI plugin'**
+  String get pluginsKindNounAiChat;
+
   /// No description provided for @pluginsKindHelpLyrics.
   ///
   /// In en, this message translates to:
@@ -9884,7 +9908,7 @@ abstract class AppLocalizations {
   /// No description provided for @pluginsPkgInstallSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Plugin {kind} · version {version} · {author}'**
+  /// **'{kind} · version {version} · {author}'**
   String pluginsPkgInstallSubtitle(String kind, int version, String author);
 
   /// No description provided for @pluginsPkgUpdateSubtitle.
@@ -10826,13 +10850,13 @@ abstract class AppLocalizations {
   /// No description provided for @pluginsPageTypeValue.
   ///
   /// In en, this message translates to:
-  /// **'Plugin for {kind} · plugin API {api}'**
+  /// **'{kind} · plugin API {api}'**
   String pluginsPageTypeValue(String kind, int api);
 
   /// No description provided for @pluginsPageTypeValueAi.
   ///
   /// In en, this message translates to:
-  /// **'AI plugin for {kind} · plugin API {api}'**
+  /// **'{kind} · AI · plugin API {api}'**
   String pluginsPageTypeValueAi(String kind, int api);
 
   /// No description provided for @pluginsPageSourceCode.
@@ -12071,6 +12095,36 @@ abstract class AppLocalizations {
   /// **'Tools'**
   String get aiChatCapTools;
 
+  /// Spoken form of a capability the model lacks.
+  ///
+  /// In en, this message translates to:
+  /// **'{cap}: unavailable'**
+  String aiChatCapUnavailable(String cap);
+
+  /// Title of the plugin picker in the composer.
+  ///
+  /// In en, this message translates to:
+  /// **'AI service'**
+  String get aiChatPluginPickerTitle;
+
+  /// Title of the model picker in the composer. {plugin} is the plugin's name.
+  ///
+  /// In en, this message translates to:
+  /// **'Model · {plugin}'**
+  String aiChatModelPickerTitle(String plugin);
+
+  /// Caption under the model picker title.
+  ///
+  /// In en, this message translates to:
+  /// **'Applies from the next message.'**
+  String get aiChatModelPickerCaption;
+
+  /// Title of the permission picker in the composer.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission in this chat'**
+  String get aiChatPermissionPickerTitle;
+
   /// Caption under the plugin picker.
   ///
   /// In en, this message translates to:
@@ -12280,6 +12334,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Now playing'**
   String get aiChatChipNowPlaying;
+
+  /// Context chip: the playing song, with its title.
+  ///
+  /// In en, this message translates to:
+  /// **'Now playing: {title}'**
+  String aiChatChipNowPlayingNamed(String title);
 
   /// Context chip of a song without a name.
   ///
@@ -13898,7 +13958,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiSetEdPreviewHint.
   ///
   /// In en, this message translates to:
-  /// **'Filled with sample data (the song Lạc trôi), not the playing song. When you tap the chip, Kanaru fills in the real data when sending.'**
+  /// **'Filled with sample data (the song Blinding Lights), not the playing song. When you tap the chip, Kanaru fills in the real data when sending.'**
   String get aiSetEdPreviewHint;
 
   /// No description provided for @aiSetEdPreviewEmpty.
@@ -13922,31 +13982,31 @@ abstract class AppLocalizations {
   /// No description provided for @aiSetEdSampleNowPlaying.
   ///
   /// In en, this message translates to:
-  /// **'Lạc trôi · Sơn Tùng M-TP'**
+  /// **'Blinding Lights · The Weeknd'**
   String get aiSetEdSampleNowPlaying;
 
   /// No description provided for @aiSetEdSampleTitle.
   ///
   /// In en, this message translates to:
-  /// **'Lạc trôi'**
+  /// **'Blinding Lights'**
   String get aiSetEdSampleTitle;
 
   /// No description provided for @aiSetEdSampleArtist.
   ///
   /// In en, this message translates to:
-  /// **'Sơn Tùng M-TP'**
+  /// **'The Weeknd'**
   String get aiSetEdSampleArtist;
 
   /// No description provided for @aiSetEdSampleAlbum.
   ///
   /// In en, this message translates to:
-  /// **'m-tp M-TP'**
+  /// **'After Hours'**
   String get aiSetEdSampleAlbum;
 
   /// No description provided for @aiSetEdSampleLyrics.
   ///
   /// In en, this message translates to:
-  /// **'‹lyrics of Lạc trôi · 42 lines›'**
+  /// **'‹lyrics of Blinding Lights · 42 lines›'**
   String get aiSetEdSampleLyrics;
 
   /// No description provided for @aiSetEdSampleQueue.

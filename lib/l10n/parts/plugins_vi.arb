@@ -99,6 +99,10 @@
   "pluginsKindLyrics": "Lời bài",
   "pluginsKindTranslate": "Dịch",
   "pluginsKindStreaming": "Nguồn nhạc",
+  "pluginsKindNounLyrics": "Plugin lời bài",
+  "pluginsKindNounTranslate": "Plugin dịch",
+  "pluginsKindNounStreaming": "Plugin nguồn nhạc",
+  "pluginsKindNounAiChat": "Plugin AI",
   "pluginsKindHelpLyrics": "Tìm lời cho bài đang nghe, có lời chạy theo dòng.",
   "pluginsKindHelpTranslate": "Dịch lời bài sang ngôn ngữ bạn chọn.",
   "pluginsKindHelpStreaming": "Tìm và phát nhạc từ một dịch vụ trực tuyến.",
@@ -301,7 +305,7 @@
       }
     }
   },
-  "pluginsPkgInstallSubtitle": "Plugin {kind} · bản {version} · {author}",
+  "pluginsPkgInstallSubtitle": "{kind} · bản {version} · {author}",
   "@pluginsPkgInstallSubtitle": {
     "placeholders": {
       "kind": {
@@ -905,7 +909,7 @@
   },
   "pluginsPageDescription": "Mô tả",
   "pluginsPageType": "Loại",
-  "pluginsPageTypeValue": "Plugin {kind} · API plugin {api}",
+  "pluginsPageTypeValue": "{kind} · API plugin {api}",
   "@pluginsPageTypeValue": {
     "placeholders": {
       "kind": {
@@ -916,7 +920,7 @@
       }
     }
   },
-  "pluginsPageTypeValueAi": "Plugin {kind} · AI · API plugin {api}",
+  "pluginsPageTypeValueAi": "{kind} · AI · API plugin {api}",
   "@pluginsPageTypeValueAi": {
     "placeholders": {
       "kind": {

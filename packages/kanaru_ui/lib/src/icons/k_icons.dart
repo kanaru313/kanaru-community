@@ -178,6 +178,7 @@ abstract final class KIcons {
   static const IconData advanced = FluentIcons.wrench_24_regular;
   static const IconData hideFromLibrary = FluentIcons.eye_off_24_regular;
   static const IconData eyeOff = FluentIcons.eye_off_24_regular;
+  static const IconData variable = FluentIcons.braces_variable_24_regular;
   static const IconData tag = FluentIcons.tag_24_regular;
 
   // Playlists.

@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../layout/form_factor.dart';
+import '../tokens/k_font.dart';
 import '../tokens/k_icon_size.dart';
 import '../tokens/k_layout.dart';
 import '../tokens/k_shape.dart';
@@ -28,11 +29,12 @@ class KChip extends StatelessWidget {
     this.semanticLabel,
     this.onRaised = false,
     this.tintWhenSelected = true,
+    this.outlined = false,
   }) : trailing = null,
-       outlined = false,
        tone = KTagTone.neutral,
        _interactive = true,
-       _tag = false;
+       _tag = false,
+       _token = false;
 
   /// A pill that is a value, not a choice: no button, no selected state, no
   /// ink. [trailing] (a remove button) sits at the end with less padding.
@@ -49,21 +51,24 @@ class KChip extends StatelessWidget {
       tintWhenSelected = true,
       tone = KTagTone.neutral,
       _interactive = false,
-      _tag = false;
+      _tag = false,
+      _token = false;
 
   /// A small label that only shows a value (the kind and the author on a
   /// plugin row): 20 dp tall, `labelSmall`, radius 6, label centred, no ink,
   /// never a button. Filled with `secondaryContainer`, or only outlined when
-  /// [outlined]; one line, a long label ends with an ellipsis. Put it in a
-  /// [KTagRow]. At 1.5x text it grows with the label.
+  /// [outlined]; one line, a long label ends with an ellipsis. An optional
+  /// [icon] sits before the label. `enabled: false` marks a value that does
+  /// not apply: outlined and dimmed (the caller says it in words for screen
+  /// readers). Put it in a [KTagRow]. At 1.5x text it grows with the label.
   const KChip.tag({
     super.key,
     required this.label,
     this.outlined = false,
     this.tone = KTagTone.neutral,
-  }) : icon = null,
-       selected = false,
-       enabled = true,
+    this.icon,
+    this.enabled = true,
+  }) : selected = false,
        onTap = null,
        dense = true,
        semanticLabel = null,
@@ -71,7 +76,31 @@ class KChip extends StatelessWidget {
        trailing = null,
        tintWhenSelected = true,
        _interactive = false,
-       _tag = true;
+       _tag = true,
+       _token = false;
+
+  /// A small insertable code token (a prompt variable such as `{title}`):
+  /// outlined (1 dp `outlineVariant`, no fill), radius 8, 28 dp visible
+  /// height, 10 dp side padding, label in the mono font at 12 sp. The tap area
+  /// is the visible chip itself (28 dp), the same on both shells, never padded
+  /// to 48 dp.
+  const KChip.token({
+    super.key,
+    required this.label,
+    this.enabled = true,
+    this.onTap,
+    this.semanticLabel,
+  }) : icon = null,
+       selected = false,
+       dense = true,
+       onRaised = false,
+       trailing = null,
+       outlined = true,
+       tintWhenSelected = true,
+       tone = KTagTone.neutral,
+       _interactive = true,
+       _tag = false,
+       _token = true;
 
   final Widget label;
   final Widget? icon;
@@ -101,13 +130,14 @@ class KChip extends StatelessWidget {
   /// Widget after the label of a [KChip.static] (its own action).
   final Widget? trailing;
 
-  /// Outline instead of fill ([KChip.tag] only).
+  /// Outline instead of fill (a [KChip] that is not selected, and [KChip.tag]).
   final bool outlined;
 
   /// What the fill says ([KChip.tag] only).
   final KTagTone tone;
   final bool _interactive;
   final bool _tag;
+  final bool _token;
 
   static const double _denseDesktopHeight = 32;
   static const double _denseTouchHeight = 40;
@@ -116,6 +146,7 @@ class KChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     if (_tag) return _buildTag(context, scheme);
+    if (_token) return _buildToken(context, scheme);
     final touch = FormFactor.of(context) == FormFactor.mobile;
     final minHeight = dense
         ? (touch ? _denseTouchHeight : _denseDesktopHeight)
@@ -150,13 +181,22 @@ class KChip extends StatelessWidget {
         ),
       ),
     );
+    final radius = dense && touch ? KRadius.sm : KRadius.full;
+    final ringed = outlined && !tinted;
     final pill = Material(
-      color: tinted
+      color: ringed
+          ? Colors.transparent
+          : tinted
           ? scheme.secondaryContainer
           : onRaised
           ? scheme.surfaceContainerHighest
           : scheme.surfaceContainerHigh,
-      shape: KShape.of(dense && touch ? KRadius.sm : KRadius.full),
+      shape: ringed
+          ? RoundedRectangleBorder(
+              borderRadius: radius,
+              side: BorderSide(color: scheme.outlineVariant),
+            )
+          : KShape.of(radius),
       clipBehavior: Clip.antiAlias,
       child: _interactive
           ? InkWell(onTap: enabled ? onTap : null, child: content)
@@ -171,6 +211,61 @@ class KChip extends StatelessWidget {
       child: Opacity(opacity: enabled ? 1 : 0.5, child: pill),
     );
   }
+
+  Widget _buildToken(BuildContext context, ColorScheme scheme) {
+    final fg = scheme.onSurfaceVariant;
+    final pill = Material(
+      type: MaterialType.transparency,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(_tokenRadius),
+        side: BorderSide(color: scheme.outlineVariant),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: _tokenHeight),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: _tokenPadding),
+            child: Center(
+              widthFactor: 1,
+              heightFactor: 1,
+              child: ExcludeSemantics(
+                excluding: semanticLabel != null,
+                child: DefaultTextStyle.merge(
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: fg,
+                    fontSize: 12,
+                    fontFamily: KFont.mono,
+                    fontFamilyFallback: KFont.monoFallback,
+                  ),
+                  maxLines: 1,
+                  child: label,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: semanticLabel,
+      child: Opacity(
+        opacity: enabled ? 1 : 0.5,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: enabled ? onTap : null,
+          child: pill,
+        ),
+      ),
+    );
+  }
+
+  static const double _tokenHeight = 28;
+  static const double _tokenRadius = 8;
+  static const double _tokenPadding = 10;
 
   Widget _buildTag(BuildContext context, ColorScheme scheme) {
     final (Color fill, Color on) = switch (tone) {
@@ -188,14 +283,15 @@ class KChip extends StatelessWidget {
       ),
       KTagTone.problem => (scheme.errorContainer, scheme.onErrorContainer),
     };
-    final fg = outlined ? scheme.onSurfaceVariant : on;
+    final flat = outlined || !enabled;
+    final fg = flat ? scheme.onSurfaceVariant : on;
     final large = KTagRow.isLarge(context);
-    return DecoratedBox(
+    final tag = DecoratedBox(
       decoration: ShapeDecoration(
-        color: outlined ? null : fill,
+        color: flat ? null : fill,
         shape: RoundedRectangleBorder(
           borderRadius: _tagRadius,
-          side: outlined
+          side: flat
               ? BorderSide(color: scheme.outlineVariant)
               : BorderSide.none,
         ),
@@ -225,15 +321,29 @@ class KChip extends StatelessWidget {
                 maxLines: 1,
                 softWrap: false,
                 overflow: TextOverflow.ellipsis,
-                child: label,
+                child: icon == null
+                    ? label
+                    : Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconTheme.merge(
+                            data: IconThemeData(color: fg, size: _tagIconSize),
+                            child: icon!,
+                          ),
+                          const KGap(KSpace.x1),
+                          Flexible(child: label),
+                        ],
+                      ),
               ),
             ),
           ),
         ),
       ),
     );
+    return enabled ? tag : Opacity(opacity: 0.6, child: tag);
   }
 
+  static const double _tagIconSize = 12;
   static const double _tagHeight = 20;
   static const double _tagMaxWidth = 154;
   static const BorderRadius _tagRadius = BorderRadius.all(Radius.circular(6));

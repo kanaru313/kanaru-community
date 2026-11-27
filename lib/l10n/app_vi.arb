@@ -4489,6 +4489,10 @@
   "pluginsKindLyrics": "Lời bài",
   "pluginsKindTranslate": "Dịch",
   "pluginsKindStreaming": "Nguồn nhạc",
+  "pluginsKindNounLyrics": "Plugin lời bài",
+  "pluginsKindNounTranslate": "Plugin dịch",
+  "pluginsKindNounStreaming": "Plugin nguồn nhạc",
+  "pluginsKindNounAiChat": "Plugin AI",
   "pluginsKindHelpLyrics": "Tìm lời cho bài đang nghe, có lời chạy theo dòng.",
   "pluginsKindHelpTranslate": "Dịch lời bài sang ngôn ngữ bạn chọn.",
   "pluginsKindHelpStreaming": "Tìm và phát nhạc từ một dịch vụ trực tuyến.",
@@ -4691,7 +4695,7 @@
       }
     }
   },
-  "pluginsPkgInstallSubtitle": "Plugin {kind} · bản {version} · {author}",
+  "pluginsPkgInstallSubtitle": "{kind} · bản {version} · {author}",
   "@pluginsPkgInstallSubtitle": {
     "placeholders": {
       "kind": {
@@ -5295,7 +5299,7 @@
   },
   "pluginsPageDescription": "Mô tả",
   "pluginsPageType": "Loại",
-  "pluginsPageTypeValue": "Plugin {kind} · API plugin {api}",
+  "pluginsPageTypeValue": "{kind} · API plugin {api}",
   "@pluginsPageTypeValue": {
     "placeholders": {
       "kind": {
@@ -5306,7 +5310,7 @@
       }
     }
   },
-  "pluginsPageTypeValueAi": "Plugin {kind} · AI · API plugin {api}",
+  "pluginsPageTypeValueAi": "{kind} · AI · API plugin {api}",
   "@pluginsPageTypeValueAi": {
     "placeholders": {
       "kind": {
@@ -6032,6 +6036,36 @@
   "@aiChatCapTools": {
     "description": "Capability tag: the model can use tools."
   },
+  "aiChatCapUnavailable": "{cap}: không dùng được",
+  "@aiChatCapUnavailable": {
+    "description": "Spoken form of a capability the model lacks.",
+    "placeholders": {
+      "cap": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatPluginPickerTitle": "Dịch vụ AI",
+  "@aiChatPluginPickerTitle": {
+    "description": "Title of the plugin picker in the composer."
+  },
+  "aiChatModelPickerTitle": "Model · {plugin}",
+  "@aiChatModelPickerTitle": {
+    "description": "Title of the model picker in the composer. {plugin} is the plugin's name.",
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatModelPickerCaption": "Áp dụng từ tin nhắn tiếp theo.",
+  "@aiChatModelPickerCaption": {
+    "description": "Caption under the model picker title."
+  },
+  "aiChatPermissionPickerTitle": "Quyền trong cuộc này",
+  "@aiChatPermissionPickerTitle": {
+    "description": "Title of the permission picker in the composer."
+  },
   "aiChatPluginPickerCaption": "Áp dụng từ tin nhắn tiếp theo. Lịch sử giữ nguyên.",
   "@aiChatPluginPickerCaption": {
     "description": "Caption under the plugin picker."
@@ -6266,6 +6300,15 @@
   "aiChatChipNowPlaying": "Bài đang phát",
   "@aiChatChipNowPlaying": {
     "description": "Context chip: the playing song."
+  },
+  "aiChatChipNowPlayingNamed": "Bài đang phát: {title}",
+  "@aiChatChipNowPlayingNamed": {
+    "description": "Context chip: the playing song, with its title.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
   },
   "aiChatChipSong": "Bài hát",
   "@aiChatChipSong": {
@@ -7278,7 +7321,7 @@
     }
   },
   "aiSetEdPreviewTitle": "Xem trước",
-  "aiSetEdPreviewHint": "Điền bằng dữ liệu ví dụ (bài Lạc trôi), không phải bài đang phát. Khi bấm chip, Kanaru điền dữ liệu thật lúc gửi.",
+  "aiSetEdPreviewHint": "Điền bằng dữ liệu ví dụ (bài Blinding Lights), không phải bài đang phát. Khi bấm chip, Kanaru điền dữ liệu thật lúc gửi.",
   "aiSetEdPreviewEmpty": "Gõ prompt ở trên để xem trước.",
   "aiSetEdPreviewUnknown": "Biến không có",
   "aiSetEdPreviewOff": "{variable} · công cụ “{group}” đang tắt",
@@ -7292,11 +7335,11 @@
       }
     }
   },
-  "aiSetEdSampleNowPlaying": "Lạc trôi · Sơn Tùng M-TP",
-  "aiSetEdSampleTitle": "Lạc trôi",
-  "aiSetEdSampleArtist": "Sơn Tùng M-TP",
-  "aiSetEdSampleAlbum": "m-tp M-TP",
-  "aiSetEdSampleLyrics": "‹lời bài Lạc trôi · 42 dòng›",
+  "aiSetEdSampleNowPlaying": "Blinding Lights · The Weeknd",
+  "aiSetEdSampleTitle": "Blinding Lights",
+  "aiSetEdSampleArtist": "The Weeknd",
+  "aiSetEdSampleAlbum": "After Hours",
+  "aiSetEdSampleLyrics": "‹lời bài Blinding Lights · 42 dòng›",
   "aiSetEdSampleQueue": "‹hàng đợi · 12 bài›",
   "aiSetEdSampleInput": "‹chữ bạn gõ›",
   "aiSetEdDeleteRow": "Xoá prompt",

@@ -17,6 +17,7 @@ import 'package:kanaru/src/ai/state/chat_view/composer_draft.dart';
 import 'package:kanaru/src/ai/state/chat_view/composer_inputs.dart';
 import 'package:kanaru/src/ai/ui/composer/composer_notice.dart';
 import 'package:kanaru/src/ai/ui/composer/composer_text_controller.dart';
+import 'package:kanaru_ui/kanaru_ui.dart' show KChip;
 import 'package:material_ui/material_ui.dart';
 
 import '../../../support/icon_button_finders.dart';
@@ -199,6 +200,12 @@ void main() {
           .set(prompts());
       await tester.pump();
 
+      // Small prompt chips are outlined, like the empty-chat prompt buttons.
+      expect(
+        tester.widget<KChip>(find.widgetWithText(KChip, 'Say hi')).outlined,
+        isTrue,
+      );
+
       // An empty field sends at once.
       await tester.tap(find.text('Say hi'));
       await tester.pump();
@@ -281,7 +288,11 @@ void main() {
           .set(const ChatPromptData(hasPlaying: false));
       await tester.pump();
       // No playing song: the lyrics prompt does nothing.
-      await tester.tap(find.text('Lyrics'));
+      expect(
+        tester.getSemantics(find.text('Lyrics')),
+        isSemantics(isEnabled: false),
+      );
+      await tester.tap(find.text('Lyrics'), warnIfMissed: false);
       await tester.pump();
       expect(setup.sends, isEmpty);
 

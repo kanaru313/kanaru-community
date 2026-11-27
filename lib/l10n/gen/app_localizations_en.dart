@@ -6350,6 +6350,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pluginsKindStreaming => 'Music source';
 
   @override
+  String get pluginsKindNounLyrics => 'Lyrics plugin';
+
+  @override
+  String get pluginsKindNounTranslate => 'Translation plugin';
+
+  @override
+  String get pluginsKindNounStreaming => 'Music source plugin';
+
+  @override
+  String get pluginsKindNounAiChat => 'AI plugin';
+
+  @override
   String get pluginsKindHelpLyrics =>
       'Finds lyrics for the song playing, with lines that follow the song.';
 
@@ -6674,7 +6686,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String pluginsPkgInstallSubtitle(String kind, int version, String author) {
-    return 'Plugin $kind · version $version · $author';
+    return '$kind · version $version · $author';
   }
 
   @override
@@ -7311,12 +7323,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String pluginsPageTypeValue(String kind, int api) {
-    return 'Plugin for $kind · plugin API $api';
+    return '$kind · plugin API $api';
   }
 
   @override
   String pluginsPageTypeValueAi(String kind, int api) {
-    return 'AI plugin for $kind · plugin API $api';
+    return '$kind · AI · plugin API $api';
   }
 
   @override
@@ -8072,6 +8084,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiChatCapTools => 'Tools';
 
   @override
+  String aiChatCapUnavailable(String cap) {
+    return '$cap: unavailable';
+  }
+
+  @override
+  String get aiChatPluginPickerTitle => 'AI service';
+
+  @override
+  String aiChatModelPickerTitle(String plugin) {
+    return 'Model · $plugin';
+  }
+
+  @override
+  String get aiChatModelPickerCaption => 'Applies from the next message.';
+
+  @override
+  String get aiChatPermissionPickerTitle => 'Permission in this chat';
+
+  @override
   String get aiChatPluginPickerCaption =>
       'Applies from the next message. History stays as it is.';
 
@@ -8210,6 +8241,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiChatChipNowPlaying => 'Now playing';
+
+  @override
+  String aiChatChipNowPlayingNamed(String title) {
+    return 'Now playing: $title';
+  }
 
   @override
   String get aiChatChipSong => 'Song';
@@ -9386,7 +9422,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aiSetEdPreviewHint =>
-      'Filled with sample data (the song Lạc trôi), not the playing song. When you tap the chip, Kanaru fills in the real data when sending.';
+      'Filled with sample data (the song Blinding Lights), not the playing song. When you tap the chip, Kanaru fills in the real data when sending.';
 
   @override
   String get aiSetEdPreviewEmpty => 'Type the prompt above to preview it.';
@@ -9400,19 +9436,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get aiSetEdSampleNowPlaying => 'Lạc trôi · Sơn Tùng M-TP';
+  String get aiSetEdSampleNowPlaying => 'Blinding Lights · The Weeknd';
 
   @override
-  String get aiSetEdSampleTitle => 'Lạc trôi';
+  String get aiSetEdSampleTitle => 'Blinding Lights';
 
   @override
-  String get aiSetEdSampleArtist => 'Sơn Tùng M-TP';
+  String get aiSetEdSampleArtist => 'The Weeknd';
 
   @override
-  String get aiSetEdSampleAlbum => 'm-tp M-TP';
+  String get aiSetEdSampleAlbum => 'After Hours';
 
   @override
-  String get aiSetEdSampleLyrics => '‹lyrics of Lạc trôi · 42 lines›';
+  String get aiSetEdSampleLyrics => '‹lyrics of Blinding Lights · 42 lines›';
 
   @override
   String get aiSetEdSampleQueue => '‹queue · 12 songs›';

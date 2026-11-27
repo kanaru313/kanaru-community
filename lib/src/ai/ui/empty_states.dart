@@ -160,10 +160,11 @@ class _EmptyFrame extends StatelessWidget {
     return Center(
       child: ListView(
         shrinkWrap: true,
+        // Same side padding as the composer under it.
         padding: const EdgeInsets.fromLTRB(
-          KSpace.x4,
+          KSpace.x3,
           KSpace.x6,
-          KSpace.x4,
+          KSpace.x3,
           KSpace.x2,
         ),
         children: [

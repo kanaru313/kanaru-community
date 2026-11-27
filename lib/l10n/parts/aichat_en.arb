@@ -325,6 +325,34 @@
   "@aiChatCapTools": {
     "description": "Capability tag: the model can use tools."
   },
+  "aiChatCapUnavailable": "{cap}: unavailable",
+  "@aiChatCapUnavailable": {
+    "description": "Spoken form of a capability the model lacks.",
+    "placeholders": {
+      "cap": {"type": "String"}
+    }
+  },
+  "aiChatPluginPickerTitle": "AI service",
+  "@aiChatPluginPickerTitle": {
+    "description": "Title of the plugin picker in the composer."
+  },
+  "aiChatModelPickerTitle": "Model · {plugin}",
+  "@aiChatModelPickerTitle": {
+    "description": "Title of the model picker in the composer. {plugin} is the plugin's name.",
+    "placeholders": {
+      "plugin": {
+        "type": "String"
+      }
+    }
+  },
+  "aiChatModelPickerCaption": "Applies from the next message.",
+  "@aiChatModelPickerCaption": {
+    "description": "Caption under the model picker title."
+  },
+  "aiChatPermissionPickerTitle": "Permission in this chat",
+  "@aiChatPermissionPickerTitle": {
+    "description": "Title of the permission picker in the composer."
+  },
   "aiChatPluginPickerCaption": "Applies from the next message. History stays as it is.",
   "@aiChatPluginPickerCaption": {
     "description": "Caption under the plugin picker."
@@ -559,6 +587,15 @@
   "aiChatChipNowPlaying": "Now playing",
   "@aiChatChipNowPlaying": {
     "description": "Context chip: the playing song."
+  },
+  "aiChatChipNowPlayingNamed": "Now playing: {title}",
+  "@aiChatChipNowPlayingNamed": {
+    "description": "Context chip: the playing song, with its title.",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
   },
   "aiChatChipSong": "Song",
   "@aiChatChipSong": {

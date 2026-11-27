@@ -8,7 +8,7 @@ import 'ai_catalog_labels.dart';
 import 'prompt_editor_text.dart';
 
 /// "Xem trước": the prompt with each variable replaced by its sample value
-/// (the song Lạc trôi, never the playing song). A value is tinted `primary`
+/// (the song Blinding Lights, never the playing song). A value is tinted `primary`
 /// with a dotted underline, `{{input}}` is dashed (the place the user types),
 /// a variable of a tool group that is off is yellow, an unknown one is red
 /// with a wavy underline.

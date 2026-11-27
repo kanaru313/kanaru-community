@@ -36,6 +36,14 @@ Future<void> _makeDirty(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('the insert-variable label has the variable icon', (
+    tester,
+  ) async {
+    await _open(tester, SettingsPaths.aiPromptNew);
+    expect(find.text('Insert variable:'), findsOneWidget);
+    expect(find.byIcon(KIcons.variable), findsOneWidget);
+  });
+
   testWidgets('insert variable at cursor', (tester) async {
     await _open(tester, SettingsPaths.aiPromptNew);
     await tester.enterText(_bodyField, 'abcdef');
@@ -74,7 +82,7 @@ void main() {
     await _open(tester, SettingsPaths.aiPromptNew);
     await tester.enterText(_bodyField, 'Tell me about {{title}}');
     await tester.pump();
-    expect(find.textContaining('Tell me about Lạc trôi'), findsOneWidget);
+    expect(find.textContaining('Tell me about Blinding Lights'), findsOneWidget);
   });
 
   testWidgets('save writes the prompt and leaves with a toast', (tester) async {

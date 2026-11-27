@@ -312,6 +312,20 @@ void main() {
   });
 
   group('tools', () {
+    testWidgets('the always-sent variables row carries the variable icon', (
+      tester,
+    ) async {
+      await openAiSettings(tester);
+      final row = find.ancestor(
+        of: find.text('Send variables even when a tool is off'),
+        matching: find.byType(KSwitchRow),
+      );
+      expect(
+        find.descendant(of: row, matching: find.byIcon(KIcons.variable)),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('each tool switch writes its own key', (tester) async {
       final handle = tester.ensureSemantics();
       final h = await openAiSettings(tester);

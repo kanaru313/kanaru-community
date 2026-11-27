@@ -46,6 +46,9 @@ Future<SettingsHarness> pumpSettings(
   String location = SettingsPaths.root,
   Size size = const Size(400, 800),
   double textScale = 1,
+
+  /// The app language (the screenshot tests run in Vietnamese).
+  Locale locale = const Locale('en'),
   MediaPermissionState permission = const MediaPermissionState.notApplicable(),
   ExtensionRegistry? registry,
   List<Override> overrides = const [],
@@ -105,8 +108,13 @@ Future<SettingsHarness> pumpSettings(
       child: MaterialApp.router(
         theme: theme ?? buildKanaruTheme(brightness: Brightness.light),
         darkTheme: buildKanaruTheme(brightness: Brightness.dark),
-        locale: const Locale('en'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        locale: locale,
+        localizationsDelegates: locale.languageCode == 'en'
+            ? AppLocalizations.localizationsDelegates
+            : [
+                AppLocalizations.delegate,
+                ...GlobalMaterialLocalizations.delegates,
+              ],
         supportedLocales: AppLocalizations.supportedLocales,
         builder: (context, child) => MediaQuery(
           data: MediaQuery.of(context).copyWith(
@@ -119,6 +127,10 @@ Future<SettingsHarness> pumpSettings(
       ),
     ),
   );
+  // Non-English date data of the Material delegate loads outside fake async.
+  if (locale.languageCode != 'en') {
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+  }
   await tester.pumpAndSettle();
   return SettingsHarness(container, store, router);
 }
