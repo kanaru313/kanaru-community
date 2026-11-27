@@ -16,7 +16,9 @@ double chatSongRowExtent(
   final scaler = MediaQuery.textScalerOf(context);
   double line(TextStyle? s) {
     final size = s?.fontSize ?? 14;
-    return scaler.scale(size * (s?.height ?? 1.4));
+    // The font size is scaled, then the line height multiplies it: a
+    // nonlinear scaler does not give the same as scaling the product.
+    return scaler.scale(size) * (s?.height ?? 1.4);
   }
 
   final lines = line(text.bodyMedium) + line(text.bodySmall);
@@ -27,5 +29,5 @@ double chatSongRowExtent(
 double chatTextRowExtent(BuildContext context, TextStyle? style) {
   final scaler = MediaQuery.textScalerOf(context);
   final size = style?.fontSize ?? 12;
-  return scaler.scale(size * (style?.height ?? 1.4)) + 8;
+  return scaler.scale(size) * (style?.height ?? 1.4) + 8;
 }
