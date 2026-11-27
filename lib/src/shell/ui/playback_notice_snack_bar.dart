@@ -2,11 +2,21 @@ import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
 
+/// Monotonic time source; a test passes its own to move time in big jumps.
+typedef MonotonicNow = Duration Function();
+
+final Stopwatch _monotonic = Stopwatch()..start();
+
+/// Time since the first use of the countdown clock; never goes back.
+Duration systemMonotonicNow() => _monotonic.elapsed;
+
 /// Floating snack bar with a sentence that changes every second and an action
 /// that is disabled while [remaining] is above zero. Used by the rate-limit
-/// pause notice: the bar stays until the count ends (plus [lingerAfterEnd]),
-/// not the usual 4 s. It replaces the snack bar on screen and
-/// never shows a close button or an icon,, like the other notices.
+/// pause notice: the bar stays until the count ends plus [lingerAfterEnd]
+/// instead of the usual 4 s. The count follows a deadline on a monotonic
+/// clock, so a delayed timer never leaves the text or the button behind real
+/// time. It replaces the snack bar on screen and never shows a close button or
+/// an icon, like the other notices.
 void showCountdownSnackBar(
   BuildContext context, {
   required String Function(Duration remaining) sentence,
@@ -14,6 +24,7 @@ void showCountdownSnackBar(
   required String actionLabel,
   required VoidCallback onAction,
   Duration lingerAfterEnd = const Duration(seconds: 4),
+  MonotonicNow now = systemMonotonicNow,
 }) {
   final messenger = ScaffoldMessenger.of(context);
   messenger.hideCurrentSnackBar();
@@ -23,6 +34,7 @@ void showCountdownSnackBar(
         sentence: sentence,
         remaining: remaining,
         actionLabel: actionLabel,
+        now: now,
         onAction: () {
           messenger.hideCurrentSnackBar();
           onAction();
@@ -41,8 +53,10 @@ class _CountdownContent extends StatefulWidget {
     required this.remaining,
     required this.actionLabel,
     required this.onAction,
+    required this.now,
   });
 
+  final MonotonicNow now;
   final String Function(Duration remaining) sentence;
   final Duration remaining;
   final String actionLabel;
@@ -54,17 +68,19 @@ class _CountdownContent extends StatefulWidget {
 
 class _CountdownContentState extends State<_CountdownContent> {
   static const _tick = Duration(seconds: 1);
+  late final Duration _deadline;
   late Duration _remaining = widget.remaining;
   Timer? _timer;
 
   @override
   void initState() {
     super.initState();
+    _deadline = widget.now() + widget.remaining;
     if (_remaining > Duration.zero) {
       _timer = Timer.periodic(_tick, (_) {
         if (!mounted) return;
         setState(() {
-          _remaining -= _tick;
+          _remaining = _deadline - widget.now();
           if (_remaining <= Duration.zero) {
             _remaining = Duration.zero;
             _timer?.cancel();
@@ -85,7 +101,12 @@ class _CountdownContentState extends State<_CountdownContent> {
     final theme = Theme.of(context);
     final color = theme.colorScheme.inversePrimary;
     final enabled = _remaining <= Duration.zero;
-    final text = widget.sentence(_remaining);
+    // The ended sentence is announced once, when the count reaches zero.
+    final text = Semantics(
+      liveRegion: enabled,
+      child: Text(widget.sentence(_remaining)),
+    );
+    final sentence = widget.sentence(_remaining);
     final button = TextButton(
       onPressed: enabled ? widget.onAction : null,
       style: TextButton.styleFrom(
@@ -102,7 +123,7 @@ class _CountdownContentState extends State<_CountdownContent> {
         final style = DefaultTextStyle.of(context).style;
         final scaler = MediaQuery.textScalerOf(context);
         final painter = TextPainter(
-          text: TextSpan(text: text, style: style),
+          text: TextSpan(text: sentence, style: style),
           textDirection: Directionality.of(context),
           textScaler: scaler,
         )..layout();
@@ -118,7 +139,7 @@ class _CountdownContentState extends State<_CountdownContent> {
         if (fits) {
           return Row(
             children: [
-              Expanded(child: Text(text)),
+              Expanded(child: text),
               button,
             ],
           );
@@ -127,7 +148,7 @@ class _CountdownContentState extends State<_CountdownContent> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(text),
+            text,
             Align(alignment: Alignment.centerRight, child: button),
           ],
         );

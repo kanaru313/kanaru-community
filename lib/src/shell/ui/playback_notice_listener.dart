@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:logging/logging.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
@@ -10,6 +11,8 @@ import '../../playback/domain/playback_notice.dart';
 import '../../playback/state/playback_providers.dart';
 import '../../screens/plugins/plugin_paths.dart';
 import 'playback_notice_snack_bar.dart';
+
+final _log = Logger('PlaybackNotice');
 
 /// Turns the player's notices into snack bars. Once started it listens for
 /// good, track or not, so a notice raised as the last track goes is not lost.
@@ -72,7 +75,13 @@ class PlaybackNoticeListenerState
 
 /// Shows [notice] as a snack bar: its words, and its action when it has one.
 /// A rate-limit pause counts down in the bar and stays until the count ends.
-void showPlaybackNotice(BuildContext context, PlaybackNotice notice) {
+///
+/// [now] replaces the monotonic clock of the countdown (tests only).
+void showPlaybackNotice(
+  BuildContext context,
+  PlaybackNotice notice, {
+  MonotonicNow? now,
+}) {
   final l10n = AppLocalizations.of(context);
   if (notice case PausedRateLimited()) {
     showCountdownSnackBar(
@@ -81,6 +90,7 @@ void showPlaybackNotice(BuildContext context, PlaybackNotice notice) {
       remaining: notice.remaining,
       actionLabel: l10n.playbackNoticeRetry,
       onAction: notice.retry,
+      now: now ?? systemMonotonicNow,
     );
     return;
   }
@@ -102,6 +112,9 @@ void showPlaybackNotice(BuildContext context, PlaybackNotice notice) {
         label = l10n.playbackNoticeOpenSettings;
         final path = PluginPaths.plugin(notice.installId);
         onAction = () => unawaited(router.push<void>(path));
+      } else if (notice is PausedNeedsConfig) {
+        // Shown without its action: there is no router to open the page with.
+        _log.warning('needs-config notice without a router: no action shown');
       }
     case null:
       break;
