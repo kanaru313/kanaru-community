@@ -229,6 +229,29 @@
       "n": {"type": "int", "format": "decimalPattern"}
     }
   },
+  "aiChatToolSummaryItems": "{shown} / {total} mục",
+  "@aiChatToolSummaryItems": {
+    "description": "Header of a tool card whose list result is not songs (playlists, for one): rows shown out of the total.",
+    "placeholders": {
+      "shown": {"type": "int", "format": "decimalPattern"},
+      "total": {"type": "int", "format": "decimalPattern"}
+    }
+  },
+  "aiChatToolSummaryItemsMore": "{shown} / {total} mục · AI có thể xem tiếp",
+  "@aiChatToolSummaryItemsMore": {
+    "description": "Same, when more rows exist than were returned.",
+    "placeholders": {
+      "shown": {"type": "int", "format": "decimalPattern"},
+      "total": {"type": "int", "format": "decimalPattern"}
+    }
+  },
+  "aiChatToolSummaryItemsCount": "{n} mục",
+  "@aiChatToolSummaryItemsCount": {
+    "description": "Header of a tool card whose list result is not songs and has no total.",
+    "placeholders": {
+      "n": {"type": "int", "format": "decimalPattern"}
+    }
+  },
   "aiChatToolSearchLibrary": "Tìm trong thư viện",
   "@aiChatToolSearchLibrary": {
     "description": "Name of the search_library tool on a tool card."

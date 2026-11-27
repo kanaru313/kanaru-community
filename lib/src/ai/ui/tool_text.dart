@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import '../../../l10n/gen/app_localizations.dart';
 
-import 'tool_result_rows.dart' show itemsOfToolResult;
+import 'tool_result_rows.dart' show isSongListTool, itemsOfToolResult;
 
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:flutter/widgets.dart' show IconData;
@@ -42,10 +42,11 @@ IconData toolIcon(String name) => switch (name) {
   _ => KIcons.advanced,
 };
 
-/// One line for the card header: "50 / 1,284 songs" for a list ("· the AI can
+/// One line for the card header: "50 / 1,284 songs" ("items" for a tool
+/// that does not list songs) for a list ("· the AI can
 /// look further" when the total is larger than the rows returned), else the
 /// first line.
-String toolSummary(AppLocalizations l10n, String resultText) {
+String toolSummary(AppLocalizations l10n, String tool, String resultText) {
   final text = resultText.trim();
   if (text.isEmpty) return '';
   final items = itemsOfToolResult(text);
@@ -56,10 +57,22 @@ String toolSummary(AppLocalizations l10n, String resultText) {
     } on FormatException {
       total = null;
     }
-    if (total is! int) return l10n.aiChatToolSummaryCount(items.length);
-    return total > items.length
-        ? l10n.aiChatToolSummaryListMore(items.length, total)
-        : l10n.aiChatToolSummaryList(items.length, total);
+    // "songs" only for the tools that list songs; a playlist list is not.
+    final songs = isSongListTool(tool);
+    if (total is! int) {
+      return songs
+          ? l10n.aiChatToolSummaryCount(items.length)
+          : l10n.aiChatToolSummaryItemsCount(items.length);
+    }
+    final more = total > items.length;
+    if (songs) {
+      return more
+          ? l10n.aiChatToolSummaryListMore(items.length, total)
+          : l10n.aiChatToolSummaryList(items.length, total);
+    }
+    return more
+        ? l10n.aiChatToolSummaryItemsMore(items.length, total)
+        : l10n.aiChatToolSummaryItems(items.length, total);
   }
   final first = text.split('\n').first;
   return first.length > 80 ? '${first.substring(0, 79)}…' : first;

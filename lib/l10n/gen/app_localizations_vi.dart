@@ -7501,6 +7501,40 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String aiChatToolSummaryItems(int shown, int total) {
+    final intl.NumberFormat shownNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String shownString = shownNumberFormat.format(shown);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$shownString / $totalString mục';
+  }
+
+  @override
+  String aiChatToolSummaryItemsMore(int shown, int total) {
+    final intl.NumberFormat shownNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String shownString = shownNumberFormat.format(shown);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$shownString / $totalString mục · AI có thể xem tiếp';
+  }
+
+  @override
+  String aiChatToolSummaryItemsCount(int n) {
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String nString = nNumberFormat.format(n);
+
+    return '$nString mục';
+  }
+
+  @override
   String get aiChatToolSearchLibrary => 'Tìm trong thư viện';
 
   @override

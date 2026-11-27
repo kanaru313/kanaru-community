@@ -11969,6 +11969,24 @@ abstract class AppLocalizations {
   /// **'{n, plural, =1{1 song} other{{n} songs}}'**
   String aiChatToolSummaryCount(int n);
 
+  /// Header of a tool card whose list result is not songs (playlists, for one): rows shown out of the total.
+  ///
+  /// In en, this message translates to:
+  /// **'{shown} / {total} items'**
+  String aiChatToolSummaryItems(int shown, int total);
+
+  /// Same, when more rows exist than were returned.
+  ///
+  /// In en, this message translates to:
+  /// **'{shown} / {total} items · the AI can look further'**
+  String aiChatToolSummaryItemsMore(int shown, int total);
+
+  /// Header of a tool card whose list result is not songs and has no total.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 item} other{{n} items}}'**
+  String aiChatToolSummaryItemsCount(int n);
+
   /// Name of the search_library tool on a tool card.
   ///
   /// In en, this message translates to:

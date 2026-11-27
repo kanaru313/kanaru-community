@@ -40,6 +40,9 @@ const _songCells = <String, (int, int, int)>{
   'get_listening_stats': (1, 2, 3),
 };
 
+/// Whether [tool] returns song rows.
+bool isSongListTool(String tool) => _songCells.containsKey(tool);
+
 /// The result of tool [tool] as the open card shows it.
 ToolResultView toolResultView(String tool, String resultText) {
   final text = resultText.trim();

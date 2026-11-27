@@ -38,12 +38,13 @@ class _ToolCardState extends State<ToolCard> {
     final resultText = result == null
         ? ''
         : result.content.whereType<TextPart>().map((p) => p.text).join();
-    final summary = running ? '' : toolSummary(l10n, resultText);
+    final toolName = result?.name ?? call?.name ?? '';
+    final summary = running ? '' : toolSummary(l10n, toolName, resultText);
     final instant = MediaQuery.disableAnimationsOf(context);
     final mobile = FormFactor.of(context) == FormFactor.mobile;
 
     final args = call == null ? '' : toolArgsPreview(call.args, call.rawArgs);
-    final view = toolResultView(result?.name ?? call?.name ?? '', resultText);
+    final view = toolResultView(toolName, resultText);
 
     return Padding(
       padding: const EdgeInsets.only(top: KSpace.x2 + 2),
