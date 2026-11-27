@@ -36,7 +36,11 @@ class _AssistantBlocksState extends State<AssistantBlocks> {
   Widget? _tailGroup;
   // Views of the open blocks of the last build, reused while their block is
   // unchanged (a run of song lines or paragraphs does not rebuild per delta).
-  List<({ChatBlock block, Widget view})> _openViews = const [];
+  List<({int index, ChatBlock block, Widget view})> _openViews = const [];
+  // One key per block (its place in the answer), so a block that closes moves
+  // from the open tail into a group with its State, a song box keeping its
+  // scroll position.
+  final _keys = <int, GlobalKey>{};
   int _built = 0;
   String _fed = '';
 
@@ -61,6 +65,8 @@ class _AssistantBlocksState extends State<AssistantBlocks> {
       _groups.clear();
       _tailViews.clear();
       _tailGroup = null;
+      _openViews = const [];
+      _keys.clear();
       _built = 0;
       _fed = '';
     }
@@ -70,7 +76,7 @@ class _AssistantBlocksState extends State<AssistantBlocks> {
     final closed = _stream.closedBlocks;
     if (closed.length == _built) return;
     for (; _built < closed.length; _built++) {
-      _tailViews.add(ChatBlockView(closed[_built]));
+      _tailViews.add(_view(_built, closed[_built]));
       if (_tailViews.length == _groupSize) {
         _groups.add(_BlockGroup(List.of(_tailViews)));
         _tailViews.clear();
@@ -78,6 +84,11 @@ class _AssistantBlocksState extends State<AssistantBlocks> {
     }
     _tailGroup = _tailViews.isEmpty ? null : _BlockGroup(List.of(_tailViews));
   }
+
+  Widget _view(int index, ChatBlock block) => RepaintBoundary(
+    key: _keys.putIfAbsent(index, GlobalKey.new),
+    child: ChatBlockView(block),
+  );
 
   bool get _isFinishing => !widget.streaming && !_stream.isFinished;
 
@@ -87,13 +98,12 @@ class _AssistantBlocksState extends State<AssistantBlocks> {
     final previous = _openViews;
     _openViews = [
       for (var i = 0; i < open.length; i++)
-        if (i < previous.length && previous[i].block == open[i])
+        if (i < previous.length &&
+            previous[i].index == _built + i &&
+            previous[i].block == open[i])
           previous[i]
         else
-          (
-            block: open[i],
-            view: RepaintBoundary(child: ChatBlockView(open[i])),
-          ),
+          (index: _built + i, block: open[i], view: _view(_built + i, open[i])),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
