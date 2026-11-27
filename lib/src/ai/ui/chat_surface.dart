@@ -67,8 +67,9 @@ class _ChatSurfaceState extends ConsumerState<ChatSurface> {
     scheduleMicrotask(() {
       try {
         view.cancelRename();
-      } on StateError {
-        // The container is gone with the app or the test.
+      } on Exception {
+        // The container is gone with the app or the test: Riverpod throws
+        // its `UnmountedRefException` (an `Exception`, not exported).
       }
     });
     super.dispose();

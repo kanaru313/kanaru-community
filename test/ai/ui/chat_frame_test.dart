@@ -231,6 +231,17 @@ void main() {
       expect(setup.view.renaming, isFalse);
     });
 
+    testWidgets('leaving after the container was disposed raises nothing', (
+      tester,
+    ) async {
+      final setup = await _pump(tester);
+      setup.container.dispose();
+
+      await tester.pumpWidget(const MaterialApp(home: _Frame(mounted: false)));
+      await tester.pump();
+
+      expect(tester.takeException(), isNull);
+    });
     test(
       'opening another conversation ends rename mode without a chat',
       () async {
