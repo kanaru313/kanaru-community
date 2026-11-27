@@ -12,6 +12,15 @@ void main() {
     expect(kindLabel(en, PluginKind.aiChat), 'AI chat');
   });
 
+  test('kind noun phrase keeps the AI acronym', () async {
+    final vi = await AppLocalizations.delegate.load(const Locale('vi'));
+    final en = await AppLocalizations.delegate.load(const Locale('en'));
+    expect(kindPluginLabel(vi, PluginKind.aiChat), 'Plugin AI');
+    expect(kindPluginLabel(en, PluginKind.aiChat), 'AI plugin');
+    expect(kindPluginLabel(vi, PluginKind.lyrics), 'Plugin lời bài');
+    expect(kindPluginLabel(vi, null), isNull);
+  });
+
   test('every kind has a chip label and help', () async {
     final en = await AppLocalizations.delegate.load(const Locale('en'));
     for (final kind in PluginKind.values) {

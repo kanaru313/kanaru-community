@@ -38,7 +38,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.text('Install Demo?'), findsOneWidget);
         expect(
-          find.text('Plugin lyrics · version 3 · someone (self-declared)'),
+          find.text('Lyrics plugin · version 3 · someone (self-declared)'),
           findsOneWidget,
         );
         expect(find.text('From repository Kanaru Plugins'), findsOneWidget);
@@ -143,7 +143,7 @@ void main() {
               reviewPluginUpdate(c, ops, installId: 'id-demo', name: 'Demo'),
         );
         expect(find.text('Update Demo'), findsOneWidget);
-        expect(find.text('lyrics · someone (self-declared)'), findsOneWidget);
+        expect(find.text('Lyrics plugin · someone (self-declared)'), findsOneWidget);
         expect(find.text('NEW'), findsOneWidget);
         expect(find.text('new.example.com'), findsOneWidget);
         expect(find.textContaining('Updating means you agree'), findsOneWidget);

@@ -99,6 +99,10 @@
   "pluginsKindLyrics": "Lyrics",
   "pluginsKindTranslate": "Translation",
   "pluginsKindStreaming": "Music source",
+  "pluginsKindNounLyrics": "Lyrics plugin",
+  "pluginsKindNounTranslate": "Translation plugin",
+  "pluginsKindNounStreaming": "Music source plugin",
+  "pluginsKindNounAiChat": "AI plugin",
   "pluginsKindHelpLyrics": "Finds lyrics for the song playing, with lines that follow the song.",
   "pluginsKindHelpTranslate": "Translates lyrics into the language you choose.",
   "pluginsKindHelpStreaming": "Searches and plays music from an online service.",
@@ -301,7 +305,7 @@
       }
     }
   },
-  "pluginsPkgInstallSubtitle": "Plugin {kind} · version {version} · {author}",
+  "pluginsPkgInstallSubtitle": "{kind} · version {version} · {author}",
   "@pluginsPkgInstallSubtitle": {
     "placeholders": {
       "kind": {
@@ -905,7 +909,7 @@
   },
   "pluginsPageDescription": "Description",
   "pluginsPageType": "Type",
-  "pluginsPageTypeValue": "Plugin for {kind} · plugin API {api}",
+  "pluginsPageTypeValue": "{kind} · plugin API {api}",
   "@pluginsPageTypeValue": {
     "placeholders": {
       "kind": {
@@ -916,7 +920,7 @@
       }
     }
   },
-  "pluginsPageTypeValueAi": "AI plugin for {kind} · plugin API {api}",
+  "pluginsPageTypeValueAi": "{kind} · AI · plugin API {api}",
   "@pluginsPageTypeValueAi": {
     "placeholders": {
       "kind": {

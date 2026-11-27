@@ -64,7 +64,7 @@ void main() {
       );
       expect(find.text('02/11/2026 · updated 10/11/2026'), findsOneWidget);
       expect(find.text('Demo plugin'), findsOneWidget);
-      expect(find.text('Plugin for lyrics · plugin API 2'), findsOneWidget);
+      expect(find.text('Lyrics plugin · plugin API 2'), findsOneWidget);
     });
   }
 

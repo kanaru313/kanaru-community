@@ -38,7 +38,7 @@ class PackageHeader extends StatelessWidget {
         : l10n.pluginsPkgInstallTitle(name);
     String? subtitle;
     if (manifest != null) {
-      final kind = (kindLabel(l10n, manifest.kind) ?? '').toLowerCase();
+      final kind = kindPluginLabel(l10n, manifest.kind) ?? '';
       final author = manifest.author.isEmpty
           ? l10n.pluginsAuthorUnknown
           : l10n.pluginsPkgAuthorDeclared(manifest.author);

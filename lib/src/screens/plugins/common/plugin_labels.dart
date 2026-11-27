@@ -41,6 +41,18 @@ String kindGroupHelp(AppLocalizations l10n, StoreKindGroup group) =>
       StoreKindGroup.aiChat => l10n.pluginsKindHelpAiChat,
     };
 
+/// The kind as a "Plugin …" noun phrase (install subtitle, plugin page).
+String? kindPluginLabel(AppLocalizations l10n, PluginKind? kind) {
+  final group = StoreKindGroup.of(kind);
+  return switch (group) {
+    StoreKindGroup.lyrics => l10n.pluginsKindNounLyrics,
+    StoreKindGroup.translate => l10n.pluginsKindNounTranslate,
+    StoreKindGroup.streaming => l10n.pluginsKindNounStreaming,
+    StoreKindGroup.aiChat => l10n.pluginsKindNounAiChat,
+    null => null,
+  };
+}
+
 /// The kind chip of a row; null for a kind this app does not know.
 String? kindLabel(AppLocalizations l10n, PluginKind? kind) {
   final group = StoreKindGroup.of(kind);
