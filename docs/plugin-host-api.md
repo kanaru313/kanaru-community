@@ -27,8 +27,20 @@ After the entry file ran, the host calls the global `execute(input)` once.
 | `Response.success(data)` | status `ok`, `output_json` = `JSON.stringify(data)` (`null` for `undefined`) |
 | `Response.error(message, {kind, retryAfterSec})` | status `scriptError`, `error_message` = `message` (cut at 1000 characters), `error_kind` = `kind`, `retry_after_sec` = `retryAfterSec` |
 
-`kind` is `rateLimited`, `invalidResponse`, `auth`, `quota` or `server`;
-anything else, or none, is `server`. `retryAfterSec` counts only as a finite
+`kind` is one of eight values; anything else, or none, is `server`:
+
+| `kind` | Meaning |
+|---|---|
+| `rateLimited` | the service asked to slow down (pauses the plugin; `retryAfterSec`) |
+| `invalidResponse` | the answer was not what the script expected |
+| `server` | the service failed, or any unknown kind |
+| `auth` | the key or login was refused |
+| `quota` | the quota or plan limit is used up (a rate limit that lasts) |
+| `unavailable` | the item is gone: removed, or geo-blocked for this user |
+| `network` | a network failure the plugin saw itself |
+| `unsupported` | content the plugin cannot play or serve, for example a livestream |
+
+ `retryAfterSec` counts only as a finite
 number of 0 or more (rounded down). Returning anything else (a Promise,
 `undefined`, a plain object) is `scriptError` with kind `invalidResponse` and
 the message `execute must return Response.success or Response.error`; a missing
@@ -54,7 +66,7 @@ on every status:
 |---|---|
 | `status` | `Ok`, `ScriptError`, `Timeout`, `Memory`, `Stack`, `Cancelled`, `OutputTooLarge`, `Internal`, `Busy` |
 | `output_json` | data of `Response.success`; empty unless `Ok` |
-| `error_message`, `error_kind`, `retry_after_sec` | explanation of a non-`Ok` status; kind and retry hint for script-reported failures. Kinds: `None`, `RateLimited`, `InvalidResponse`, `Server`, `Auth`, `Quota`. The app folds `Auth` (lyrics) and unknown kinds to `server` |
+| `error_message`, `error_kind`, `retry_after_sec` | explanation of a non-`Ok` status; kind and retry hint for script-reported failures. Kinds: `None`, `RateLimited`, `InvalidResponse`, `Server`, `Auth`, `Quota`, `Unavailable`, `Network`, `Unsupported`. Unknown kinds are `server`; each consumer folds the rest (see Errors under `lyrics`) |
 | `js_error` | the exception that ended the run (`message`, `stack` with `file:line:col`). Set for thrown errors, syntax errors, and for `Timeout`, `Memory`, `Stack` and a cancel of a running job. Not set for `Busy`, `Internal`, `OutputTooLarge`, `Response.error`, a non-`Response` return or a missing `execute` |
 | `logs` | console lines captured before the run ended |
 | `fetch_failure` | the first failing `fetch` of the call, even if the script caught the error |
@@ -292,7 +304,7 @@ A plugin of type `lyrics` declares two scripts, `search` and `lyrics`. Each is a
 
 **`lyrics`.** Input: the chosen item's `id` as a string. Output: `null` (no lyrics), `{ instrumental: true }` (wins over data) or `{ data, type? }` with `type` `lrc` or `txt`. Anything else is an invalid response.
 
-**Errors.** `Response.error` kinds: `rateLimited` (with `retryAfterSec` when the server said so), `invalidResponse`, `server`, `auth`, `quota`; an unknown kind is `server`. A failed `fetch` is a sticky failure (above): a script that catches it and returns an empty list still ends `Ok` with a `fetch_failure`, and the app treats "empty result + failure" as a failure, never as "no lyrics". For lyrics the app folds `auth` into a server failure and `quota` into a rate limit.
+**Errors.** `Response.error` kinds: `rateLimited` (with `retryAfterSec` when the server said so), `invalidResponse`, `server`, `auth`, `quota`, `unavailable`, `network`, `unsupported`; an unknown kind is `server`. A failed `fetch` is a sticky failure (above): a script that catches it and returns an empty list still ends `Ok` with a `fetch_failure`, and the app treats "empty result + failure" as a failure, never as "no lyrics". For lyrics the app folds `auth`, `unavailable` and `unsupported` into a server failure, `quota` into a rate limit and `network` into a network failure. Translation maps `network` to its network failure, `unavailable` and `unsupported` to server, `auth` to a bad key and `quota` to quota. AI chat maps by the `ai:<code>` in the message, not by the kind. The run log writes the kind name; the log screen shows kinds without a label as written.
 
 **Time.** The app runs `search` and `lyrics` with a 30 s script wall (plus 0.9 s for the pauses between requests); the chain of a token fetch, a search and a lyrics fetch fits in it. A run that needs more fails as a timeout.
 

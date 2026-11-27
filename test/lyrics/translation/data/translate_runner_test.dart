@@ -96,6 +96,18 @@ void main() {
         const RunScriptError(RunErrorKind.server, 'x'),
         () => const ChunkFailed(TranslationFailure.server()),
       ),
+      'RunScriptError unavailable': (
+        const RunScriptError(RunErrorKind.unavailable, 'x'),
+        () => const ChunkFailed(TranslationFailure.server()),
+      ),
+      'RunScriptError unsupported': (
+        const RunScriptError(RunErrorKind.unsupported, 'x'),
+        () => const ChunkFailed(TranslationFailure.server()),
+      ),
+      'RunScriptError network': (
+        const RunScriptError(RunErrorKind.network, 'x'),
+        () => const ChunkFailed(TranslationFailure.network()),
+      ),
       'RunFailed timeout': (
         const RunFailed(RunFailReason.timeout),
         () => const ChunkFailed(TranslationFailure.network()),

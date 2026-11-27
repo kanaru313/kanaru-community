@@ -119,6 +119,23 @@ void main() {
     },
   );
 
+  test('the new error kinds are written as their name', () async {
+    for (final kind in [
+      EngineErrorKind.network,
+      EngineErrorKind.unavailable,
+      EngineErrorKind.unsupported,
+    ]) {
+      final events = await run(
+        EngineResult(
+          status: EngineStatus.scriptError,
+          errorKind: kind,
+          errorMessage: 'ai:server',
+        ),
+      );
+      expect(events.single.kind, kind.name);
+    }
+  });
+
   test('header masks still applied', () async {
     final events = await run(
       const EngineResult(

@@ -119,10 +119,14 @@ RunDecision decideRun(RunOutcome outcome) => switch (outcome) {
       ),
       // A quota is a rate limit that lasts.
       RunErrorKind.quota => _failed(SourceFailKind.rateLimited, retryAfter),
-      // A bad key is the user's to fix: shown like a server failure.
+      // The plugin saw the network fail itself: same retryable state as a
+      // timeout.
+      RunErrorKind.network => _failed(SourceFailKind.network),
+      // A bad key is the user's to fix; a removed or geo-blocked item and
+      // content the plugin cannot serve have no state of their own yet: all
+      // shown like a server failure.
       RunErrorKind.auth ||
       RunErrorKind.unavailable ||
-      RunErrorKind.network ||
       RunErrorKind.unsupported ||
       RunErrorKind.server => _failed(SourceFailKind.server),
       RunErrorKind.invalidResponse => _failed(SourceFailKind.invalid),
