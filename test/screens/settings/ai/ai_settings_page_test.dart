@@ -1,8 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/ai/domain/output/chat_readiness.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru/src/ai/domain/settings/tool_groups.dart';
-import 'package:kanaru/src/ai/state/ai_settings_providers.dart';
 import 'package:kanaru/src/screens/plugins/store/store_page.dart';
 import 'package:kanaru/src/screens/settings/settings_routes.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -164,10 +162,8 @@ void main() {
         tester,
         store: store,
         removedNames: {'gone': 'Gemini'},
+        nextPlugin: null,
         services: [service('x')],
-        overrides: [
-          aiChatPluginProvider.overrideWith((ref) => const AsyncData(null)),
-        ],
       );
       expect(find.textContaining('was removed'), findsNothing);
     });
@@ -251,20 +247,28 @@ void main() {
       expect(find.text('2,000 / 2,000'), findsOneWidget);
     });
 
-    testWidgets('a long text of multi-code-point characters is cut at 2000', (
-      tester,
-    ) async {
-      final h = await openAiSettings(tester);
-      // Thumbs-up with a skin tone: one character, two code points.
-      await tester.enterText(find.byType(TextField), '👍🏽' * 1100);
-      await tester.pump();
-      final saved = h.store.read('ai.instructions') as String;
-      expect(saved.runes.length, lessThanOrEqualTo(2000));
-      expect(
-        tester.widget<TextField>(find.byType(TextField)).controller!.text,
-        saved,
-      );
-    });
+    testWidgets(
+      'multi-code-point characters ending at 2000 code points are kept whole, '
+      'one more is rejected',
+      (tester) async {
+        final h = await openAiSettings(tester);
+        final field = find.byType(TextField);
+        final controller = tester.widget<TextField>(field).controller!;
+        // Thumbs-up with a skin tone: one character, two code points.
+        final whole = '👍🏽' * 1000;
+        await tester.enterText(field, whole);
+        await tester.pump();
+        expect(whole.runes.length, 2000);
+        expect(h.store.read('ai.instructions'), whole);
+        expect(controller.text, whole);
+        // One more character (1001 characters, 2002 code points): the field
+        // lets it in, the section rejects it and keeps the text.
+        await tester.enterText(field, '$whole👍🏽');
+        await tester.pump();
+        expect(controller.text, whole);
+        expect(h.store.read('ai.instructions'), whole);
+      },
+    );
   });
 
   group('instructions limit', () {

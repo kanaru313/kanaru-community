@@ -41,13 +41,13 @@ ChatPluginInfo service(
 /// Settings › AI chat over a plugin fixture: [services] is the list of
 /// installed AI chat plugins (`null` = still loading), [removedNames] the
 /// tombstone names by install id. [nextPlugin] is what the engine's
-/// `aiChatPluginProvider` answers; by default it resolves the stored last
+/// `aiChatPluginProvider` answers (`null` = no answer); by default it resolves the stored last
 /// plugin over [services], as the engine does.
 Future<SettingsHarness> openAiSettings(
   WidgetTester tester, {
   List<ChatPluginInfo>? services = const [],
   Map<String, String> removedNames = const {},
-  String? nextPlugin,
+  String? nextPlugin = _auto,
   MemorySettingsStore? store,
   Size size = const Size(400, 4000),
   String location = SettingsPaths.ai,
@@ -74,14 +74,15 @@ Future<SettingsHarness> openAiSettings(
       ),
       aiChatPluginProvider.overrideWith(
         (ref) => AsyncData(
-          nextPlugin ??
-              resolveChatPlugin(
-                stored: ref.watch(aiLastPluginProvider),
-                installedIds: [
-                  for (final s in services ?? const <ChatPluginInfo>[])
-                    s.installId,
-                ],
-              ),
+          !identical(nextPlugin, _auto)
+              ? nextPlugin
+              : resolveChatPlugin(
+                  stored: ref.watch(aiLastPluginProvider),
+                  installedIds: [
+                    for (final s in services ?? const <ChatPluginInfo>[])
+                      s.installId,
+                  ],
+                ),
         ),
       ),
       aiRemovedPluginNameProvider.overrideWith(
