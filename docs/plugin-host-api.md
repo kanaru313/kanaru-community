@@ -40,11 +40,10 @@ After the entry file ran, the host calls the global `execute(input)` once.
 | `network` | a network failure the plugin saw itself |
 | `unsupported` | content the plugin cannot play or serve, for example a livestream |
 
- `retryAfterSec` counts only as a finite
-number of 0 or more (rounded down). Returning anything else (a Promise,
-`undefined`, a plain object) is `scriptError` with kind `invalidResponse` and
-the message `execute must return Response.success or Response.error`; a missing
-`execute` is `scriptError` too.
+`retryAfterSec` counts only as a finite number of 0 or more (rounded down).
+Returning anything else (a Promise, `undefined`, a plain object) is
+`scriptError` with kind `invalidResponse` and the message `execute must return
+Response.success or Response.error`; a missing `execute` is `scriptError` too.
 
 ### `load(name)`
 

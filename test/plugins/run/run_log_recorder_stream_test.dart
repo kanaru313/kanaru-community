@@ -119,22 +119,26 @@ void main() {
     },
   );
 
-  test('the new error kinds are written as their name', () async {
-    for (final kind in [
-      EngineErrorKind.network,
-      EngineErrorKind.unavailable,
-      EngineErrorKind.unsupported,
-    ]) {
-      final events = await run(
-        EngineResult(
-          status: EngineStatus.scriptError,
-          errorKind: kind,
-          errorMessage: 'ai:server',
-        ),
-      );
-      expect(events.single.kind, kind.name);
-    }
-  });
+  test(
+    'writes the unavailable, network and unsupported kinds by name',
+    () async {
+      const expected = {
+        EngineErrorKind.unavailable: 'unavailable',
+        EngineErrorKind.network: 'network',
+        EngineErrorKind.unsupported: 'unsupported',
+      };
+      for (final entry in expected.entries) {
+        final events = await run(
+          EngineResult(
+            status: EngineStatus.scriptError,
+            errorKind: entry.key,
+            errorMessage: 'upstream text without a code',
+          ),
+        );
+        expect(events.single.kind, entry.value);
+      }
+    },
+  );
 
   test('header masks still applied', () async {
     final events = await run(
