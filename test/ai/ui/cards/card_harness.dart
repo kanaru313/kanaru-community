@@ -143,7 +143,10 @@ Future<CardSetup> pumpCard(
       child: MaterialApp(
         locale: const Locale('vi'),
         theme: buildKanaruTheme(brightness: Brightness.light),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: [
+          AppLocalizations.delegate,
+          ...GlobalMaterialLocalizations.delegates,
+        ],
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: SingleChildScrollView(

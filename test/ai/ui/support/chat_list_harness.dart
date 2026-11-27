@@ -97,7 +97,10 @@ Future<ListSetup> pumpChatList(
       child: MaterialApp(
         locale: locale,
         theme: buildKanaruTheme(brightness: Brightness.light),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: [
+          AppLocalizations.delegate,
+          ...GlobalMaterialLocalizations.delegates,
+        ],
         supportedLocales: AppLocalizations.supportedLocales,
         builder: (context, child) => MediaQuery(
           data: MediaQuery.of(context)

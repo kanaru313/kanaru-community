@@ -145,8 +145,10 @@ class ChatNoPluginGuide extends ConsumerWidget {
   }
 }
 
-/// [header] centred in the free space, [below] at the bottom; scrolls when
-/// the window is too short (200 % text, keyboard up).
+/// [header] and [below] centred as one group in the free space; scrolls when
+/// the window is too short (200 % text, keyboard up). No intrinsic sizes: the
+/// group is laid out at its natural height inside a box at least as tall as
+/// the viewport.
 class _EmptyFrame extends StatelessWidget {
   const _EmptyFrame({required this.header, this.below});
 
@@ -155,31 +157,35 @@ class _EmptyFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      slivers: [
-        SliverFillRemaining(
-          hasScrollBody: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              KSpace.x4,
-              KSpace.x6,
-              KSpace.x4,
-              KSpace.x2,
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(
+          KSpace.x4,
+          KSpace.x6,
+          KSpace.x4,
+          KSpace.x2,
+        ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: (constraints.maxHeight - KSpace.x6 - KSpace.x2).clamp(
+              0.0,
+              double.infinity,
             ),
+          ),
+          child: Center(
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // Spacers, not an Expanded box: in a panel shorter than the
-                // header the column grows and the sliver scrolls.
-                const Spacer(),
                 header,
-                const Spacer(),
-                const SizedBox(height: KSpace.x4),
-                ?below,
+                if (below != null) ...[
+                  const SizedBox(height: KSpace.x4),
+                  below!,
+                ],
               ],
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 }
