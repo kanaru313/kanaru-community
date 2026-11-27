@@ -151,6 +151,9 @@ void main() {
   testWidgets('composer focused', (tester) async {
     final container = await _pumpApp(tester, width: 1280);
     await _ask(tester, container, _song);
+    // The panel slides in and the focus request waits for its first frame.
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
     expect(_composerFocused(tester), isTrue);
   });
 }

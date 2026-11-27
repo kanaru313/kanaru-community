@@ -12,6 +12,8 @@ import 'package:kanaru/src/ai/state/chat_view/card_view.dart';
 import 'package:kanaru/src/ai/ui/cards/chat_cards.dart';
 import 'package:kanaru/src/ai/ui/cards/playlist_link.dart';
 import 'package:kanaru/src/ai/ui/chat_host.dart';
+import 'package:kanaru/src/library/state/browse/song_list_providers.dart'
+    show trackRowLoaderProvider;
 import 'package:kanaru/src/media/domain/track_info.dart';
 import 'package:kanaru/src/playback/state/track_info_providers.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -120,6 +122,9 @@ Future<CardSetup> pumpCard(
       chatHostProvider.overrideWithValue(host),
       trackInfoProvider.overrideWith(
         (ref, id) => Stream.value(library[id.value]),
+      ),
+      trackRowLoaderProvider.overrideWithValue(
+        (ids) async => [for (final id in ids) ?library[id.value]],
       ),
       chatConfirmPreviewProvider.overrideWith((ref, call) async => preview),
       chatCardHostProvider.overrideWith((ref, installId) async => pluginHost),

@@ -19,22 +19,42 @@ class ChatSuggestionsSync extends ConsumerStatefulWidget {
 }
 
 class _ChatSuggestionsSyncState extends ConsumerState<ChatSuggestionsSync> {
-  List<ChipPart>? _sent;
+  ProviderSubscription<List<ChipPart>>? _subscription;
+  Locale? _locale;
+  List<ChipPart>? _last;
 
   @override
-  Widget build(BuildContext context) {
-    final chips = ref.watch(
-      chatSuggestionsProvider(AppLocalizations.of(context)),
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final l10n = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context);
+    if (_subscription != null && locale == _locale) return;
+    _locale = locale;
+    _subscription?.close();
+    // Later changes arrive as provider events, never from a build. The first
+    // value waits for the end of the frame: a provider must not change while
+    // the tree builds.
+    _subscription = ref.listenManual(
+      chatSuggestionsProvider(l10n),
+      (_, chips) => _push(chips),
     );
-    if (_sent == null || !listEquals(_sent, chips)) {
-      _sent = chips;
-      // After the frame: a provider must not change while the tree builds.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          ref.read(chatAttachmentsProvider.notifier).setSuggestions(chips);
-        }
-      });
-    }
-    return const SizedBox.shrink();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _push(ref.read(chatSuggestionsProvider(l10n)));
+    });
   }
+
+  void _push(List<ChipPart> chips) {
+    if (listEquals(_last, chips)) return;
+    _last = chips;
+    ref.read(chatAttachmentsProvider.notifier).setSuggestions(chips);
+  }
+
+  @override
+  void dispose() {
+    _subscription?.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
 }

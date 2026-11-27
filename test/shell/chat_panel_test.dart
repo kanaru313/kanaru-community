@@ -197,6 +197,8 @@ void main() {
         savedSettings: {'shell.right_panel': 'chat'},
       );
       expect(_kind(host), RightPanelKind.chat);
+      // The state may have changed after the last frame: draw it first.
+      await tester.pump();
       // The panel's room is kept, its content waits for the player.
       expect(find.byType(ChatSurface), findsNothing);
       expect(

@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart' show BuildContext;
+import 'package:flutter/widgets.dart' show BuildContext, WidgetsBinding;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -24,8 +24,7 @@ class AskAiEntryShell implements AskAiEntry {
 
   @override
   Future<void> ask(BuildContext context, AskAiTarget target) async {
-    // Read before anything else: the context may be a menu that closes.
-    final desktop = FormFactor.of(context) == FormFactor.desktop;
+    final desktop = _isDesktop(context);
     _ref.read(chatAttachmentsProvider.notifier).attachTarget(target);
     // The conversation, not the history list, must be in front.
     _ref.read(chatViewProvider.notifier).closeHistory();
@@ -35,5 +34,17 @@ class AskAiEntryShell implements AskAiEntry {
       openChatPage(_router());
     }
     _ref.read(composerFocusRequestProvider.notifier).request();
+  }
+
+  /// The shell for the current window. A context that is already gone (a
+  /// menu that closed) falls back to the window's own size, so a caller can
+  /// never break the entry with a dead context.
+  bool _isDesktop(BuildContext context) {
+    if (context.mounted) return FormFactor.of(context) == FormFactor.desktop;
+    final view = WidgetsBinding.instance.platformDispatcher.views.first;
+    return FormFactor.fromWidth(
+          view.physicalSize.width / view.devicePixelRatio,
+        ) ==
+        FormFactor.desktop;
   }
 }

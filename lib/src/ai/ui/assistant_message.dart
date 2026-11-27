@@ -5,7 +5,8 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../l10n/gen/app_localizations.dart';
 import '../../media/domain/track_id.dart';
-import '../../playback/state/track_info_providers.dart';
+import '../../library/state/browse/song_list_providers.dart'
+    show TrackRowLoader, trackRowLoaderProvider;
 import '../domain/conversation/ai_message.dart';
 import '../domain/loop/loop_state.dart';
 import '../state/chat_session.dart';
@@ -111,6 +112,8 @@ class _Footer extends ConsumerWidget {
         ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant);
     final model = message.model;
     final known = ChatKnownTracks.of(context);
+    // Read before the copy awaits: the footer may be gone by then.
+    final loader = ref.read(trackRowLoaderProvider);
     return Row(
       children: [
         MessageTime(at: message.createdAt),
@@ -125,7 +128,7 @@ class _Footer extends ConsumerWidget {
             ),
           ),
         ],
-        MessageCopyButton(textBuilder: () => _plainText(ref, known)),
+        MessageCopyButton(textBuilder: () => _plainText(loader, known)),
       ],
     );
   }
@@ -134,22 +137,22 @@ class _Footer extends ConsumerWidget {
 extension on _Footer {
   /// The answer as it reads on screen: song lines of this conversation become
   /// "title – artist", the rest of the markers are dropped.
-  Future<String> _plainText(WidgetRef ref, Set<int> known) async {
+  Future<String> _plainText(TrackRowLoader load, Set<int> known) async {
+    final ids = <int>{
+      for (final token in trackTokensOf(text))
+        if (int.tryParse(token) case final id? when known.contains(id)) id,
+    };
     final labels = <String, String>{};
-    for (final token in trackTokensOf(text)) {
-      final id = int.tryParse(token);
-      if (id == null || !known.contains(id) || labels.containsKey(token)) {
-        continue;
-      }
+    if (ids.isNotEmpty) {
       try {
-        final info = await ref.read(trackInfoProvider(TrackId(id)).future);
-        if (info == null) continue;
-        final artist = info.artist;
-        labels[token] = artist == null || artist.isEmpty
-            ? info.title
-            : '${info.title} – $artist';
+        for (final info in await load([for (final id in ids) TrackId(id)])) {
+          final artist = info.artist;
+          labels['${info.id.value}'] = artist == null || artist.isEmpty
+              ? info.title
+              : '${info.title} – $artist';
+        }
       } on Object catch (e, s) {
-        // The song is left out of the copy; the rest still copies.
+        // The songs are left out of the copy; the rest still copies.
         _log.warning('track lookup for copy failed', e, s);
       }
     }

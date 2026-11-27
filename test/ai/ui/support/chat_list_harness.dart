@@ -7,6 +7,8 @@ import 'package:kanaru/src/ai/ui/chat_host.dart';
 import 'package:kanaru/src/ai/ui/chat_surface.dart';
 import 'package:kanaru/src/ai/ui/track_actions.dart';
 import 'package:kanaru/src/media/domain/track_id.dart';
+import 'package:kanaru/src/library/state/browse/song_list_providers.dart'
+    show trackRowLoaderProvider;
 import 'package:kanaru/src/media/domain/track_info.dart';
 import 'package:kanaru/src/playback/state/track_info_providers.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
@@ -85,6 +87,9 @@ Future<ListSetup> pumpChatList(
       chatTrackActionsProvider.overrideWithValue(tracks),
       trackInfoProvider.overrideWith(
         (ref, id) => Stream.value(library[id.value]),
+      ),
+      trackRowLoaderProvider.overrideWithValue(
+        (ids) async => [for (final id in ids) ?library[id.value]],
       ),
       if (failMessages) fakeMessagesFailProvider.overrideWithValue(true),
       ...extra,

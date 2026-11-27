@@ -2,14 +2,19 @@ import 'dart:math' as math;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
+import 'package:logging/logging.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../../l10n/gen/app_localizations.dart';
+import '../../../library/state/browse/song_list_providers.dart'
+    show trackRowLoaderProvider;
 import '../../../media/domain/cover_files.dart';
 import '../../../media/domain/track_id.dart';
-import '../../../playback/state/track_info_providers.dart';
+import '../../../media/domain/track_info.dart';
 import '../../../playback/ui/track_cover.dart';
 import '../../domain/conversation/track_ref_snapshot.dart';
+
+final _log = Logger('ai.track_rows_preview');
 
 /// A list of up to this many songs shows all of them; a longer one shows the
 /// first [_shortRows] and a "+N bài" button.
@@ -27,7 +32,7 @@ double _buttonHeight(BuildContext context) =>
 /// The songs of a card as compact rows (cover 40, title, artist): the whole
 /// list up to six songs, else five and "+N bài" that opens the rest. Rows
 /// only show; nothing in them is tappable.
-class TrackRowsPreview extends StatefulWidget {
+class TrackRowsPreview extends ConsumerStatefulWidget {
   const TrackRowsPreview({super.key, required this.tracks, this.indent = true});
 
   final List<TrackRefSnapshot> tracks;
@@ -36,19 +41,63 @@ class TrackRowsPreview extends StatefulWidget {
   final bool indent;
 
   @override
-  State<TrackRowsPreview> createState() => _TrackRowsPreviewState();
+  ConsumerState<TrackRowsPreview> createState() => _TrackRowsPreviewState();
 }
 
-class _TrackRowsPreviewState extends State<TrackRowsPreview> {
+class _TrackRowsPreviewState extends ConsumerState<TrackRowsPreview> {
   bool _all = false;
+
+  /// Library rows of the songs shown, read in one query per batch (a card
+  /// never keeps a live watch per row). Ids already read are not read again.
+  final Map<int, TrackInfo> _infos = {};
+  final Set<int> _asked = {};
+  bool _loaded = false;
+
+  int get _shownCount => widget.tracks.length > _showAllUpTo && !_all
+      ? _shortRows
+      : widget.tracks.length;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void didUpdateWidget(TrackRowsPreview old) {
+    super.didUpdateWidget(old);
+    _load();
+  }
+
+  Future<void> _load() async {
+    final ids = [
+      for (final t in widget.tracks.take(_shownCount))
+        if (_asked.add(t.trackId)) TrackId(t.trackId),
+    ];
+    if (ids.isEmpty) return;
+    // Captured before the await: the card may be gone when it returns.
+    final loader = ref.read(trackRowLoaderProvider);
+    try {
+      final rows = await loader(ids);
+      if (!mounted) return;
+      setState(() {
+        for (final r in rows) {
+          _infos[r.id.value] = r;
+        }
+        _loaded = true;
+      });
+    } on Object catch (e, s) {
+      // Rows keep the text the engine stored; only covers are missing.
+      _log.warning('reading the card songs failed: ${e.runtimeType}', e, s);
+      if (mounted) setState(() => _loaded = true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final tracks = widget.tracks;
-    final shown = tracks.length > _showAllUpTo && !_all
-        ? _shortRows
-        : tracks.length;
+    final shown = _shownCount;
     final rest = tracks.length - shown;
     return Padding(
       padding: EdgeInsetsDirectional.only(
@@ -63,7 +112,11 @@ class _TrackRowsPreviewState extends State<TrackRowsPreview> {
           children: [
             for (var i = 0; i < shown; i++) ...[
               if (i > 0) const SizedBox(height: KSpace.x1 / 2),
-              _SongLine(track: tracks[i]),
+              _SongLine(
+                track: tracks[i],
+                info: _infos[tracks[i].trackId],
+                loaded: _loaded,
+              ),
             ],
             if (rest > 0)
               Align(
@@ -162,21 +215,30 @@ class _TrackListFoldState extends State<TrackListFold> {
 /// stored (what the call listed or changed); the cover comes from the library
 /// while the song is still there. A song stored by id only (a replaced queue)
 /// takes its text from the library too.
-class _SongLine extends ConsumerWidget {
-  const _SongLine({required this.track});
+class _SongLine extends StatelessWidget {
+  const _SongLine({
+    required this.track,
+    required this.info,
+    required this.loaded,
+  });
 
   final TrackRefSnapshot track;
 
+  /// The song's library row; null while it loads or when it left the library.
+  final TrackInfo? info;
+
+  /// Whether the library read finished (a missing row is then "gone").
+  final bool loaded;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    final info = ref.watch(trackInfoProvider(TrackId(track.trackId))).value;
     final stored = track.title.isNotEmpty;
     final title = stored
         ? track.title
-        : (info?.title ?? l10n.aiChatCardTrackGone);
+        : (info?.title ?? (loaded ? l10n.aiChatCardTrackGone : ''));
     final artist = stored ? track.artist : (info?.artist ?? '');
     return Padding(
       padding: const EdgeInsets.symmetric(

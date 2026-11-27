@@ -87,6 +87,16 @@ Future<_Setup> _pump(
   return _Setup(container, fake);
 }
 
+/// The search and the rename boxes, told apart by their hint, so the finders
+/// hold however many text fields the page shows.
+Finder _byHint(String hint) => find.byWidgetPredicate(
+  (w) => w is TextField && w.decoration?.hintText == hint,
+  description: 'TextField with hint "$hint"',
+);
+
+Finder get _searchField => _byHint('Search conversations');
+Finder get _renameField => _byHint('Conversation name');
+
 SelectionRow _selection(WidgetTester tester, int id) => tester.widget(
   find.descendant(
     of: find.byKey(historyRowKey(id)),
@@ -139,6 +149,36 @@ void main() {
           [5, 6],
         ],
       );
+    });
+
+    testWidgets('a list left open regroups at midnight', (tester) async {
+      var now = historyNow;
+      final container = ProviderContainer(
+        overrides: [
+          ...chatUiOverrides(session: FakeChatSession()),
+          chatHistoryClockProvider.overrideWithValue(() => now),
+        ],
+      );
+      container.read(fakeHistoryProvider.notifier).set([
+        historyConversation(1, 'a', at: DateTime(2026, 11, 27, 14)),
+      ]);
+      final sections = container.listen(chatHistorySectionsProvider, (_, _) {});
+      // Closed before the test ends, so no timer is left pending.
+      try {
+        await tester.pump();
+        await tester.pump();
+        expect(sections.read().value!.single.group, HistoryGroup.today);
+
+        // Nine hours later it is the next day: the same conversation is no
+        // longer from today.
+        now = DateTime(2026, 11, 28, 0, 0, 1);
+        await tester.pump(const Duration(hours: 9));
+        await tester.pump();
+        expect(sections.read().value!.single.group, HistoryGroup.week);
+      } finally {
+        sections.close();
+        container.dispose();
+      }
     });
 
     test('empty groups are left out and the order is kept', () {
@@ -194,13 +234,13 @@ void main() {
       expect(find.text('Roadtrip songs'), findsOneWidget);
       expect(find.text('Lyrics help'), findsOneWidget);
 
-      await tester.enterText(find.byType(TextField), 'lyric');
+      await tester.enterText(_searchField, 'lyric');
       await tester.pumpAndSettle();
       expect(setup.container.read(chatHistoryQueryProvider), 'lyric');
       expect(find.text('Roadtrip songs'), findsNothing);
       expect(find.text('Lyrics help'), findsOneWidget);
 
-      await tester.enterText(find.byType(TextField), 'zzz');
+      await tester.enterText(_searchField, 'zzz');
       await tester.pumpAndSettle();
       expect(find.text('No conversation matches “zzz”.'), findsOneWidget);
     });
@@ -290,12 +330,12 @@ void main() {
         conversations: [historyConversation(2, 'Old name', at: _daysAgo(1))],
       );
       await _rowMenu(tester, 'Old name', 'Rename');
-      await tester.enterText(find.byType(TextField).last, 'New name');
+      await tester.enterText(_renameField, 'New name');
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pumpAndSettle();
       expect(setup.session.calls, contains('rename 2 New name'));
       // The row is back to text and nothing was opened.
-      expect(find.byType(TextField), findsOneWidget);
+      expect(_renameField, findsNothing);
       expect(setup.session.calls, isNot(contains('open 2')));
     });
   });
@@ -342,6 +382,10 @@ void main() {
       await tester.tap(find.text('Delete').last);
       await tester.pumpAndSettle();
       expect(find.text('Conversation deleted'), findsOneWidget);
+      // Let the toast run out, so no timer outlives the test.
+      await tester.pump(const Duration(seconds: 10));
+      await tester.pumpAndSettle();
+      expect(find.text('Conversation deleted'), findsNothing);
     });
 
     testWidgets('a delete that fails shows no toast', (tester) async {

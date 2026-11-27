@@ -146,7 +146,7 @@ list and from the empty search field (a search with text clears first).
   `search(query)` for title and message text) and reloads on `store.changes`,
   keeping the list on screen meanwhile. `groupHistory(list, now)` (pure) splits
   by local calendar day: today, 1-7 days before today ("7 ngày qua"), older;
-  `chatHistoryClockProvider` is the injectable clock. The list is not paged
+  `chatHistoryClockProvider` is the injectable clock; `chatHistorySectionsProvider` invalidates itself at the next local midnight, so a list left open regroups. The list is not paged
   (rows are cheap); search runs on each keystroke without debounce.
 - **Row:** `SelectionRow` icon row (plugin icon, name, line "giờ | dd/mm · plugin
   · quyền"), the open conversation `selected` (tint). A plugin missing from
@@ -311,7 +311,7 @@ stored row:
   `chatConfirmPreviewProvider` asks the tool's `describe` again on the library
   as it is now (summary = playlist name, songs); a refusal or an error leaves
   the card with what the call says. Rows come from `TrackRowsPreview` (cover 40,
-  title, artist; text from the stored snapshot, cover from `trackInfoProvider`).
+  title, artist; text from the stored snapshot, cover from one `trackRowLoaderProvider` read per card for the rows shown, not a watch per row).
 - **Error card source of truth:** the stored `ErrorPart` gives the kind through
   `cardOfStoredError`; for the newest row `chatLiveOutcomeProvider` (the
   session's `lastView`) wins, because it knows the host, the busy and timeout
@@ -380,18 +380,19 @@ One interface, one implementation, no second route:
   the chat (desktop: `RightPanelKind.chat`, which also replaces the queue;
   phone: `openChatPage`, so a chat already on top is left alone and a second
   `/chat` is never pushed), then `composerFocusRequestProvider.request()`. The
-  form factor is read from the caller's context before anything else (a menu
-  closes after the tap).
+  form factor is read from the caller's context at call time, falling back
+  to the window size when that context is already gone.
 - **Page suggestions** (`state/chat_view/page_suggestions.dart`):
   `chatPageLocationProvider` holds the location of the page the chat covers.
-  `AppShell` writes it on every route change except while `/chat` is the top
-  route, so on desktop it follows the page beside the panel and on the phone it
+  `AppShell` writes it on every route change except while `/chat` is in the
+  stack (on top, or with a page opened from inside the chat above it), so on desktop it follows the page beside the panel and on the phone it
   is the page captured before the push. `chatSuggestionsProvider(l10n)` returns
   the chips in order: Bài đang phát (only when a track is loaded), "N bài đã
   chọn" (selection), then the page's chip (album / artist / genre / language /
   playlist; a root page or a page without a chip adds none), all through
-  `chipRefOf`. `ChatSuggestionsSync` (inside `ChatSurface`) copies them into
-  `chatAttachmentsProvider.setSuggestions`.
+  `chipRefOf`. `ChatSuggestionsSync` (inside `ChatSurface`) listens to them and copies
+  changes into `chatAttachmentsProvider.setSuggestions`; the first value is
+  pushed after the first frame, never from `build`.
 
 ## Review fixes (behaviour notes)
 
