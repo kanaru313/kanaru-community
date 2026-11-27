@@ -88,12 +88,12 @@ void main() {
       expect(parseBlocks('see [[t:12]] now'), [
         _para(['see [[t:12]] now']),
       ]);
-      expect(parseBlocks('- [[t:12]]'), [
+      expect(parseBlocks('- [[t:12]] extra'), [
         ChatList(
           ordered: false,
           start: 1,
           items: [
-            [const ChatText('[[t:12]]')],
+            [const ChatText('[[t:12]] extra')],
           ],
         ),
       ]);
@@ -102,6 +102,40 @@ void main() {
       ]);
       expect(parseBlocks('[[t:a b]]'), [
         _para(['[[t:a b]]']),
+      ]);
+    });
+
+    test('a list item that is only a track ref is a track row', () {
+      for (final line in [
+        '- [[t:853]]',
+        '* [[t:853]]',
+        '+ [[t:853]]',
+        '1. [[t:853]]',
+        '2) [[t:853]]',
+        '  - [[t:853]]  ',
+      ]) {
+        expect(parseBlocks(line), [const ChatTrack('853')], reason: line);
+      }
+      expect(parseBlocks('- [[t:1]]\n- [[t:2]]\n3. [[t:3]]'), [
+        const ChatTrack('1'),
+        const ChatTrack('2'),
+        const ChatTrack('3'),
+      ]);
+    });
+
+    test('a mixed list keeps its text items as bullets', () {
+      ChatList bullets(List<String> t) => ChatList(
+        ordered: false,
+        start: 1,
+        items: [
+          for (final s in t) [ChatText(s)],
+        ],
+      );
+      expect(parseBlocks('- intro\n- [[t:1]]\n- [[t:2]]\n- outro'), [
+        bullets(['intro']),
+        const ChatTrack('1'),
+        const ChatTrack('2'),
+        bullets(['outro']),
       ]);
     });
 

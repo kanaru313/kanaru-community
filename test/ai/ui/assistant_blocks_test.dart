@@ -147,6 +147,26 @@ void main() {
       },
     );
 
+    testWidgets('track refs as list items become track rows, unknown stays', (
+      tester,
+    ) async {
+      final setup = await pumpChatList(
+        tester,
+        library: {7: fakeTrack(7, title: 'Lac troi')},
+      );
+      await setup.setMessages(tester, [
+        _toolResult(
+          1,
+          'search_library',
+          '{"total":1,"items":["7|Lac troi|Son Tung|x|2017"]}',
+        ),
+        _answer(2, '- [[t:7]]\n- [[t:9031]]\n1. [[t:7]]'),
+      ]);
+      expect(find.text('Lac troi'), findsNWidgets(2));
+      expect(find.text('[[t:9031]]', findRichText: true), findsOneWidget);
+      expect(find.text('[[t:7]]', findRichText: true), findsNothing);
+    });
+
     testWidgets('an id only a plugin or a playlist list mentions stays text', (
       tester,
     ) async {

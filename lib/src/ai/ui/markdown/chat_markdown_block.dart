@@ -30,7 +30,11 @@ class ChatLine {
       kind == ChatLineKind.bullet || kind == ChatLineKind.ordered;
 }
 
-final _trackRe = RegExp(r'^\s*\[\[t:([^\]\s]{1,64})\]\]\s*$');
+// A track line may carry a list marker (`- `, `* `, `+ `, `1. `, `1) `): a
+// model often writes one citation per list item, and the row replaces the item.
+final _trackRe = RegExp(
+  r'^\s{0,3}(?:(?:[-*+]|\d{1,9}[.)])\s+)?\[\[t:([^\]\s]{1,64})\]\]\s*$',
+);
 final _bulletRe = RegExp(r'^\s{0,3}[-*+]\s+(.*)$');
 final _orderedRe = RegExp(r'^\s{0,3}(\d{1,9})[.)]\s+(.*)$');
 final _contRe = RegExp(r'^\s{2,}\S');
