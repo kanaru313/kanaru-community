@@ -307,6 +307,20 @@ A plugin of type `lyrics` declares two scripts, `search` and `lyrics`. Each is a
 
 **Time.** The app runs `search` and `lyrics` with a 30 s script wall (plus 0.9 s for the pauses between requests); the chain of a token fetch, a search and a lyrics fetch fits in it. A run that needs more fails as a timeout.
 
+## Streaming scripts
+
+A plugin of type `streaming` declares `search` and `stream`, and may declare `autocomplete` (more scripts are read by later features). Each is an ordinary script whose `execute(input)` receives one object. The app checks the output once, with the limits below. Lengths count code points; text is cleaned (control, bidi and zero-width characters removed, trimmed). An item that breaks a rule is dropped and the app notes its position and a fixed reason, never the plugin's text.
+
+**Ids** are handed back to the plugin exactly as sent, never trimmed. An id is 1-200 code points, has no control character, is not `.` or `..`, and is not URL-shaped (contains `://` or starts with `//`); a card with a bad id is dropped.
+
+**`search`.** Input: `{ query, next?, filter? }` (`query` 1-2000 code points; `next` and `filter` are the tokens the plugin gave before). Output: an object with `sections` and/or `items`, optional `filters` and `next`. `sections` (a non-empty array, at most 20) win; otherwise `items` become one untitled `list` section; neither is invalid. A section is `{ title?, layout?, items, more? }`: `layout` is `top`, `list` or `shelf` (anything else reads as `list`); `title` is cut to 100 code points; a section without an `items` array (a lazy section) is dropped, and so is one left empty. `more.filter` (a string up to 8 KiB) is the filter that shows the whole section; `more.script` is not read. A page keeps at most 200 cards over all sections; a repeated id inside one section is dropped. `filters` is an array of at most 20 `{ title (1-50), input (1 byte to 8 KiB) }`. `next` over 8 KiB, empty, or equal to the input `next` reads as none.
+
+**Card.** `{ kind?, id, title, subtitle?, artist?, artists?, album?, albums?, durationMs?, artworkUrl?, webUrl? }`. `kind` is `track` (default), `album`, `playlist` or `artist`; any other kind drops the card. `title` 1-300 code points (required). `subtitle` up to 300 and `artist` up to 200 read as absent when longer. `artists` is up to 10 `{ id?, title }` (title 1-200; an invalid id reads as absent). The album is `album` (a string) and/or `albums[0]` `{ id, title }`. `durationMs` is an integer above 0 and at most 24 h, else unknown. `artworkUrl` and `webUrl` must be absolute `https` URLs of at most 2000 characters, without user info or a written port (`:443` included), else absent.
+
+**`stream`.** Input: `{ id, fresh? }`; `fresh: true` is sent only when true. Output: `{ url, headers?, mimeType, bitrate?, expiresAtMs? }`. `url`: absolute `https`, at most 8 KiB, no port written, no user info; else invalid. `headers`: at most 20 string pairs filtered like any plugin request header (a bad name or value is invalid); `range` and `if-range` are removed. `mimeType`: the type before `;` must be `audio/*`, `video/*` or `application/*`, else invalid. Playable types: `audio/mpeg`, `audio/mp3` (mp3); `audio/mp4`, `audio/x-m4a`, `video/mp4` (mp4); `audio/webm`, `video/webm`, `audio/x-matroska` (webm). The HLS types (`application/vnd.apple.mpegurl`, `application/x-mpegurl`, `audio/mpegurl`, `audio/x-mpegurl`) and every other type are well-formed but unsupported for now. `bitrate` and `expiresAtMs` (UTC epoch ms) are integers above 0, else unknown. The url and headers are checked before the type, so a bad url is invalid whatever the type.
+
+**`autocomplete`.** Input: `{ query }`. Output: a JSON array of strings (an object such as `{ suggestions: [...] }` is invalid). Each is cleaned, 1-200 code points; non-strings, empty entries and repeats are skipped; the first 10 are kept.
+
 ## Streaming runs
 
 An opt-in mode (`run_streaming`) used by AI-style plugins; lyrics and translate
