@@ -247,7 +247,10 @@ final composerViewProvider = Provider<ComposerView>((ref) {
               .select((m) => lastSwitchTarget(m.value?.messages)),
         );
   final settings = ref.watch(composerSettingsProvider);
-  final attached = ref.watch(chatAttachmentsProvider).attached;
+  // Only the attached chips: the suggestions are written from a listener of
+  // the page providers, and rebuilding on them rebuilt this provider twice in
+  // one refresh pass.
+  final attached = ref.watch(chatAttachmentsProvider.select((a) => a.attached));
   return deriveComposerView(
     turn: session.turnState,
     readiness: readiness,
