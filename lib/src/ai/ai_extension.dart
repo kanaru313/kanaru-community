@@ -21,6 +21,7 @@ class AiExtension implements KanaruExtension {
   void register(ExtensionRegistry registry) {
     registry
       ..addFlushHook(flushChat)
+      ..addLiveFlushHook(flushChat)
       ..addRoute(
         GoRoute(
           path: chatPath,

@@ -18,14 +18,43 @@ const exitFlushCap = Duration(seconds: 2);
 /// changed since: an exit request runs one more flush after it.
 const flushFreshWindow = Duration(milliseconds: 250);
 
-/// The first state that tells the app may be killed soon: the flush starts at
-/// the earliest of these (`inactive` comes before `hidden` and `paused`, and a
-/// swipe-away can follow within a second); the coordinator joins the later
-/// ones to the running flush.
-bool flushesOnLifecycle(AppLifecycleState state) =>
-    state == AppLifecycleState.inactive ||
-    state == AppLifecycleState.hidden ||
-    state == AppLifecycleState.paused;
+/// What the app writes when the lifecycle changes to a state.
+enum LifecycleFlush {
+  /// Nothing (running, coming back, detached).
+  none,
+
+  /// Only the light hooks (the chat's live text): on Android `inactive` comes
+  /// first when Home or the recents screen is pressed and a swipe-away can
+  /// kill the process within a second. On desktop `inactive` is only a focus
+  /// loss, which must not write the settings and the listen history.
+  live,
+
+  /// Everything: settings store and every flush hook (`hidden`, `paused`).
+  all,
+}
+
+/// The flush a lifecycle [state] asks for; [android] is true on the Android
+/// shell.
+LifecycleFlush lifecycleFlush(
+  AppLifecycleState state, {
+  required bool android,
+}) => switch (state) {
+  AppLifecycleState.hidden || AppLifecycleState.paused => LifecycleFlush.all,
+  AppLifecycleState.inactive when android => LifecycleFlush.live,
+  _ => LifecycleFlush.none,
+};
+
+/// Runs only the registry's light flush hooks, in order; a failure is logged
+/// and does not stop the others.
+Future<void> flushLive(ProviderContainer container) async {
+  for (final hook in container.read(extensionRegistryProvider).liveFlushHooks) {
+    try {
+      await hook(container);
+    } catch (error, stack) {
+      _log.warning('live flush hook failed', error, stack);
+    }
+  }
+}
 
 /// Writes pending state to disk: the settings store first, then every flush
 /// hook of the registry in order. A failing step is logged and does not stop

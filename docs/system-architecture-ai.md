@@ -587,10 +587,12 @@ an await. `state` is `{conversationId, turnState, lastView}`.
   again (its install time changed). An update or a model switch clears
   nothing: those turns are sent flattened by the binding rule.
 - **Flush:** the loop writes the first streamed text at once, later text
-  about once a second, and all of it at each round end. The app starts the
-  flush hooks at the first of `inactive` / `hidden` / `paused` (later ones
-  join the running flush), because a swipe-away can kill the process within a
-  second of Home. A turn the sweep cut off with no stored text gets the
-  cut-off card without the "received part stays above" sentence. `flushChat(container)` (hook of `AiExtension`, registered in
+  about once a second, and all of it at each round end. The app flushes
+  at `hidden` / `paused` (settings store and every flush hook; they join one
+  running flush). On Android it also flushes the chat alone (live flush hooks,
+  `addLiveFlushHook`) at `inactive`, because a swipe-away can kill the process
+  within a second of Home; on desktop `inactive` is only a focus loss and
+  writes nothing. A turn the sweep cut off with no stored text gets the
+  cut-off card without the "received part stays above" sentence. `flushChat(container)` (flush and live flush hook of `AiExtension`, registered in
   `builtInExtensions` by the chat UI) writes it on pause and exit; it does
   nothing when the session was never created.
