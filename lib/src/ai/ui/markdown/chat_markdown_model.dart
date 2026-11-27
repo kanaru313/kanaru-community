@@ -102,6 +102,37 @@ final class ChatTrack extends ChatBlock {
   String toString() => 'ChatTrack($id)';
 }
 
+/// Song lines in a row (no other line between). Only a run of more than
+/// [chatListMaxRows] lines is one of these (the screen gives it a box of its
+/// own with its own scroll); a shorter run stays single [ChatTrack] blocks.
+final class ChatTrackList extends ChatBlock {
+  const ChatTrackList(this.ids);
+
+  final List<String> ids;
+
+  @override
+  bool operator ==(Object other) =>
+      other is ChatTrackList && _sameIds(other.ids, ids);
+
+  @override
+  int get hashCode => Object.hash('tl', ids.length, ids.first);
+
+  @override
+  String toString() => 'ChatTrackList($ids)';
+}
+
+/// A song list longer than this many rows gets a box of this height with its
+/// own scroll; a shorter one is shown whole.
+const int chatListMaxRows = 8;
+
+bool _sameIds(List<String> a, List<String> b) {
+  if (a.length != b.length) return false;
+  for (var i = 0; i < a.length; i++) {
+    if (a[i] != b[i]) return false;
+  }
+  return true;
+}
+
 bool _same(List<List<ChatSpan>> a, List<List<ChatSpan>> b) {
   if (a.length != b.length) return false;
   for (var i = 0; i < a.length; i++) {

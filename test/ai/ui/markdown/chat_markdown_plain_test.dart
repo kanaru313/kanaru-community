@@ -28,4 +28,19 @@ void main() {
   test('trackTokensOf lists the ids as typed', () {
     expect(trackTokensOf('x\n[[t:7]]\ny\n[[t:8]]'), ['7', '8']);
   });
+
+  test(
+    'a long song run (one box on screen) copies and lists like a short one',
+    () {
+      final md = [for (var i = 1; i <= 12; i++) '[[t:$i]]'].join('\n');
+      expect(trackTokensOf(md), [for (var i = 1; i <= 12; i++) '$i']);
+      final out = plain('Top:\n$md', {
+        for (var i = 1; i <= 12; i++) '$i': 'S$i',
+      });
+      expect(
+        out,
+        'Top:\n\n${[for (var i = 1; i <= 12; i++) 'S$i'].join('\n')}',
+      );
+    },
+  );
 }

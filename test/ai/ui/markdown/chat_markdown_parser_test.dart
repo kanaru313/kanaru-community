@@ -123,6 +123,33 @@ void main() {
       ]);
     });
 
+    test('more than eight song lines in a row are one list, eight are not', () {
+      String lines(int n) =>
+          [for (var i = 1; i <= n; i++) '[[t:$i]]'].join('\n');
+      expect(parseBlocks(lines(8)), [
+        for (var i = 1; i <= 8; i++) ChatTrack('$i'),
+      ]);
+      expect(parseBlocks(lines(9)), [
+        ChatTrackList([for (var i = 1; i <= 9; i++) '$i']),
+      ]);
+    });
+
+    test('a text line or a blank line splits song runs', () {
+      String run(int from, int n) =>
+          [for (var i = from; i < from + n; i++) '[[t:$i]]'].join('\n');
+      final blocks = parseBlocks(
+        '${run(1, 9)}\ntext\n${run(20, 9)}\n\n${run(40, 9)}',
+      );
+      expect(blocks.map((b) => b.runtimeType.toString()).toList(), [
+        'ChatTrackList',
+        'ChatParagraph',
+        'ChatTrackList',
+        'ChatTrackList',
+      ]);
+      expect((blocks[2] as ChatTrackList).ids.first, '20');
+      expect((blocks[3] as ChatTrackList).ids.first, '40');
+    });
+
     test('a mixed list keeps its text items as bullets', () {
       ChatList bullets(List<String> t) => ChatList(
         ordered: false,

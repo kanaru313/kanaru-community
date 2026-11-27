@@ -1,12 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru_ui/kanaru_ui.dart' show KCappedList;
 import 'package:kanaru/src/ai/domain/conversation/ai_message.dart';
 import 'package:kanaru/src/ai/domain/conversation/parts.dart';
 import 'package:kanaru/src/ai/domain/loop/card_results.dart';
 import 'package:kanaru/src/ai/domain/loop/driver_results.dart';
 import 'package:kanaru/src/ai/domain/tools/ai_tool.dart';
 
+import '../../../support/kanaru_ui_finders.dart';
 import 'card_harness.dart';
 
 final _call = writeCall('create_playlist', {
@@ -120,8 +122,25 @@ void main() {
     expect(find.text('+7 bài'), findsOneWidget);
     await tester.tap(find.text('+7 bài'));
     await settle(tester);
-    expect(find.text('Bài 11'), findsOneWidget);
     expect(find.text('+7 bài'), findsNothing);
+    // Twelve rows: a box eight rows tall, rows built as they scroll in.
+    expect(find.text('Bài 7'), findsOneWidget);
+    expect(find.text('Bài 11'), findsNothing);
+    expect(cappedBottomFade, findsOneWidget);
+    await tester.drag(find.byType(KCappedList), const Offset(0, -2000));
+    await settle(tester);
+    expect(find.text('Bài 11'), findsOneWidget);
+    expect(cappedBottomFade, findsNothing);
+    expect(cappedTopFade, findsOneWidget);
+  });
+
+  testWidgets('eight songs opened show whole, no box', (tester) async {
+    await pumpCard(tester, _row(), preview: _preview(8));
+    await tester.tap(find.text('+3 bài'));
+    await settle(tester);
+    expect(cappedBottomFade, findsNothing);
+    expect(cappedTopFade, findsNothing);
+    expect(find.text('Bài 7'), findsOneWidget);
   });
 
   testWidgets('six songs show all of them, no +N', (tester) async {

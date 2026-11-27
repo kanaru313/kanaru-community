@@ -4,6 +4,11 @@ import 'package:material_ui/material_ui.dart';
 import '../../../l10n/gen/app_localizations.dart';
 import '../domain/conversation/ai_message.dart';
 import '../domain/conversation/parts.dart';
+import '../domain/conversation/track_ref_snapshot.dart';
+import 'cards/track_rows_preview.dart';
+import 'chat_row_extent.dart';
+import 'markdown/chat_markdown_model.dart' show chatListMaxRows;
+import 'tool_result_rows.dart';
 import 'tool_text.dart';
 
 /// A tool the assistant called: folded to a header (icon, name, one-line
@@ -38,7 +43,7 @@ class _ToolCardState extends State<ToolCard> {
     final mobile = FormFactor.of(context) == FormFactor.mobile;
 
     final args = call == null ? '' : toolArgsPreview(call.args, call.rawArgs);
-    final preview = toolResultPreview(resultText);
+    final view = toolResultView(result?.name ?? call?.name ?? '', resultText);
 
     return Padding(
       padding: const EdgeInsets.only(top: KSpace.x2 + 2),
@@ -149,8 +154,17 @@ class _ToolCardState extends State<ToolCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (args.isNotEmpty) _Block(l10n.aiChatToolParams, args),
-                      if (preview.isNotEmpty)
-                        _Block(l10n.aiChatToolResult, preview),
+                      switch (view) {
+                        ToolSongs(:final tracks) when tracks.isNotEmpty =>
+                          _ResultSongs(l10n.aiChatToolResult, tracks),
+                        ToolLines(:final lines) when lines.isNotEmpty =>
+                          _ResultLines(l10n.aiChatToolResult, lines),
+                        ToolText(:final text) when text.isNotEmpty => _Block(
+                          l10n.aiChatToolResult,
+                          text,
+                        ),
+                        _ => const SizedBox.shrink(),
+                      },
                     ],
                   ),
                 ),
@@ -201,6 +215,100 @@ class _Block extends StatelessWidget {
                   fontFamily: KFont.mono,
                   fontFamilyFallback: KFont.monoFallback,
                   color: scheme.onSurface,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The result heading of an open card.
+class _ResultTitle extends StatelessWidget {
+  const _ResultTitle(this.title);
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Text(
+      title,
+      style: Theme.of(context).textTheme.labelSmall
+          ?.copyWith(fontWeight: FontWeight.w700, color: scheme.onSurface),
+    );
+  }
+}
+
+/// A result of songs: compact song rows, every row of the call; more than
+/// eight sit in a box eight rows tall with its own scroll.
+class _ResultSongs extends StatelessWidget {
+  const _ResultSongs(this.title, this.tracks);
+
+  final String title;
+  final List<TrackRefSnapshot> tracks;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: KSpace.x1 + 2),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _ResultTitle(title),
+        TrackRowsPreview(tracks: tracks, indent: false, showAll: true),
+      ],
+    ),
+  );
+}
+
+/// A result that is a list of something else: one short line per row, the
+/// same eight-row cap.
+class _ResultLines extends StatelessWidget {
+  const _ResultLines(this.title, this.lines);
+
+  final String title;
+  final List<String> lines;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final style = Theme.of(context).textTheme.labelSmall?.copyWith(
+      fontFamily: KFont.mono,
+      fontFamilyFallback: KFont.monoFallback,
+      color: scheme.onSurface,
+    );
+    return Padding(
+      padding: const EdgeInsets.only(top: KSpace.x1 + 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _ResultTitle(title),
+          const SizedBox(height: KSpace.x1 / 2),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHigh,
+              borderRadius: KRadius.xs,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: KSpace.x2 + 2,
+                vertical: KSpace.x1,
+              ),
+              child: KCappedList(
+                itemCount: lines.length,
+                maxVisible: chatListMaxRows,
+                gap: 0,
+                rowExtent: chatTextRowExtent(context, style),
+                itemBuilder: (context, i) => Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    lines[i],
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: style,
+                  ),
                 ),
               ),
             ),

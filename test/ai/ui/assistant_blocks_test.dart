@@ -8,6 +8,7 @@ import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../support/icon_button_finders.dart';
+import '../../support/kanaru_ui_finders.dart';
 import 'support/chat_list_harness.dart';
 import 'support/chat_ui_support.dart';
 
@@ -176,6 +177,50 @@ void main() {
         _answer(2, '[[t:7]]'),
       ]);
       expect(find.text('[[t:7]]', findRichText: true), findsOneWidget);
+    });
+
+    testWidgets('more than eight song lines in a row sit in one scrolling box', (
+      tester,
+    ) async {
+      final setup = await pumpChatList(
+        tester,
+        library: {for (var i = 1; i <= 40; i++) i: fakeTrack(i, title: 'T$i')},
+      );
+      await setup.setMessages(tester, [
+        _toolResult(
+          1,
+          'search_library',
+          '{"items":[${[for (var i = 1; i <= 40; i++) '"$i|T$i|A"'].join(',')}]}',
+        ),
+        _answer(
+          2,
+          '${[for (var i = 1; i <= 40; i++) '[[t:$i]]'].join('\n')}\n\nafter',
+        ),
+      ]);
+      expect(find.byType(KCappedList), findsOneWidget);
+      // Lazy: the first rows are built, the rest wait for the scroll.
+      expect(find.text('T1'), findsOneWidget);
+      expect(find.text('T8'), findsOneWidget);
+      expect(find.text('T30'), findsNothing);
+      expect(cappedBottomFade, findsOneWidget);
+      expect(find.text('after', findRichText: true), findsOneWidget);
+    });
+
+    testWidgets('eight song lines show whole, no box', (tester) async {
+      final setup = await pumpChatList(
+        tester,
+        library: {for (var i = 1; i <= 8; i++) i: fakeTrack(i, title: 'T$i')},
+      );
+      await setup.setMessages(tester, [
+        _toolResult(
+          1,
+          'search_library',
+          '{"items":[${[for (var i = 1; i <= 8; i++) '"$i|T$i|A"'].join(',')}]}',
+        ),
+        _answer(2, [for (var i = 1; i <= 8; i++) '[[t:$i]]'].join('\n')),
+      ]);
+      expect(find.byType(KCappedList), findsNothing);
+      expect(find.text('T8'), findsOneWidget);
     });
 
     testWidgets('track row tap plays, ⋮ opens the song menu', (tester) async {
