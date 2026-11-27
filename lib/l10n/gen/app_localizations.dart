@@ -11423,6 +11423,24 @@ abstract class AppLocalizations {
   /// **'internal error'**
   String get pluginsLogsKindInternal;
 
+  /// No description provided for @pluginsLogsKindNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'network error'**
+  String get pluginsLogsKindNetwork;
+
+  /// No description provided for @pluginsLogsKindUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'no longer on the source'**
+  String get pluginsLogsKindUnavailable;
+
+  /// No description provided for @pluginsLogsKindUnsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'not supported'**
+  String get pluginsLogsKindUnsupported;
+
   /// No description provided for @pluginsLogsKindOther.
   ///
   /// In en, this message translates to:

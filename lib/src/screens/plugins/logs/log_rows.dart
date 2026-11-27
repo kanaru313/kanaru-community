@@ -39,6 +39,9 @@ String logKindLabel(AppLocalizations l10n, String kind) => switch (kind) {
   'stack' => l10n.pluginsLogsKindStack,
   'outputTooLarge' => l10n.pluginsLogsKindOutputTooLarge,
   'internal' => l10n.pluginsLogsKindInternal,
+  'network' => l10n.pluginsLogsKindNetwork,
+  'unavailable' => l10n.pluginsLogsKindUnavailable,
+  'unsupported' => l10n.pluginsLogsKindUnsupported,
   _ => l10n.pluginsLogsKindOther(kind),
 };
 
