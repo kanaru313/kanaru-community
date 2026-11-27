@@ -114,7 +114,7 @@ class _ComposerBoxState extends ConsumerState<_ComposerBox> {
         shortVersion: shortVersion,
       );
     } on Object catch (e, s) {
-      _log.warning('send failed: ${e.runtimeType}', e, s);
+      _log.warning('send failed: $e', e, s);
       notice.set(const NoticeSendFailed());
       return;
     }

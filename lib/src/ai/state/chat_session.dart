@@ -181,7 +181,7 @@ class ChatSessionController extends Notifier<ChatSessionState> {
           return const SendFailed();
       }
     } on Object catch (e, s) {
-      _log.warning('send failed: ${e.runtimeType}', e, s);
+      _log.warning('send failed: $e', e, s);
       return const SendFailed();
     }
   }

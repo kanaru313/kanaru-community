@@ -1,10 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../library/state/history/history_providers.dart';
 import '../../library/state/playlists/playlist_providers.dart';
 import '../../library/state/track_search_provider.dart';
+import '../../lyrics/domain/lyrics_status.dart';
+import '../../media/domain/track_id.dart';
 import '../../lyrics/state/stored_track_lyrics_provider.dart';
-import '../../lyrics/state/track_lyrics_providers.dart';
 import '../../playback/state/playback_position_provider.dart';
 import '../../playback/state/playback_providers.dart';
 import '../../playback/state/playback_settings_providers.dart';
@@ -43,11 +46,7 @@ ToolEnv buildToolEnv(Ref ref) {
       readPosition: () => ref.read(playbackPositionProvider.future),
       readQueue: () => ref.read(queueViewProvider.future),
     ),
-    lyrics: LyricsPortImpl((id) async {
-      // Read the local lyrics first so the stored state is not still loading.
-      await ref.read(localLyricsReadProvider(id).future);
-      return ref.read(storedTrackLyricsProvider(id));
-    }),
+    lyrics: LyricsPortImpl((id) => _storedLyrics(ref, id)),
     history: HistoryPortImpl(
       store: ref.read(historyStoreProvider),
       lookup: lookup,
@@ -76,4 +75,31 @@ ToolEnv buildToolEnv(Ref ref) {
       store: ref.read(playlistStoreProvider),
     ),
   );
+}
+
+/// The stored lyrics of [id], once they have left loading. The providers are
+/// auto-dispose and nothing in the chat listens to them, so a bare `read`
+/// of the future lets them dispose mid-load (a `ProviderException`); a
+/// subscription held until the answer keeps them alive. Never starts an online
+/// lookup. A read that does not settle in time answers loading.
+Future<TrackLyrics> _storedLyrics(Ref ref, TrackId id) async {
+  final done = Completer<TrackLyrics>();
+  final sub = ref.container.listen<TrackLyrics>(
+    storedTrackLyricsProvider(id),
+    (_, next) {
+      if (next is! LyricsLoading && !done.isCompleted) done.complete(next);
+    },
+    fireImmediately: true,
+    onError: (e, s) {
+      if (!done.isCompleted) done.completeError(e, s);
+    },
+  );
+  try {
+    return await done.future.timeout(
+      const Duration(seconds: 5),
+      onTimeout: () => const LyricsLoading(),
+    );
+  } finally {
+    sub.close();
+  }
 }
