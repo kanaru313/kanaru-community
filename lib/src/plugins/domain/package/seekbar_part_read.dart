@@ -37,13 +37,17 @@ SeekbarThumb readSeekbarThumb(Object? value, SeekbarFields f) {
   if (lottie == raw.containsKey('image')) invalid(path);
   f.noUnknownKeys(raw, lottie ? _lottieKeys : _spriteKeys, path);
   final size = _size(raw, f, path);
-  final anchor = f.pair(
-    raw['anchor'] ?? seekbarDefaultAnchor,
-    '$path.anchor',
-    lo: seekbarAnchorRange.min,
-    hi: seekbarAnchorRange.max,
-    fallback: seekbarDefaultAnchor,
-  );
+  // Absent gives the default; a present `null` is a wrong value (strict
+  // refuses it, lenient falls back to the default).
+  final anchor = raw.containsKey('anchor')
+      ? f.pair(
+          raw['anchor'],
+          '$path.anchor',
+          lo: seekbarAnchorRange.min,
+          hi: seekbarAnchorRange.max,
+          fallback: seekbarDefaultAnchor,
+        )
+      : seekbarDefaultAnchor;
   if (lottie) return _lottie(raw, f, size, anchor);
   final image = _asset(raw['image'], seekbarImageAsset, '$path.image');
   final frames = f.integer(
@@ -140,8 +144,9 @@ SeekbarEmitter readSeekbarEmitter(Object? value, SeekbarFields f) {
   );
   if (life[0] <= 0) invalid('$path.life');
   final velocity = asObject(raw['velocity']);
+  // Extra keys are refused in strict mode only; lenient ignores them.
   if (velocity == null ||
-      velocity.length != 2 ||
+      (f.strict && velocity.length != 2) ||
       !velocity.containsKey('x') ||
       !velocity.containsKey('y')) {
     invalid('$path.velocity');

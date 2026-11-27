@@ -395,7 +395,7 @@ void main() {
         await _open(
           tester,
           ops,
-          () => const Err(PackageUnreadable(UnsafeEntry('src/main.js'))),
+          () => const Err(PackageUnreadable(CodeNotAllowed('src/main.js'))),
           wide: wide,
         );
         expect(

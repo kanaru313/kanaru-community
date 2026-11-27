@@ -1,6 +1,10 @@
+import 'dart:async';
+import 'dart:io' show FileSystemException;
+
 import 'package:flutter/widgets.dart' show Size;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru/src/plugins/state/plugin_store_providers.dart';
 import 'package:kanaru/src/screens/settings/settings_routes.dart';
 
 import '../../settings/support/settings_host.dart' show SettingsHarness;
@@ -12,19 +16,29 @@ Future<SettingsHarness> _open(
   WidgetTester tester, {
   Size size = const Size(400, 2400),
   Map<String, Object?>? seekbar,
+  Future<int> Function()? packageBytes,
 }) => pumpPlugins(
   tester,
   StoreFixture(),
   location: pagePath,
   size: size,
-  overrides: pageOverrides(
-    AsyncData(
-      pageData(
-        row: pageRow(kind: 'seekbar', name: 'Neon', hosts: const []),
-        manifest: seekbarManifestOf(seekbar: seekbar),
+  overrides: [
+    ...pageOverrides(
+      AsyncData(
+        pageData(
+          row: pageRow(
+            kind: 'seekbar',
+            name: 'Neon',
+            hosts: const [],
+            packageDir: packageBytes == null ? null : 'v3-1',
+          ),
+          manifest: seekbarManifestOf(seekbar: seekbar),
+        ),
       ),
     ),
-  ),
+    if (packageBytes != null)
+      pluginPackageBytesProvider.overrideWith((ref, key) => packageBytes()),
+  ],
 );
 
 void main() {
@@ -55,6 +69,34 @@ void main() {
       expect(find.text('plugin.json + 1 PNG image · no code'), findsOneWidget);
     });
   }
+
+  testWidgets('the package row adds the size of the folder', (tester) async {
+    await _open(tester, packageBytes: () async => 18 * 1024);
+    await tester.pump();
+    expect(
+      find.text('plugin.json + 1 PNG image · 18 KB · no code'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('the package row has no size while loading or when it fails', (
+    tester,
+  ) async {
+    final never = Completer<int>();
+    await _open(tester, packageBytes: () => never.future);
+    expect(find.text('plugin.json + 1 PNG image · no code'), findsOneWidget);
+  });
+
+  testWidgets('a folder that cannot be read leaves the size out', (
+    tester,
+  ) async {
+    await _open(
+      tester,
+      packageBytes: () async => throw const FileSystemException('gone'),
+    );
+    await tester.pump();
+    expect(find.text('plugin.json + 1 PNG image · no code'), findsOneWidget);
+  });
 
   testWidgets('nothing about addresses, code, settings, logs or the AI', (
     tester,

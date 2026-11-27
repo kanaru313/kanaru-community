@@ -93,6 +93,12 @@ final class UnsafeEntry extends PackageProblem {
   const UnsafeEntry(super.entry);
 }
 
+/// A seek bar package carries `src/*.js`; seek bar plugins are data only.
+/// The detail is the first script entry (`src/<name>.js`).
+final class CodeNotAllowed extends PackageProblem {
+  const CodeNotAllowed(super.entry);
+}
+
 /// More zip entries than allowed.
 final class TooManyEntries extends PackageProblem {
   const TooManyEntries() : super('');

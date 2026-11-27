@@ -39,7 +39,7 @@ Map<String, Uint8List> readSeekbarAssets({
   if (contents.scripts.isNotEmpty) {
     // Seekbar plugins carry no code.
     final first = (contents.scripts.keys.toList()..sort()).first;
-    throw PackageProblemError(UnsafeEntry('src/$first'));
+    throw PackageProblemError(CodeNotAllowed('src/$first'));
   }
   if (zipSize > maxSeekbarPackageBytes) {
     throw const PackageProblemError(PackageTooLarge());

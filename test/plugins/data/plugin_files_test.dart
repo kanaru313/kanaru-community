@@ -432,6 +432,36 @@ void main() {
       expect(await files.readAsset(row(dir), 'p.webp'), isNull);
     });
 
+    test('packageBytes sums manifest, icon and plain asset files', () async {
+      final dir = await files.write(id, seekbarPackage());
+      final base = folder(dir).path;
+      final expected =
+          File('$base/plugin.json').lengthSync() + png.length + webp.length;
+      expect(await files.packageBytes(id, dir), expected);
+
+      // A symbolic link in assets/ is not counted, nor followed.
+      final secret = File('${data.path}/secret.bin')
+        ..writeAsBytesSync(Uint8List(5000));
+      Link('$base/assets/extra.png').createSync(secret.path);
+      expect(await files.packageBytes(id, dir), expected);
+
+      // A linked assets folder counts nothing from the target.
+      Directory('$base/assets').deleteSync(recursive: true);
+      final moved = Directory('${data.path}/elsewhere')..createSync();
+      File('${moved.path}/t.png').writeAsBytesSync(png);
+      Link('$base/assets').createSync(moved.path);
+      expect(
+        await files.packageBytes(id, dir),
+        File('$base/plugin.json').lengthSync(),
+      );
+    });
+
+    test('packageBytes is 0 for a bad name or a missing folder', () async {
+      expect(await files.packageBytes('..', 'v1-1'), 0);
+      expect(await files.packageBytes(id, '../x'), 0);
+      expect(await files.packageBytes(id, 'v9-9'), 0);
+    });
+
     test('a bad asset name is refused before anything is created', () async {
       final package = seekbarPackage();
       final bad = PluginPackage(

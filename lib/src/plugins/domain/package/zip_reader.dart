@@ -24,9 +24,6 @@ class ZipAssetEntry {
   /// Size the header declares.
   int get declaredSize => _header.uncompressedSize;
 
-  /// Zip compression method (0 stored, 8 deflate).
-  int get method => _header.compressionMethod;
-
   /// The entry's bytes. A declared size over [cap] is `PackageTooLarge`, data
   /// that does not match the header is `PackageTooLarge` or `NotAZip`; every
   /// problem names [path].

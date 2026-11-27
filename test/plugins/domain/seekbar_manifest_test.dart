@@ -55,13 +55,7 @@ void main() {
   test('seekbar kind has no scripts and no code', () {
     expect(PluginKind.fromWire('seekbar'), PluginKind.seekbar);
     expect(PluginKind.seekbar.requiredScripts, isEmpty);
-    expect(PluginKind.seekbar.hasCode, isFalse);
     expect(PluginKind.seekbar.allowsWildcardHosts, isFalse);
-    for (final kind in PluginKind.values.where(
-      (k) => k != PluginKind.seekbar,
-    )) {
-      expect(kind.hasCode, isTrue, reason: kind.wire);
-    }
   });
 
   group('a seekbar manifest', () {

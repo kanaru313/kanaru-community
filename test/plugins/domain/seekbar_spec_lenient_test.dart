@@ -85,6 +85,31 @@ void main() {
       expect(e.fade, isFalse);
     });
 
+    test(
+      'a null anchor gives the default; extra velocity keys are ignored',
+      () {
+        final spec = lenient(
+          block((b) {
+            b['thumb'] = thumb({'anchor': null});
+            b['emitter'] = emitter({
+              'velocity': {
+                'x': [0, 1],
+                'y': [2, 3],
+                'z': [0, 1],
+              },
+            });
+          }),
+        );
+        expect((spec.thumb as SpriteThumb).anchorX, 0.5);
+        expect((spec.thumb as SpriteThumb).anchorY, 0.5);
+        expect(spec.emitter, isNotNull);
+        expect(
+          (spec.emitter!.velocityYMin, spec.emitter!.velocityYMax),
+          (2, 3),
+        );
+      },
+    );
+
     test('a rate of zero is raised, not dropped', () {
       final e = lenient(block((b) => b['emitter'] = emitter({'rate': 0})))
           .emitter!;

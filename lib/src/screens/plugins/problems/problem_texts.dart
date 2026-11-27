@@ -68,11 +68,7 @@ String packageProblemText(AppLocalizations l10n, PackageProblem problem) {
     ),
     NotAZip() => l10n.pluginsReasonNotZip,
     PackageTooLarge() => l10n.pluginsReasonTooLarge,
-    // A seek bar package that carries `src/*.js` is refused with its first
-    // script as the entry; any other package never names one here.
-    UnsafeEntry() when _isScriptEntry(detail) => l10n.pluginsReasonSeekbarCode(
-      detail,
-    ),
+    CodeNotAllowed() => l10n.pluginsReasonSeekbarCode(detail),
     UnsafeEntry() => l10n.pluginsReasonUnsafeEntry(detail),
     TooManyEntries() => l10n.pluginsReasonTooManyEntries,
     MissingManifest() => l10n.pluginsReasonMissingManifest,
@@ -89,10 +85,6 @@ String packageProblemText(AppLocalizations l10n, PackageProblem problem) {
     },
   };
 }
-
-final _scriptEntry = RegExp(r'^src/[^/]+\.js$');
-
-bool _isScriptEntry(String entry) => _scriptEntry.hasMatch(entry);
 
 /// Whether an image of a seek bar package is among the reasons (the box then
 /// adds its note on what images are allowed).

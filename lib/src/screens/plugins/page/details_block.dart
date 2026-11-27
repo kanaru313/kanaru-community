@@ -8,11 +8,13 @@ import '../../../plugins/domain/package/plugin_kind.dart';
 import '../../../plugins/domain/package/seekbar_assets.dart'
     show referencedAssets;
 import '../../../plugins/state/plugin_page_provider.dart';
+import '../../../plugins/state/plugin_store_providers.dart';
 import '../../../plugins/state/store_ops.dart';
 import '../../../plugins/state/store_view_models.dart';
 import '../../settings/ui/soon_row.dart';
 import '../common/plugin_labels.dart';
 import '../common/seekbar_facts.dart';
+import '../install/source_card.dart' show formatPackageSize;
 import 'details_info_row.dart';
 
 /// "Chi tiết": label over a selectable value for where it came from, who it
@@ -59,16 +61,35 @@ class DetailsBlock extends ConsumerWidget {
         if (seekbar && manifest?.seekbar != null)
           DetailsInfoRow(
             label: l10n.pluginsSkFactPackage,
-            lines: [
-              DetailLine(
-                l10n.pluginsSkPackageNoCode(
-                  seekbarFilesText(l10n, referencedAssets(manifest!.seekbar!)),
-                ),
-              ),
-            ],
+            lines: [DetailLine(_package(l10n, ref))],
           ),
         if (!seekbar) ..._soonRows(l10n),
       ],
+    );
+  }
+
+  /// "plugin.json + 1 ảnh PNG · 18 KB · không có mã"; the size is left out
+  /// while it loads or when the folder cannot be read.
+  String _package(AppLocalizations l10n, WidgetRef ref) {
+    final files = seekbarFilesText(
+      l10n,
+      referencedAssets(data.manifest!.seekbar!),
+    );
+    final dir = data.row.packageDir;
+    final bytes = dir == null
+        ? null
+        : ref
+              .watch(
+                pluginPackageBytesProvider((
+                  installId: data.row.installId,
+                  packageDir: dir,
+                )),
+              )
+              .value;
+    return l10n.pluginsSkPackageNoCode(
+      bytes == null
+          ? files
+          : l10n.pluginsSkPackageSize(files, formatPackageSize(bytes)),
     );
   }
 

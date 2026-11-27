@@ -196,6 +196,32 @@ class PluginFiles {
     }
   }
 
+  /// The bytes of `plugin.json`, `icon.png` and every `assets/*` file of the
+  /// package folder [installId]/[packageDir]; 0 when the name has the wrong
+  /// shape or the folder is missing. Only plain files count: a symbolic link
+  /// is never followed. Throws [FileSystemException] when a file cannot be
+  /// read.
+  Future<int> packageBytes(String installId, String packageDir) async {
+    if (!isInstallIdShape(installId) || !isPackageDirShape(packageDir)) {
+      return 0;
+    }
+    final dir = _dir(installId, packageDir);
+    var total = 0;
+    for (final name in const ['plugin.json', 'icon.png']) {
+      final file = File('${dir.path}/$name');
+      if (await isPlainFile(file.path)) total += await file.length();
+    }
+    final assets = Directory('${dir.path}/assets');
+    if (await FileSystemEntity.type(assets.path, followLinks: false) !=
+        FileSystemEntityType.directory) {
+      return total;
+    }
+    await for (final entry in assets.list(followLinks: false)) {
+      if (entry is File) total += await entry.length();
+    }
+    return total;
+  }
+
   /// Whether the folder [row] points at is on disk with its `plugin.json`
   /// (false for a row without a package).
   Future<bool> exists(PluginRow row) async {

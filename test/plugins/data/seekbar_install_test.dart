@@ -112,7 +112,7 @@ void main() {
     expect(result, isA<Err>());
     expect(
       ((result as Err).error as PackageUnreadable).problem,
-      isA<UnsafeEntry>(),
+      isA<CodeNotAllowed>(),
     );
   });
 }

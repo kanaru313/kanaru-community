@@ -32,7 +32,9 @@ class ImageHeader {
 const _pngSignature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 
 /// Reads the dimensions of the PNG or WebP [bytes] from its header only; the
-/// image is never decoded. [fileName] (`t.png`) must end in the extension
+/// image is never decoded. A PNG cut off after its IHDR chunk passes here
+/// (install) and fails to decode at load, where the part that uses it is
+/// dropped. [fileName] (`t.png`) must end in the extension
 /// that matches the data. Anything unknown is refused (fail closed).
 ImageHeader readImageHeader(String fileName, Uint8List bytes) {
   final String type;
@@ -65,10 +67,6 @@ ImageHeader readImageHeader(String fileName, Uint8List bytes) {
   }
   return ImageHeader.ok(width, height);
 }
-
-/// Why [bytes] is not an acceptable seekbar image, or null when it is.
-String? imageHeaderProblem(String fileName, Uint8List bytes) =>
-    readImageHeader(fileName, bytes).problem;
 
 bool _isPng(Uint8List b) {
   if (b.length < 8) return false;

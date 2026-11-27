@@ -51,6 +51,18 @@ final pluginAssetProvider = FutureProvider.autoDispose
           .readAssetAt(key.installId, key.packageDir, key.name),
     );
 
+Duration? _noRetry(int count, Object error) => null;
+
+/// Bytes of an installed package folder (manifest, icon, assets); see
+/// `PluginFiles.packageBytes`. An unreadable folder is an error, not retried.
+final pluginPackageBytesProvider = FutureProvider.autoDispose
+    .family<int, ({String installId, String packageDir})>(
+      (ref, key) => ref
+          .watch(pluginFilesProvider)
+          .packageBytes(key.installId, key.packageDir),
+      retry: _noRetry,
+    );
+
 final pluginConfigStoreProvider = Provider<PluginConfigStore>(
   (ref) => PluginConfigStore(
     ref.watch(appDatabaseProvider),

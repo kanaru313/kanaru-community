@@ -172,6 +172,10 @@ void main() {
         ),
         'seekbar.thumb.anchor',
       ),
+      'thumb anchor null': (
+        block((b) => b['thumb'] = thumb({'anchor': null})),
+        'seekbar.thumb.anchor',
+      ),
       'thumb tint': (
         block((b) => b['thumb'] = thumb({'tint': '#12345'})),
         'seekbar.thumb.tint',

@@ -24,6 +24,7 @@ PluginRow pageRow({
   List<String> hosts = const ['music.example.com'],
   int installedAt = 1762041600000,
   int updatedAt = 1762041600000,
+  String? packageDir,
 }) => PluginRow(
   installId: 'id-demo',
   kind: kind,
@@ -32,6 +33,7 @@ PluginRow pageRow({
   version: 3,
   apiVersion: 2,
   manifestJson: '{}',
+  packageDir: packageDir,
   packageSha256: 'a' * 64,
   origin: origin,
   repoUrl: origin == 'repo' ? repoAddress : null,

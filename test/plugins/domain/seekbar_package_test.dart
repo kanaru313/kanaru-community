@@ -205,7 +205,7 @@ void main() {
         'src/a.js': 'function execute() {}',
       });
       final problem = _refused(zip);
-      expect(problem, isA<UnsafeEntry>());
+      expect(problem, isA<CodeNotAllowed>());
       expect(problem.detail, 'src/a.js');
     });
 
@@ -214,7 +214,7 @@ void main() {
         'plugin.json': _manifest(),
         'src/a.js': Uint8List.fromList([0xff, 0xfe, 0xfd]),
       });
-      expect(_refused(zip), isA<UnsafeEntry>());
+      expect(_refused(zip), isA<CodeNotAllowed>());
     });
   });
 
