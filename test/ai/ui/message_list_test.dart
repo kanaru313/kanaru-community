@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/src/ai/domain/conversation/ai_message.dart';
 import 'package:kanaru/src/ai/domain/conversation/parts.dart';
 import 'package:kanaru/src/ai/domain/loop/loop_state.dart';
+import 'package:kanaru/src/ai/state/chat_view/message_view.dart';
 
 import '../../support/icon_button_finders.dart';
 import 'support/chat_list_harness.dart';
@@ -233,6 +234,34 @@ void main() {
       await pumpChatList(tester, failMessages: true);
       expect(find.text('Could not load this conversation.'), findsOneWidget);
       expect(find.text('Try again'), findsOneWidget);
+    });
+  });
+
+  group('cut off by closing', () {
+    final cut = chatMessage(
+      7,
+      parts: const [ErrorPart(code: 'cutOffByClose', kind: 'closed')],
+      state: AiMessageState.stopped,
+      liveText: 'Jazz began in New Orleans',
+    );
+
+    testWidgets('the received text stays on screen', (tester) async {
+      final setup = await pumpChatList(tester);
+      await setup.setMessages(tester, [_user(1, 'history of jazz'), cut]);
+      await tester.pump();
+      expect(find.textContaining('Jazz began in New Orleans'), findsWidgets);
+    });
+
+    test('displayText: stored text, else live text when not streaming', () {
+      expect(displayText(cut), 'Jazz began in New Orleans');
+      expect(displayText(_answer(1, 'stored')), 'stored');
+      final streaming = chatMessage(
+        2,
+        state: AiMessageState.streaming,
+        liveText: 'partial',
+      );
+      expect(displayText(streaming), '');
+      expect(displayText(chatMessage(3)), '');
     });
   });
 }

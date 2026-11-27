@@ -232,6 +232,7 @@ AiMessage chatMessage(
   List<AiPart> parts = const [],
   AiMessageState state = AiMessageState.complete,
   String? model,
+  String? liveText,
   DateTime? at,
 }) => AiMessage(
   id: id,
@@ -241,6 +242,7 @@ AiMessage chatMessage(
   parts: parts,
   state: state,
   model: model,
+  liveText: liveText,
   createdAt: at ?? DateTime(2026, 11, 27, 14, 32),
 );
 
