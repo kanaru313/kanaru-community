@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
@@ -40,6 +41,15 @@ final pluginFilesProvider = Provider<PluginFiles>(
     clock: ref.watch(pluginClockProvider),
   ),
 );
+
+/// One asset file of an installed seekbar package; null when it is missing
+/// or unreadable. Read with `ref.read(...future)` where it is needed.
+final pluginAssetProvider = FutureProvider.autoDispose
+    .family<Uint8List?, ({String installId, String packageDir, String name})>(
+      (ref, key) => ref
+          .watch(pluginFilesProvider)
+          .readAssetAt(key.installId, key.packageDir, key.name),
+    );
 
 final pluginConfigStoreProvider = Provider<PluginConfigStore>(
   (ref) => PluginConfigStore(

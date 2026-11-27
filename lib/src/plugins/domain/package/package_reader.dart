@@ -7,6 +7,7 @@ import '../../../foundation/result.dart';
 import 'manifest_parser.dart';
 import 'package_problem.dart';
 import 'plugin_package.dart';
+import 'seekbar_assets.dart';
 import 'zip_reader.dart';
 
 /// Reads a plugin zip: safe unpack in memory, manifest checks, every script
@@ -38,6 +39,16 @@ PluginPackage _read(Uint8List bytes) {
     Ok(:final value) => value,
     Err(:final error) => throw PackageProblemError(error.first),
   };
+  final seekbar = manifest.seekbar;
+  // Only a seekbar package inflates its assets; for any other kind the
+  // headers are dropped and nothing under `assets/` can refuse the install.
+  final assets = seekbar == null
+      ? const <String, Uint8List>{}
+      : readSeekbarAssets(
+          spec: seekbar,
+          contents: contents,
+          zipSize: bytes.length,
+        );
   final names = contents.scripts.keys.toList()..sort();
   final scripts = {
     for (final name in names)
@@ -53,6 +64,7 @@ PluginPackage _read(Uint8List bytes) {
     manifestText: manifestText,
     manifest: manifest,
     scripts: Map.unmodifiable(scripts),
+    assets: assets,
     icon: contents.icon,
     sha256: crypto.sha256.convert(bytes).toString(),
     size: bytes.length,

@@ -12,11 +12,36 @@ import 'zip_entry_names.dart';
 // `src/<name>.js`, flat; the whole file name is restricted.
 final _scriptPath = RegExp(r'^src/([A-Za-z0-9_.-]+\.js)$');
 
+/// The header of an `assets/<name>` entry. Reading the zip does not inflate
+/// it: only [inflate] does, and only a seekbar package asks for that.
+class ZipAssetEntry {
+  const ZipAssetEntry._(this.path, this._header);
+
+  /// Package path, `assets/<name>`.
+  final String path;
+  final ZipFileHeader _header;
+
+  /// Size the header declares.
+  int get declaredSize => _header.uncompressedSize;
+
+  /// Zip compression method (0 stored, 8 deflate).
+  int get method => _header.compressionMethod;
+
+  /// The entry's bytes. A declared size over [cap] is `PackageTooLarge`, data
+  /// that does not match the header is `PackageTooLarge` or `NotAZip`; every
+  /// problem names [path].
+  Uint8List inflate(int cap) {
+    if (declaredSize > cap) throw PackageProblemError(PackageTooLarge(path));
+    return _inflate(_header, path);
+  }
+}
+
 /// The whitelisted entries of a plugin zip, still raw bytes.
 class ZipContents {
   const ZipContents({
     required this.manifest,
     required this.scripts,
+    this.assetHeaders = const {},
     this.icon,
     this.iconProblem,
   });
@@ -26,6 +51,9 @@ class ZipContents {
 
   /// `src/` files by name (`search.js`), bytes not yet decoded.
   final Map<String, Uint8List> scripts;
+
+  /// `assets/` entries by file name (`t.png`), headers only.
+  final Map<String, ZipAssetEntry> assetHeaders;
 
   /// `icon.png` bytes, null when absent or [iconProblem] says it is bad.
   final Uint8List? icon;
@@ -37,8 +65,9 @@ class ZipContents {
 /// Reads [bytes] as a plugin zip entirely in memory. Throws
 /// [PackageProblemError] for any rule broken; nothing is partly returned.
 ///
-/// Only `plugin.json`, `icon.png` and `src/<name>.js` are inflated. Other
-/// entries are ignored (a nested `plugin.zip` included) but their names, count
+/// Only `plugin.json`, `icon.png` and `src/<name>.js` are inflated; the
+/// `assets/<name>` entries are kept as headers for [ZipAssetEntry.inflate].
+/// Other entries are ignored (a nested `plugin.zip` included) but their names, count
 /// and declared sizes still count toward the limits. Every inflate is capped
 /// at the entry's declared size, which is first checked against the entry's
 /// cap, so an entry whose header lies about its size is refused instead of
@@ -69,11 +98,17 @@ ZipContents readZip(Uint8List bytes) {
   Uint8List? icon;
   String? droppedIcon;
   final scripts = <String, Uint8List>{};
+  final assetHeaders = <String, ZipAssetEntry>{};
   var inflatedTotal = 0;
   for (final header in headers) {
     if (isFinderMetadata(header.filename)) continue;
     final name = header.filename.substring(prefix.length);
     final scriptMatch = _scriptPath.firstMatch(name);
+    if (name.startsWith('assets/') &&
+        assetFileName.hasMatch(name.substring(7))) {
+      assetHeaders[name.substring(7)] = ZipAssetEntry._(name, header);
+      continue;
+    }
     final int cap;
     if (name == 'plugin.json') {
       cap = maxManifestBytes;
@@ -116,6 +151,7 @@ ZipContents readZip(Uint8List bytes) {
   return ZipContents(
     manifest: manifest,
     scripts: scripts,
+    assetHeaders: Map.unmodifiable(assetHeaders),
     icon: icon,
     iconProblem: droppedIcon,
   );
@@ -142,8 +178,8 @@ List<ZipFileHeader> _readHeaders(Uint8List bytes) {
 /// capped at the declared size by a stream of our own, so data longer than
 /// declared is `PackageTooLarge` whatever the zip package does; any other
 /// failure is `NotAZip`. The size and CRC32 must match the header.
-Uint8List _inflate(ZipFileHeader header) {
-  final name = header.filename;
+Uint8List _inflate(ZipFileHeader header, [String? label]) {
+  final name = label ?? header.filename;
   final method = header.compressionMethod;
   if (header.generalPurposeBitFlag & 1 != 0) {
     throw PackageProblemError(NotAZip('encrypted: $name'));

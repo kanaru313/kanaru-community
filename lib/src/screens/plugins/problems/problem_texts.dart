@@ -68,6 +68,8 @@ String packageProblemText(AppLocalizations l10n, PackageProblem problem) {
     MissingManifest() => l10n.pluginsReasonMissingManifest,
     MissingScript() => l10n.pluginsReasonMissingScript(detail),
     ScriptNotUtf8() => l10n.pluginsReasonScriptNotUtf8(detail),
+    MissingAsset() ||
+    InvalidAsset() => l10n.pluginsReasonInvalidManifest(detail),
   };
 }
 

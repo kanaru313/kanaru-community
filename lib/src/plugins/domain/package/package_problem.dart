@@ -114,6 +114,23 @@ final class ScriptNotUtf8 extends PackageProblem {
   const ScriptNotUtf8(super.file);
 }
 
+/// A file the seekbar block names (`thumb.image`, `emitter.image`) is not in
+/// `assets/`; the detail is the path the block gives.
+final class MissingAsset extends PackageProblem {
+  const MissingAsset(super.path);
+}
+
+/// An asset a seekbar plugin names cannot be used; the detail is its path and
+/// [reason] one of the `ImageProblem` values.
+final class InvalidAsset extends PackageProblem {
+  const InvalidAsset(super.path, this.reason);
+
+  final String reason;
+
+  @override
+  String toString() => 'InvalidAsset($detail, $reason)';
+}
+
 /// Thrown inside the parsers to stop at the first problem; the public entry
 /// points catch it and return the problem as a value.
 final class PackageProblemError implements Exception {
