@@ -30,9 +30,8 @@ class _Setup {
   ChatViewState get view => container.read(chatViewProvider);
 }
 
-/// The chat frame the desktop panel builds (title, menu, surface) plus a
-/// composer field standing in for the real one, which uses the same draft
-/// binding. [mounted] false removes the chat, as a swap to the queue does.
+/// The chat frame the desktop panel builds (title, menu, surface with its
+/// composer). [mounted] false removes the chat, as a swap to the queue does.
 class _Frame extends StatelessWidget {
   const _Frame({this.mounted = true});
 
@@ -50,10 +49,6 @@ class _Frame extends StatelessWidget {
           ],
         ),
         const Expanded(child: ChatSurface()),
-        ComposerDraftBinding(
-          builder: (context, controller, focus) =>
-              TextField(controller: controller, focusNode: focus),
-        ),
       ],
     );
   }

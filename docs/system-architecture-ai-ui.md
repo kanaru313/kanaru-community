@@ -154,6 +154,79 @@ Files in `lib/src/ai/ui/`: `message_list`, `message_bubble` (user bubble),
   copy button puts the text on the clipboard. A plugin switch shows the divider
   "Từ đây dùng <plugin> · <model>".
 
+## Composer and pickers
+
+Files in `lib/src/ai/ui/composer/`: `composer` (the box), `composer_field`,
+`composer_text_controller`, `variable_list`, `context_chips`, `chip_labels`,
+`prompt_chips`, `prompt_text`, `composer_notice`, `composer_buttons`,
+`send_button`, `chat_plugin_icon`, `plugin_picker`, `permission_picker`,
+`model_picker`; state in `state/chat_view/{composer_view,composer_inputs,
+composer_send,prompt_apply}.dart`. `ChatSurface` shows `Composer` under the
+body, except in History and in the no-plugin guide (no plugin, no messages).
+The big prompt chips fill the greeting's `chips` slot; once the chat has
+messages they are one small scrolling row above the composer.
+
+- **Lock table** (`deriveComposerView`, pure; `composerViewProvider` feeds it
+  the turn state, readiness, permission and struck chips): idle / error: Send,
+  everything on. streaming / runningTools: Stop (tools: its tooltip says the
+  running tool finishes and later calls do not run), plugin / model / permission
+  pickers and prompt chips locked, the field stays editable. awaitingConfirm:
+  Send and everything on (a new message denies the pending card; read-only
+  denies pending calls). Send also needs `ChatReady` and no struck chip. A
+  removed or reinstalled plugin makes the field read-only and disables the
+  model button; the plugin picker stays on (the way out).
+- **One note** above the field, by priority: readiness (key, model, config,
+  removed, reinstalled) > struck chip > the note a refused send left
+  (`composerSendNoticeProvider`: missing data, oversize, store failure; cleared
+  by editing the text, by ×, by Huỷ and by an accepted send) > the gentle
+  "model without tools" line. `ComposerNoticeView` maps them to `KInlineNotice`
+  (warning tone; quiet for the gentle one). Plugin settings go through
+  `ChatHost.openSettings(aiPluginPageLocation(id))`, "Tìm lời bài này" through
+  `chatFindLyricsProvider` (the lyrics modal for the playing song).
+- **Send:** `sendFromComposer` calls `ChatSessionController.send` and turns a
+  refusal into the note; the field is cleared only by `SendSent` and only when
+  the text is still what was sent. Oversize: [Gửi bản rút gọn] calls `send` with
+  `shortVersion: true`.
+- **Field:** `ComposerTextController` paints `{{variables}}` (group off or
+  just-refused ones as warnings). Desktop shell: Enter sends, Shift+Enter new
+  line; phone shell: Enter is a new line. **IME:** while `value.composing` is
+  valid and not collapsed, Enter and the `{{` trigger do nothing, and the
+  composing range keeps its underline inside a painted variable
+  (`buildComposerSpan`). `{{` lists the catalogue names (not `{{input}}`),
+  filtered by what follows; ↑ ↓ Enter / Tab / Esc work; a tap inserts.
+- **Draft:** `ComposerDraftBinding` also reads the draft back, so parts that
+  write `composerDraftProvider` (prompt chips) change the field.
+- **Chips:** attached chips (× removes; struck while their tool group is off
+  and `ai.var_bypass` is off) and the page / selection suggestions
+  (`chatAttachmentsProvider.suggestions`, tap attaches).
+- **Prompt chips** (`applyPrompt`): empty field and no `{{input}}`: send at
+  once (a send that does not go through leaves the prompt in the field); typed
+  text: prompt on top, text on the next line; `{{input}}`: only filled in with
+  the blank selected. A prompt whose variable has no data now is dimmed with
+  its reason ("Không có bài đang phát", "Hàng đợi trống").
+- **Pickers** (`showSelectionPicker`, anchored dropdown on desktop, sheet on the
+  phone, sizes decided in `kanaru_ui`): plugin (icon rows, state line from
+  readiness, caption, footer "Thêm dịch vụ AI…" to the plugin store), permission
+  (icon rows with descriptions; "Tự động" asks through
+  `chatAutoModeConfirmProvider`, cancel keeps the picker open), model (text rows
+  with Ảnh · Công cụ · context tags, struck when missing, "Tuỳ chỉnh" for added
+  models). The permission control on the composer is the icon and a chevron
+  only; tooltip "Quyền: <chế độ> · <mô tả>", semantics label "Quyền: <chế độ>".
+- **Opening the model picker from elsewhere:** `modelPickerRequestProvider`
+  (`request()`); the button row takes it after the frame and opens the picker
+  anchored to the model button (dropped while the chat is locked). The error
+  card's "Đổi model" calls `request()`.
+- **Stand-ins until the settings work merges:** `chat_auto_confirm.dart`
+  (`AutoModeScope`, `confirmAutoMode`, same names as the settings lane's
+  `auto_mode_confirm.dart`; confirms at once), `chat_links.dart`, and the
+  built-in prompt texts in the chat's own l10n (`aiChatPrompt*`), variable
+  names without descriptions.
+- **Tests:** `test/ai/ui/support/chat_ui_support.dart` now also fakes `send`,
+  `stop`, `switchPlugin`, `switchModel`, `setPermission` (recorded in `calls`,
+  they change `fakeChatBindingProvider`), readiness (`fakeChatReadinessProvider`),
+  the composer's settings and prompt data; `test/ai/ui/composer/composer_harness`
+  pumps the composer alone.
+
 ## Play context label
 
 `AiPlayContextLabelSync` (top of `AppShell`) sets

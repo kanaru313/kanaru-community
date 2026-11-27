@@ -8,13 +8,15 @@ import '../state/chat_providers.dart';
 import '../state/chat_session.dart';
 import '../state/chat_view/chat_view_state.dart';
 import 'chat_history_slot.dart';
+import 'composer/composer.dart';
+import 'composer/prompt_chips.dart';
 import 'empty_states.dart';
 import 'messages_error.dart';
 import 'message_list.dart';
 
 /// The chat below its header, the same on the desktop panel and the phone
 /// page: the body (history, the no-plugin guide, the empty greeting or the
-/// message list) over the composer.
+/// message list) over the composer (none in the history and the guide).
 ///
 /// It keeps no state of its own that must outlive it: the draft, the scroll
 /// anchor, the history flag and the rename state live in keep-alive providers
@@ -54,10 +56,20 @@ class _ChatSurfaceState extends ConsumerState<ChatSurface> {
     final historyOpen = ref.watch(
       chatViewProvider.select((s) => s.historyOpen),
     );
+    final id = ref.watch(chatSessionProvider.select((s) => s.conversationId));
+    final messages = id == null
+        ? null
+        : ref.watch(chatMessagesProvider(id)).value;
+    final plugins = ref.watch(chatPluginsProvider).value;
+    final hasMessages = messages?.messages.isNotEmpty ?? false;
+    // The no-plugin guide has no composer (nothing to send through).
+    final guide =
+        messages != null && !hasMessages && plugins != null && plugins.isEmpty;
     return Column(
       children: [
         Expanded(child: historyOpen ? const ChatHistorySlot() : _body()),
-        // The composer sits here.
+        if (!historyOpen && id != null && !guide)
+          Composer(showPromptChips: hasMessages),
       ],
     );
   }
@@ -84,6 +96,6 @@ class _ChatSurfaceState extends ConsumerState<ChatSurface> {
     }
     final plugins = ref.watch(chatPluginsProvider).value;
     if (plugins != null && plugins.isEmpty) return const ChatNoPluginGuide();
-    return const ChatEmptyGreeting();
+    return const ChatEmptyGreeting(chips: PromptChips(large: true));
   }
 }

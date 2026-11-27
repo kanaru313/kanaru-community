@@ -2,20 +2,23 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../state/chat_view/composer_draft.dart';
+import 'composer/composer_text_controller.dart';
 
-/// Gives the composer its text controller and focus node, backed by the
+/// Gives the composer its text controller (one that paints `{{variables}}`)
+/// and focus node, backed by the
 /// keep-alive draft, so what was typed (and where the cursor was) comes back
 /// after the chat left the screen, and a focus request is honoured by exactly
 /// one composer even while the chat is still being built.
 ///
 /// The draft is written on every change, not only on dispose: a provider must
-/// not be changed while the tree is being torn down.
+/// not be changed while the tree is being torn down. It is also read back, so
+/// a part that writes the draft (a prompt chip) changes the field.
 class ComposerDraftBinding extends ConsumerStatefulWidget {
   const ComposerDraftBinding({super.key, required this.builder});
 
   final Widget Function(
     BuildContext context,
-    TextEditingController controller,
+    ComposerTextController controller,
     FocusNode focusNode,
   )
   builder;
@@ -26,14 +29,18 @@ class ComposerDraftBinding extends ConsumerStatefulWidget {
 }
 
 class _ComposerDraftBindingState extends ConsumerState<ComposerDraftBinding> {
-  late final TextEditingController _controller =
-      TextEditingController.fromValue(ref.read(composerDraftProvider));
+  late final ComposerTextController _controller =
+      ComposerTextController.fromValue(ref.read(composerDraftProvider));
   final FocusNode _focus = FocusNode(debugLabel: 'chat composer');
 
   @override
   void initState() {
     super.initState();
     _controller.addListener(_save);
+    // Someone else wrote the draft (a prompt chip): show it.
+    ref.listenManual(composerDraftProvider, (_, next) {
+      if (next != _controller.value) _controller.value = next;
+    });
     ref.listenManual(composerFocusRequestProvider, (_, pending) {
       if (pending) _takeRequest();
     }, fireImmediately: true);
