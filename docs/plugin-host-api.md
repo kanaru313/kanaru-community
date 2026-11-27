@@ -7,6 +7,8 @@ nothing about hosts, consent or the network: the app answers `fetch` and stream
 calls through the `PluginHost` trait (see
 [system-architecture-plugin-runtime.md](./system-architecture-plugin-runtime.md)).
 
+Seekbar plugins carry no scripts; the host API does not apply.
+
 Every call runs in a fresh QuickJS engine; globals do not survive between calls.
 
 ## Script contract
