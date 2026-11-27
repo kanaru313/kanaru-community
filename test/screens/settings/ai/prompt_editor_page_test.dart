@@ -36,6 +36,14 @@ Future<void> _makeDirty(WidgetTester tester) async {
 }
 
 void main() {
+  testWidgets('the insert-variable label has the variable icon', (
+    tester,
+  ) async {
+    await _open(tester, SettingsPaths.aiPromptNew);
+    expect(find.text('Insert variable:'), findsOneWidget);
+    expect(find.byIcon(KIcons.variable), findsOneWidget);
+  });
+
   testWidgets('insert variable at cursor', (tester) async {
     await _open(tester, SettingsPaths.aiPromptNew);
     await tester.enterText(_bodyField, 'abcdef');

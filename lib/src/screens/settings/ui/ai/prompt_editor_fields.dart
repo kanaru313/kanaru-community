@@ -111,21 +111,31 @@ class PromptBodyField extends StatelessWidget {
             container: true,
             label: l10n.aiSetEdVars,
             child: Wrap(
-              spacing: KSpace.x2,
-              runSpacing: KSpace.x2,
+              spacing: 6,
+              runSpacing: KSpace.x1,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Text(
-                  '${l10n.aiSetEdVars}:',
-                  style: text.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      KIcons.variable,
+                      size: KIconSize.xs,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: KSpace.x1),
+                    Text(
+                      '${l10n.aiSetEdVars}:',
+                      style: text.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
                 for (final v in variableCatalog)
                   Tooltip(
                     message: variableDescription(l10n, v),
-                    child: KChip(
-                      dense: true,
+                    child: KChip.token(
                       label: Text(variableToken(v)),
                       semanticLabel: variableToken(v),
                       onTap: () => onInsert(v),

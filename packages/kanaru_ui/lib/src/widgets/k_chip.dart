@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../layout/form_factor.dart';
+import '../tokens/k_font.dart';
 import '../tokens/k_icon_size.dart';
 import '../tokens/k_layout.dart';
 import '../tokens/k_shape.dart';
@@ -32,7 +33,8 @@ class KChip extends StatelessWidget {
        outlined = false,
        tone = KTagTone.neutral,
        _interactive = true,
-       _tag = false;
+       _tag = false,
+       _token = false;
 
   /// A pill that is a value, not a choice: no button, no selected state, no
   /// ink. [trailing] (a remove button) sits at the end with less padding.
@@ -49,7 +51,8 @@ class KChip extends StatelessWidget {
       tintWhenSelected = true,
       tone = KTagTone.neutral,
       _interactive = false,
-      _tag = false;
+      _tag = false,
+      _token = false;
 
   /// A small label that only shows a value (the kind and the author on a
   /// plugin row): 20 dp tall, `labelSmall`, radius 6, label centred, no ink,
@@ -71,7 +74,30 @@ class KChip extends StatelessWidget {
        trailing = null,
        tintWhenSelected = true,
        _interactive = false,
-       _tag = true;
+       _tag = true,
+       _token = false;
+
+  /// A small insertable code token (a prompt variable such as `{title}`):
+  /// outlined (1 dp `outlineVariant`, no fill), radius 8, 28 dp visible
+  /// height, 10 dp side padding, label in the mono font at 12 sp. On touch
+  /// shells the tap area is padded to 48 dp; the visible shape stays 28.
+  const KChip.token({
+    super.key,
+    required this.label,
+    this.enabled = true,
+    this.onTap,
+    this.semanticLabel,
+  }) : icon = null,
+       selected = false,
+       dense = true,
+       onRaised = false,
+       trailing = null,
+       outlined = true,
+       tintWhenSelected = true,
+       tone = KTagTone.neutral,
+       _interactive = true,
+       _tag = false,
+       _token = true;
 
   final Widget label;
   final Widget? icon;
@@ -108,6 +134,7 @@ class KChip extends StatelessWidget {
   final KTagTone tone;
   final bool _interactive;
   final bool _tag;
+  final bool _token;
 
   static const double _denseDesktopHeight = 32;
   static const double _denseTouchHeight = 40;
@@ -116,6 +143,7 @@ class KChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     if (_tag) return _buildTag(context, scheme);
+    if (_token) return _buildToken(context, scheme);
     final touch = FormFactor.of(context) == FormFactor.mobile;
     final minHeight = dense
         ? (touch ? _denseTouchHeight : _denseDesktopHeight)
@@ -171,6 +199,66 @@ class KChip extends StatelessWidget {
       child: Opacity(opacity: enabled ? 1 : 0.5, child: pill),
     );
   }
+
+  Widget _buildToken(BuildContext context, ColorScheme scheme) {
+    final touch = FormFactor.of(context) == FormFactor.mobile;
+    final fg = scheme.onSurfaceVariant;
+    final pill = Material(
+      type: MaterialType.transparency,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(_tokenRadius),
+        side: BorderSide(color: scheme.outlineVariant),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: _tokenHeight),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: _tokenPadding),
+            child: Center(
+              widthFactor: 1,
+              heightFactor: 1,
+              child: ExcludeSemantics(
+                excluding: semanticLabel != null,
+                child: DefaultTextStyle.merge(
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: fg,
+                    fontSize: 12,
+                    fontFamily: KFont.mono,
+                    fontFamilyFallback: KFont.monoFallback,
+                  ),
+                  maxLines: 1,
+                  child: label,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    final target = touch ? KLayout.minTarget : _tokenHeight;
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: semanticLabel,
+      child: Opacity(
+        opacity: enabled ? 1 : 0.5,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: enabled ? onTap : null,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: target),
+            child: Center(widthFactor: 1, heightFactor: 1, child: pill),
+          ),
+        ),
+      ),
+    );
+  }
+
+  static const double _tokenHeight = 28;
+  static const double _tokenRadius = 8;
+  static const double _tokenPadding = 10;
 
   Widget _buildTag(BuildContext context, ColorScheme scheme) {
     final (Color fill, Color on) = switch (tone) {

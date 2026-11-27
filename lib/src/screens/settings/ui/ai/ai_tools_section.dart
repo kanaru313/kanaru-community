@@ -42,7 +42,7 @@ class AiToolsSection extends ConsumerWidget {
           _ToolRow(group: g),
         const Divider(indent: KSpace.x4, endIndent: KSpace.x4),
         KSwitchRow(
-          leading: const Icon(KIcons.tag),
+          leading: const Icon(KIcons.variable),
           title: Text(l10n.aiSetVarBypassTitle),
           subtitle: Text(l10n.aiSetVarBypassDesc),
           switchLabel: l10n.aiSetVarBypassTitle,

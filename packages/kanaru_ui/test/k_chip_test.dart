@@ -213,4 +213,59 @@ void main() {
       greaterThan(tester.getTopLeft(kind).dy),
     );
   });
+
+  for (final (name, width, target) in [
+    ('touch', 400.0, 48.0),
+    ('desktop', 1400.0, 28.0),
+  ]) {
+    testWidgets(
+      'token chip is 28 tall, outlined, r8, mono; target $target on $name',
+      (tester) async {
+        var taps = 0;
+        tester.view.physicalSize = Size(width, 800);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          host(
+            Center(
+              child: KChip.token(
+                label: const Text('{title}'),
+                onTap: () => taps++,
+              ),
+            ),
+          ),
+        );
+        final chip = find.byType(KChip);
+        expect(tester.getSize(chip).height, target);
+        final material = tester.widget<Material>(
+          find.descendant(of: chip, matching: find.byType(Material)),
+        );
+        final shape = material.shape! as RoundedRectangleBorder;
+        expect(shape.borderRadius, BorderRadius.circular(8));
+        expect(shape.side.width, 1);
+        expect(material.type, MaterialType.transparency);
+        expect(
+          tester
+              .getSize(
+                find.descendant(of: chip, matching: find.byType(Material)),
+              )
+              .height,
+          28,
+        );
+        final style = tester.widget<DefaultTextStyle>(
+          find
+              .ancestor(
+                of: find.text('{title}'),
+                matching: find.byType(DefaultTextStyle),
+              )
+              .first,
+        );
+        expect(style.style.fontSize, 12);
+        expect(style.style.fontFamily, KFont.mono);
+        // The padded area outside the visible pill still taps.
+        await tester.tapAt(tester.getTopLeft(chip) + const Offset(20, 1));
+        expect(taps, 1);
+      },
+    );
+  }
 }
