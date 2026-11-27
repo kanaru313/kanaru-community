@@ -161,7 +161,7 @@ class ChatSessionController extends Notifier<ChatSessionState> {
       );
       if (prepared.failure != null) return prepared.failure!;
 
-      final first = await _store.latestSeq(id) == 0;
+      final first = !await _store.hasUserMessage(id);
       final start = await driver.send(prepared.parts);
       switch (start) {
         case DriverStarted(:final done, :final userMessageId):

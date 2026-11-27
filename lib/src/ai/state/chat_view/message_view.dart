@@ -47,6 +47,17 @@ final class ChatSwitchItem extends ChatItem {
 String messageText(AiMessage message) =>
     message.parts.whereType<TextPart>().map((p) => p.text).join();
 
+/// Text to draw for [message] once it is not streaming: the stored
+/// [TextPart]s, else the received [AiMessage.liveText] (a turn cut off by
+/// closing keeps its partial answer there, not in a part).
+String displayText(AiMessage message) {
+  final stored = messageText(message);
+  if (stored.isNotEmpty || message.state == AiMessageState.streaming) {
+    return stored;
+  }
+  return message.liveText ?? '';
+}
+
 /// Rows to draw for [messages] (oldest first).
 List<ChatItem> chatItemsOf(List<AiMessage> messages) {
   final items = <ChatItem>[];
@@ -64,7 +75,7 @@ List<ChatItem> chatItemsOf(List<AiMessage> messages) {
             m.state == AiMessageState.error ||
             (m.state == AiMessageState.stopped &&
                 m.parts.any((p) => p is ErrorPart));
-        final hasText = messageText(m).trim().isNotEmpty;
+        final hasText = displayText(m).trim().isNotEmpty;
         // A round that only called tools has no text to draw.
         if (live || m.state == AiMessageState.stopped || hasText) {
           items.add(ChatAssistantItem(m));

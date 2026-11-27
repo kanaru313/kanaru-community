@@ -345,6 +345,19 @@ class ConversationStore {
     return row.read<int>('m');
   }
 
+  /// Whether the conversation has a user message (switch markers and other
+  /// rows do not count).
+  Future<bool> hasUserMessage(int conversationId) async {
+    final row = await _db
+        .customSelect(
+          'SELECT EXISTS(SELECT 1 FROM ai_messages WHERE conversation_id = ? '
+          "AND role = 'user') AS e",
+          variables: [Variable.withInt(conversationId)],
+        )
+        .getSingle();
+    return row.read<int>('e') == 1;
+  }
+
   /// [append] only when the newest row still has `seq == expectedSeq`; null
   /// (nothing written) when another row got in first. The check and the
   /// insert share one transaction.

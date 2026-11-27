@@ -13,7 +13,8 @@ class _FailingStore extends ConversationStore {
   _FailingStore(super.db);
 
   @override
-  Future<int> latestSeq(int conversationId) async => throw StateError(_secret);
+  Future<bool> hasUserMessage(int conversationId) async =>
+      throw StateError(_secret);
 }
 
 void main() {
