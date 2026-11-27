@@ -65,6 +65,88 @@ void main() {
     expect(find.byIcon(KIcons.back), findsOneWidget);
   });
 
+  group('shellActions: false', () {
+    Widget scoped(PageHeader header) => _host(
+      PageHeaderScope(
+        leading: const Icon(Icons.menu, key: Key('scope-leading')),
+        trailing: const [Icon(Icons.search, key: Key('scope-trailing'))],
+        rootTrailing: const [
+          Icon(Icons.settings, key: Key('scope-root-trailing')),
+        ],
+        child: header,
+      ),
+    );
+    const own = Icon(Icons.tune, key: Key('own-action'));
+
+    testWidgets('root keeps leading, title and own actions only', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        scoped(
+          const PageHeader(
+            title: 'Audius',
+            actions: [own],
+            shellActions: false,
+          ),
+        ),
+      );
+      expect(find.byKey(const Key('scope-leading')), findsOneWidget);
+      expect(find.text('Audius'), findsOneWidget);
+      expect(find.byKey(const Key('own-action')), findsOneWidget);
+      expect(find.byKey(const Key('scope-trailing')), findsNothing);
+      expect(find.byKey(const Key('scope-root-trailing')), findsNothing);
+    });
+
+    testWidgets('child keeps back, title and own actions only', (tester) async {
+      await tester.pumpWidget(
+        scoped(
+          PageHeader(
+            title: 'Album',
+            onBack: () {},
+            backTooltip: 'Up',
+            actions: const [own],
+            shellActions: false,
+          ),
+        ),
+      );
+      expect(
+        find.byWidgetPredicate((w) => w is KIconButton && w.tooltip == 'Up'),
+        findsOneWidget,
+      );
+      expect(find.text('Album'), findsOneWidget);
+      expect(find.byKey(const Key('own-action')), findsOneWidget);
+      expect(find.byKey(const Key('scope-trailing')), findsNothing);
+      expect(find.byKey(const Key('scope-root-trailing')), findsNothing);
+    });
+
+    testWidgets('default still shows the scope actions', (tester) async {
+      await tester.pumpWidget(
+        scoped(const PageHeader(title: 'Audius', actions: [own])),
+      );
+      expect(find.byKey(const Key('scope-trailing')), findsOneWidget);
+      expect(find.byKey(const Key('scope-root-trailing')), findsOneWidget);
+    });
+
+    testWidgets('no scope: unchanged, no overflow at 2x text', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MediaQuery(
+            data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+            child: Scaffold(
+              body: const PageHeader(
+                title: 'A very long page title that must ellipsize',
+                actions: [own],
+                shellActions: false,
+              ),
+            ),
+          ),
+        ),
+      );
+      expect(find.byKey(const Key('own-action')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
   testWidgets('KEmpty shows message and action', (tester) async {
     await tester.pumpWidget(
       _host(
