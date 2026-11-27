@@ -12075,6 +12075,42 @@ abstract class AppLocalizations {
   /// **'Queue'**
   String get aiChatToolGetQueue;
 
+  /// Header of a tool card whose result is a list: rows shown out of the total.
+  ///
+  /// In en, this message translates to:
+  /// **'{shown} / {total} songs'**
+  String aiChatToolSummaryList(int shown, int total);
+
+  /// Same, when more rows exist than were returned.
+  ///
+  /// In en, this message translates to:
+  /// **'{shown} / {total} songs · the AI can look further'**
+  String aiChatToolSummaryListMore(int shown, int total);
+
+  /// Header of a tool card whose list result has no total.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 song} other{{n} songs}}'**
+  String aiChatToolSummaryCount(int n);
+
+  /// Header of a tool card whose list result is not songs (playlists, for one): rows shown out of the total.
+  ///
+  /// In en, this message translates to:
+  /// **'{shown} / {total} items'**
+  String aiChatToolSummaryItems(int shown, int total);
+
+  /// Same, when more rows exist than were returned.
+  ///
+  /// In en, this message translates to:
+  /// **'{shown} / {total} items · the AI can look further'**
+  String aiChatToolSummaryItemsMore(int shown, int total);
+
+  /// Header of a tool card whose list result is not songs and has no total.
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, =1{1 item} other{{n} items}}'**
+  String aiChatToolSummaryItemsCount(int n);
+
   /// Name of the search_library tool on a tool card.
   ///
   /// In en, this message translates to:
@@ -13214,6 +13250,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'What was received stays above. Kanaru does not resend when it opens; tap Try again to let the AI go on.'**
   String get aiChatErrCutOffBody;
+
+  /// No description provided for @aiChatErrCutOffBodyEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing of the answer had arrived when Kanaru closed. Kanaru does not resend when it opens; tap Try again to let the AI answer.'**
+  String get aiChatErrCutOffBodyEmpty;
 
   /// Button of the broken-plugin error card.
   ///

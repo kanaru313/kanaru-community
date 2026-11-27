@@ -19,6 +19,7 @@ class ExtensionRegistry {
   final _songDetailSections = <SongDetailSection>[];
   final _startupHooks = <StartupHook>[];
   final _flushHooks = <FlushHook>[];
+  final _liveFlushHooks = <FlushHook>[];
   final _beforeExitHooks = <FlushHook>[];
   final _l10nDelegates = <LocalizationsDelegate<Object?>>[];
   LicenseService _licenseService = const FreeLicenseService();
@@ -60,6 +61,7 @@ class ExtensionRegistry {
 
   List<StartupHook> get startupHooks => List.unmodifiable(_startupHooks);
   List<FlushHook> get flushHooks => List.unmodifiable(_flushHooks);
+  List<FlushHook> get liveFlushHooks => List.unmodifiable(_liveFlushHooks);
   List<FlushHook> get beforeExitHooks => List.unmodifiable(_beforeExitHooks);
   List<LocalizationsDelegate<Object?>> get l10nDelegates =>
       List.unmodifiable(_l10nDelegates);
@@ -162,6 +164,12 @@ class ExtensionRegistry {
   /// settings store is flushed). Hooks run in registration order; one that
   /// throws does not stop the others.
   void addFlushHook(FlushHook hook) => _flushHooks.add(hook);
+
+  /// Adds a light flush hook: it runs alone, without the settings store or the
+  /// other hooks, when the app only loses focus (`inactive` on Android: the
+  /// recents screen can precede a kill). Keep it cheap and idempotent; the
+  /// same work is normally also a flush hook, which runs at `hidden` / `paused`.
+  void addLiveFlushHook(FlushHook hook) => _liveFlushHooks.add(hook);
 
   /// Adds work that runs only on exit, before the normal flush (for example
   /// pausing playback so nothing advances during the flush). Same shape as a

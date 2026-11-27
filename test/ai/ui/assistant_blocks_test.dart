@@ -1,13 +1,20 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kanaru/l10n/gen/app_localizations.dart';
 import 'package:kanaru/src/ai/domain/conversation/ai_message.dart';
 import 'package:kanaru/src/ai/domain/conversation/parts.dart';
 import 'package:kanaru/src/ai/ui/assistant_blocks.dart';
+import 'package:kanaru/src/ai/ui/chat_host.dart';
 import 'package:kanaru/src/ai/ui/chat_markdown.dart';
+import 'package:kanaru/src/ai/ui/track_actions.dart';
+import 'package:kanaru/src/library/state/browse/song_list_providers.dart'
+    show trackRowLoaderProvider;
+import 'package:kanaru/src/playback/state/track_info_providers.dart';
 import 'package:kanaru_ui/kanaru_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../support/icon_button_finders.dart';
+import '../../support/kanaru_ui_finders.dart';
 import 'support/chat_list_harness.dart';
 import 'support/chat_ui_support.dart';
 
@@ -34,6 +41,56 @@ Future<ValueNotifier<String>> _pumpBlocks(
   );
   return notifier;
 }
+
+/// Blocks of an answer with song lines, over a fake library, on a mutable
+/// text and streaming flag.
+Future<({ValueNotifier<String> text, ValueNotifier<bool> streaming})>
+_pumpTrackBlocks(WidgetTester tester, String text) async {
+  final textNotifier = ValueNotifier(text);
+  final streaming = ValueNotifier(true);
+  final library = {for (var i = 1; i <= 40; i++) i: fakeTrack(i, title: 'T$i')};
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        chatHostProvider.overrideWithValue(RecordingChatHost()),
+        chatTrackActionsProvider.overrideWithValue(RecordingTrackActions()),
+        trackInfoProvider.overrideWith(
+          (ref, id) => Stream.value(library[id.value]),
+        ),
+        trackRowLoaderProvider.overrideWithValue(
+          (ids) async => [for (final id in ids) ?library[id.value]],
+        ),
+      ],
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: ListenableBuilder(
+              listenable: Listenable.merge([textNotifier, streaming]),
+              builder: (_, _) => AssistantBlocks(
+                text: textNotifier.value,
+                streaming: streaming.value,
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.pump();
+  return (text: textNotifier, streaming: streaming);
+}
+
+double _boxOffset(WidgetTester tester) => tester
+    .state<ScrollableState>(
+      find.descendant(
+        of: find.byType(KCappedList),
+        matching: find.byType(Scrollable),
+      ),
+    )
+    .position
+    .pixels;
 
 AiMessage _toolResult(int id, String name, String json) => chatMessage(
   id,
@@ -147,6 +204,26 @@ void main() {
       },
     );
 
+    testWidgets('track refs as list items become track rows, unknown stays', (
+      tester,
+    ) async {
+      final setup = await pumpChatList(
+        tester,
+        library: {7: fakeTrack(7, title: 'Lac troi')},
+      );
+      await setup.setMessages(tester, [
+        _toolResult(
+          1,
+          'search_library',
+          '{"total":1,"items":["7|Lac troi|Son Tung|x|2017"]}',
+        ),
+        _answer(2, '- [[t:7]]\n- [[t:9031]]\n1. [[t:7]]'),
+      ]);
+      expect(find.text('Lac troi'), findsNWidgets(2));
+      expect(find.text('[[t:9031]]', findRichText: true), findsOneWidget);
+      expect(find.text('[[t:7]]', findRichText: true), findsNothing);
+    });
+
     testWidgets('an id only a plugin or a playlist list mentions stays text', (
       tester,
     ) async {
@@ -156,6 +233,70 @@ void main() {
         _answer(2, '[[t:7]]'),
       ]);
       expect(find.text('[[t:7]]', findRichText: true), findsOneWidget);
+    });
+
+    testWidgets('more than eight song lines in a row sit in one scrolling box', (
+      tester,
+    ) async {
+      final setup = await pumpChatList(
+        tester,
+        library: {for (var i = 1; i <= 40; i++) i: fakeTrack(i, title: 'T$i')},
+      );
+      await setup.setMessages(tester, [
+        _toolResult(
+          1,
+          'search_library',
+          '{"items":[${[for (var i = 1; i <= 40; i++) '"$i|T$i|A"'].join(',')}]}',
+        ),
+        _answer(
+          2,
+          '${[for (var i = 1; i <= 40; i++) '[[t:$i]]'].join('\n')}\n\nafter',
+        ),
+      ]);
+      expect(find.byType(KCappedList), findsOneWidget);
+      // Lazy: the first rows are built, the rest wait for the scroll.
+      expect(find.text('T1'), findsOneWidget);
+      expect(find.text('T8'), findsOneWidget);
+      expect(find.text('T30'), findsNothing);
+      expect(cappedBottomFade, findsOneWidget);
+      expect(find.text('after', findRichText: true), findsOneWidget);
+    });
+
+    testWidgets('a song box keeps its scroll when its group closes and the '
+        'answer finishes', (tester) async {
+      final songs = [for (var i = 1; i <= 20; i++) '[[t:$i]]'].join('\n');
+      final setup = await _pumpTrackBlocks(tester, songs);
+      await tester.drag(find.byType(KCappedList), const Offset(0, -150));
+      await tester.pump();
+      final scrolled = _boxOffset(tester);
+      expect(scrolled, greaterThan(0));
+
+      // A blank line closes the song group; text goes on below it.
+      setup.text.value = '$songs\n\nSome words after';
+      await tester.pump();
+      expect(_boxOffset(tester), scrolled);
+
+      // The answer finishes: every block is closed.
+      setup.streaming.value = false;
+      await tester.pump();
+      expect(_boxOffset(tester), scrolled);
+    });
+
+    testWidgets('eight song lines show whole, no box', (tester) async {
+      final setup = await pumpChatList(
+        tester,
+        library: {for (var i = 1; i <= 8; i++) i: fakeTrack(i, title: 'T$i')},
+      );
+      await setup.setMessages(tester, [
+        _toolResult(
+          1,
+          'search_library',
+          '{"items":[${[for (var i = 1; i <= 8; i++) '"$i|T$i|A"'].join(',')}]}',
+        ),
+        _answer(2, [for (var i = 1; i <= 8; i++) '[[t:$i]]'].join('\n')),
+      ]);
+      expect(find.byType(KCappedList), findsNothing);
+      expect(find.text('T8'), findsOneWidget);
     });
 
     testWidgets('track row tap plays, ⋮ opens the song menu', (tester) async {

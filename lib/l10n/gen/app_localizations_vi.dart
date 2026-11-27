@@ -7570,6 +7570,74 @@ class AppLocalizationsVi extends AppLocalizations {
   String get aiChatToolGetQueue => 'Hàng đợi';
 
   @override
+  String aiChatToolSummaryList(int shown, int total) {
+    final intl.NumberFormat shownNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String shownString = shownNumberFormat.format(shown);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$shownString / $totalString bài';
+  }
+
+  @override
+  String aiChatToolSummaryListMore(int shown, int total) {
+    final intl.NumberFormat shownNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String shownString = shownNumberFormat.format(shown);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$shownString / $totalString bài · AI có thể xem tiếp';
+  }
+
+  @override
+  String aiChatToolSummaryCount(int n) {
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String nString = nNumberFormat.format(n);
+
+    return '$nString bài';
+  }
+
+  @override
+  String aiChatToolSummaryItems(int shown, int total) {
+    final intl.NumberFormat shownNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String shownString = shownNumberFormat.format(shown);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$shownString / $totalString mục';
+  }
+
+  @override
+  String aiChatToolSummaryItemsMore(int shown, int total) {
+    final intl.NumberFormat shownNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String shownString = shownNumberFormat.format(shown);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$shownString / $totalString mục · AI có thể xem tiếp';
+  }
+
+  @override
+  String aiChatToolSummaryItemsCount(int n) {
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String nString = nNumberFormat.format(n);
+
+    return '$nString mục';
+  }
+
+  @override
   String get aiChatToolSearchLibrary => 'Tìm trong thư viện';
 
   @override
@@ -8311,6 +8379,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get aiChatErrCutOffBody =>
       'Phần đã nhận vẫn ở trên. Kanaru không tự gửi lại khi mở; bấm Thử lại để AI làm tiếp.';
+
+  @override
+  String get aiChatErrCutOffBodyEmpty =>
+      'Kanaru chưa nhận được chữ nào của câu trả lời trước khi đóng. Kanaru không tự gửi lại khi mở; bấm Thử lại để AI trả lời.';
 
   @override
   String get aiChatActionOpenPlugin => 'Mở plugin';

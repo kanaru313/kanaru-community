@@ -8107,6 +8107,86 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiChatToolGetQueue => 'Queue';
 
   @override
+  String aiChatToolSummaryList(int shown, int total) {
+    final intl.NumberFormat shownNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String shownString = shownNumberFormat.format(shown);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$shownString / $totalString songs';
+  }
+
+  @override
+  String aiChatToolSummaryListMore(int shown, int total) {
+    final intl.NumberFormat shownNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String shownString = shownNumberFormat.format(shown);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$shownString / $totalString songs · the AI can look further';
+  }
+
+  @override
+  String aiChatToolSummaryCount(int n) {
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String nString = nNumberFormat.format(n);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$nString songs',
+      one: '1 song',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String aiChatToolSummaryItems(int shown, int total) {
+    final intl.NumberFormat shownNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String shownString = shownNumberFormat.format(shown);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$shownString / $totalString items';
+  }
+
+  @override
+  String aiChatToolSummaryItemsMore(int shown, int total) {
+    final intl.NumberFormat shownNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String shownString = shownNumberFormat.format(shown);
+    final intl.NumberFormat totalNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String totalString = totalNumberFormat.format(total);
+
+    return '$shownString / $totalString items · the AI can look further';
+  }
+
+  @override
+  String aiChatToolSummaryItemsCount(int n) {
+    final intl.NumberFormat nNumberFormat = intl.NumberFormat.decimalPattern(
+      localeName,
+    );
+    final String nString = nNumberFormat.format(n);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$nString items',
+      one: '1 item',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get aiChatToolSearchLibrary => 'Search the library';
 
   @override
@@ -8996,6 +9076,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get aiChatErrCutOffBody =>
       'What was received stays above. Kanaru does not resend when it opens; tap Try again to let the AI go on.';
+
+  @override
+  String get aiChatErrCutOffBodyEmpty =>
+      'Nothing of the answer had arrived when Kanaru closed. Kanaru does not resend when it opens; tap Try again to let the AI answer.';
 
   @override
   String get aiChatActionOpenPlugin => 'Open plugin';

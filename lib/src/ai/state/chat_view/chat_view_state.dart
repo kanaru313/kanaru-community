@@ -43,7 +43,17 @@ class ChatViewState {
 
 class ChatViewNotifier extends Notifier<ChatViewState> {
   @override
-  ChatViewState build() => const ChatViewState();
+  ChatViewState build() {
+    // Another conversation (new, deleted, opened from the history): a rename
+    // of the old one ends, whether or not a chat is on screen to see it.
+    ref.listen(chatSessionProvider.select((s) => s.conversationId), (
+      previous,
+      next,
+    ) {
+      if (previous != next && state.renaming) cancelRename();
+    });
+    return const ChatViewState();
+  }
 
   void openHistory() =>
       state = state.copyWith(historyOpen: true, renaming: false);

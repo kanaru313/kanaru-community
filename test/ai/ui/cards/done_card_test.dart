@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:kanaru_ui/kanaru_ui.dart' show KCappedList;
 import 'package:kanaru/src/ai/domain/conversation/ai_message.dart';
 import 'package:kanaru/src/ai/domain/conversation/parts.dart';
 import 'package:kanaru/src/ai/state/chat_session.dart' show ReplayResult;
@@ -168,9 +169,14 @@ void main() {
     expect(find.text('Cũ 106'), findsNothing);
     await tester.tap(find.text('+7 bài'));
     await settle(tester);
-    for (final id in ids.skip(5)) {
+    // Twelve songs: eight rows tall, the rest scroll in.
+    for (final id in ids.skip(5).take(3)) {
       expect(find.text('Cũ $id'), findsOneWidget);
     }
+    expect(find.text('Cũ ${ids.last}'), findsNothing);
+    await tester.drag(find.byType(KCappedList), const Offset(0, -2000));
+    await settle(tester);
+    expect(find.text('Cũ ${ids.last}'), findsOneWidget);
     expect(find.text('Không còn trong thư viện'), findsNothing);
   });
 

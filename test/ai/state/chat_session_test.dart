@@ -298,11 +298,62 @@ void main() {
     t.session.liveText.listen((e) => live.add(e.text));
     await t.session.send('go');
     await until(() => live.isNotEmpty);
-    expect((await transcript()).last.liveText, isNull);
+    t.engine.lastOnEvent!('{"t":"text","d":"def"}');
+    await until(() => live.length == 2);
 
     await flushChat(t.container);
 
-    expect((await transcript()).last.liveText, 'abc');
+    expect((await transcript()).last.liveText, 'abcdef');
+  });
+
+  test(
+    'the first streamed text is written without waiting for a flush',
+    () async {
+      await start();
+      t.engine.rounds.add(
+        const ScriptedRound(
+          events: ['{"t":"text","d":"abc"}'],
+          untilCancelled: true,
+        ),
+      );
+      final live = <String>[];
+      t.session.liveText.listen((e) => live.add(e.text));
+      await t.session.send('go');
+      await until(() => live.isNotEmpty);
+
+      // No flushChat and no interval elapsed: a kill now still keeps it.
+      final swept = await t.store.sweepAfterCrash();
+
+      expect(swept.stopped, 1);
+      expect((await transcript()).last.liveText, 'abc');
+    },
+  );
+
+  test('later text is written once per interval, not per delta', () async {
+    await start();
+    t.engine.rounds.add(
+      const ScriptedRound(
+        events: ['{"t":"text","d":"abc"}'],
+        untilCancelled: true,
+      ),
+    );
+    final live = <String>[];
+    t.session.liveText.listen((e) => live.add(e.text));
+    await t.session.send('go');
+    await until(() => live.isNotEmpty);
+    Future<String?> stored() async => (await transcript()).last.liveText;
+    await untilAsync(() async => await stored() == 'abc');
+
+    // Inside the interval: shown live, not written.
+    t.engine.lastOnEvent!('{"t":"text","d":"def"}');
+    await until(() => live.length == 2);
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+    expect(await stored(), 'abc');
+
+    // After the interval the next delta writes everything received so far.
+    await Future<void>.delayed(const Duration(milliseconds: 1000));
+    t.engine.lastOnEvent!('{"t":"text","d":"ghi"}');
+    await untilAsync(() async => await stored() == 'abcdefghi');
   });
 
   test('kill after some deltas keeps the flushed prefix', () async {

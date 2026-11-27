@@ -17,7 +17,9 @@ import 'package:kanaru/src/ai/state/chat_view/composer_draft.dart';
 import 'package:kanaru/src/ai/state/chat_view/composer_inputs.dart';
 import 'package:kanaru/src/ai/ui/composer/composer_notice.dart';
 import 'package:kanaru/src/ai/ui/composer/composer_text_controller.dart';
+import 'package:kanaru/src/foundation/app_logger.dart';
 import 'package:kanaru_ui/kanaru_ui.dart' show KChip;
+import 'package:logging/logging.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../support/icon_button_finders.dart';
@@ -379,6 +381,38 @@ void main() {
       expect(find.textContaining('could not be saved'), findsOneWidget);
       await typeInComposer(tester, 'one two');
       expect(find.textContaining('could not be saved'), findsNothing);
+    });
+
+    testWidgets('a send that throws logs only the type in release', (
+      tester,
+    ) async {
+      final before = Logger.root.level;
+      Logger.root.level = Level.ALL;
+      final records = <LogRecord>[];
+      final sub = Logger.root.onRecord.listen(records.add);
+      addTearDown(() async {
+        Logger.root.level = before;
+        await sub.cancel();
+      });
+      final setup = await pumpComposer(tester);
+      setup.session.sendError = StateError('SECRET-chat-text');
+      await typeInComposer(tester, 'one');
+      await tester.tap(find.byTooltip('Send'));
+      await tester.pump();
+      final warning = records.singleWhere(
+        (r) => r.level == Level.WARNING && r.message.startsWith('send failed'),
+      );
+      final printed = formatLogLine(warning, release: true);
+      expect(printed, contains('StateError'));
+      expect(printed, isNot(contains('SECRET-chat-text')));
+      expect(
+        records.any(
+          (r) =>
+              r.level == Level.FINE && r.message.contains('SECRET-chat-text'),
+        ),
+        isTrue,
+      );
+      expect(find.textContaining('could not be saved'), findsOneWidget);
     });
 
     testWidgets('oversize queue shows the count and sends the short version', (

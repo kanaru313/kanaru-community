@@ -4,7 +4,7 @@ import 'chat_markdown_stream.dart';
 /// Ids of the `[[t:ID]]` lines of [markdown], as typed.
 List<String> trackTokensOf(String markdown) => [
   for (final b in parseBlocks(markdown))
-    if (b is ChatTrack) b.id,
+    if (b is ChatTrack) b.id else if (b is ChatTrackList) ...b.ids,
 ];
 
 /// The answer as it reads on screen, for the clipboard: markers (`**`, `` ` ``,
@@ -25,16 +25,20 @@ String plainAnswerText(
           '${ordered ? '${start + i}.' : '•'} ${_line(items[i])}',
       ].join('\n'),
       ChatTrack(:final id) => trackLabel(id) ?? '',
+      ChatTrackList(:final ids) =>
+        ids.map(trackLabel).whereType<String>().join('\n'),
     };
     if (text.isEmpty) continue;
     if (previous != null) {
       // Song lines stay a run; other blocks are set apart by a blank line.
-      out.write(previous is ChatTrack && block is ChatTrack ? '\n' : '\n\n');
+      out.write(_isSong(previous) && _isSong(block) ? '\n' : '\n\n');
     }
     out.write(text);
     previous = block;
   }
   return out.toString();
 }
+
+bool _isSong(ChatBlock b) => b is ChatTrack || b is ChatTrackList;
 
 String _line(List<ChatSpan> spans) => spans.map((s) => s.text).join();

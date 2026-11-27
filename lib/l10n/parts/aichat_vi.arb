@@ -206,6 +206,52 @@
   "@aiChatToolGetQueue": {
     "description": "Name of the get_queue tool on a tool card."
   },
+  "aiChatToolSummaryList": "{shown} / {total} bài",
+  "@aiChatToolSummaryList": {
+    "description": "Header of a tool card whose result is a list: rows shown out of the total.",
+    "placeholders": {
+      "shown": {"type": "int", "format": "decimalPattern"},
+      "total": {"type": "int", "format": "decimalPattern"}
+    }
+  },
+  "aiChatToolSummaryListMore": "{shown} / {total} bài · AI có thể xem tiếp",
+  "@aiChatToolSummaryListMore": {
+    "description": "Same, when more rows exist than were returned.",
+    "placeholders": {
+      "shown": {"type": "int", "format": "decimalPattern"},
+      "total": {"type": "int", "format": "decimalPattern"}
+    }
+  },
+  "aiChatToolSummaryCount": "{n} bài",
+  "@aiChatToolSummaryCount": {
+    "description": "Header of a tool card whose list result has no total.",
+    "placeholders": {
+      "n": {"type": "int", "format": "decimalPattern"}
+    }
+  },
+  "aiChatToolSummaryItems": "{shown} / {total} mục",
+  "@aiChatToolSummaryItems": {
+    "description": "Header of a tool card whose list result is not songs (playlists, for one): rows shown out of the total.",
+    "placeholders": {
+      "shown": {"type": "int", "format": "decimalPattern"},
+      "total": {"type": "int", "format": "decimalPattern"}
+    }
+  },
+  "aiChatToolSummaryItemsMore": "{shown} / {total} mục · AI có thể xem tiếp",
+  "@aiChatToolSummaryItemsMore": {
+    "description": "Same, when more rows exist than were returned.",
+    "placeholders": {
+      "shown": {"type": "int", "format": "decimalPattern"},
+      "total": {"type": "int", "format": "decimalPattern"}
+    }
+  },
+  "aiChatToolSummaryItemsCount": "{n} mục",
+  "@aiChatToolSummaryItemsCount": {
+    "description": "Header of a tool card whose list result is not songs and has no total.",
+    "placeholders": {
+      "n": {"type": "int", "format": "decimalPattern"}
+    }
+  },
   "aiChatToolSearchLibrary": "Tìm trong thư viện",
   "@aiChatToolSearchLibrary": {
     "description": "Name of the search_library tool on a tool card."
@@ -1282,6 +1328,7 @@
   },
   "aiChatErrCutOffTitle": "Lượt trả lời bị ngắt khi đóng Kanaru",
   "aiChatErrCutOffBody": "Phần đã nhận vẫn ở trên. Kanaru không tự gửi lại khi mở; bấm Thử lại để AI làm tiếp.",
+  "aiChatErrCutOffBodyEmpty": "Kanaru chưa nhận được chữ nào của câu trả lời trước khi đóng. Kanaru không tự gửi lại khi mở; bấm Thử lại để AI trả lời.",
   "aiChatActionOpenPlugin": "Mở plugin",
   "@aiChatActionOpenPlugin": {
     "description": "Button of the broken-plugin error card."

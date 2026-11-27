@@ -33,27 +33,46 @@ class ChatSurface extends ConsumerStatefulWidget {
 }
 
 class _ChatSurfaceState extends ConsumerState<ChatSurface> {
+  late final ChatViewNotifier _view;
+
   @override
   void initState() {
     super.initState();
+    _view = ref.read(chatViewProvider.notifier);
     // After the first frame: opening a conversation changes providers.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       unawaited(ref.read(chatViewProvider.notifier).ensureConversation());
     });
-    // Another conversation (new, deleted, opened from the history): a rename
-    // of the old one ends, and so do the note of a refused send and the scroll
+    // Another conversation (new, deleted, opened from the history): the note of a refused send and the scroll
     // place, which described the old one.
     ref.listenManual(chatSessionProvider.select((s) => s.conversationId), (
       previous,
       next,
     ) {
       if (previous != null && previous != next) {
-        ref.read(chatViewProvider.notifier).cancelRename();
         ref.read(composerSendNoticeProvider.notifier).clear();
         ref.read(chatScrollAnchorProvider.notifier).set(null);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    // The panel or page went away (closed, swapped to the queue, handed over
+    // to the other shell): a half-typed rename does not wait for the next
+    // time the chat opens. Deferred, a provider cannot change while the tree
+    // is being torn down; a container already disposed has nothing to reset.
+    final view = _view;
+    scheduleMicrotask(() {
+      try {
+        view.cancelRename();
+      } on Exception {
+        // The container is gone with the app or the test: Riverpod throws
+        // its `UnmountedRefException` (an `Exception`, not exported).
+      }
+    });
+    super.dispose();
   }
 
   @override

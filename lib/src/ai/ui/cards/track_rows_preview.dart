@@ -13,6 +13,8 @@ import '../../../media/domain/track_id.dart';
 import '../../../media/domain/track_info.dart';
 import '../../../playback/ui/track_cover.dart';
 import '../../domain/conversation/track_ref_snapshot.dart';
+import '../chat_row_extent.dart';
+import '../markdown/chat_markdown_model.dart' show chatListMaxRows;
 
 final _log = Logger('ai.track_rows_preview');
 
@@ -31,11 +33,21 @@ double _buttonHeight(BuildContext context) =>
 
 /// The songs of a card as compact rows (cover 40, title, artist): the whole
 /// list up to six songs, else five and "+N bài" that opens the rest. Rows
-/// only show; nothing in them is tappable.
+/// only show; nothing in them is tappable. Once every song shows, a list of
+/// more than eight rows sits in a box eight rows tall with its own scroll
+/// (rows built as they come into view).
 class TrackRowsPreview extends ConsumerStatefulWidget {
-  const TrackRowsPreview({super.key, required this.tracks, this.indent = true});
+  const TrackRowsPreview({
+    super.key,
+    required this.tracks,
+    this.indent = true,
+    this.showAll = false,
+  });
 
   final List<TrackRefSnapshot> tracks;
+
+  /// Show every song at once, without the "+N bài" button (a result list).
+  final bool showAll;
 
   /// Line the list up with the card's text on the desktop shell.
   final bool indent;
@@ -56,9 +68,10 @@ class _TrackRowsPreviewState extends ConsumerState<TrackRowsPreview> {
   /// that failed leaves its ids unknown and is tried again on the next load.
   final Set<int> _read = {};
 
-  int get _shownCount => widget.tracks.length > _showAllUpTo && !_all
-      ? _shortRows
-      : widget.tracks.length;
+  bool get _whole =>
+      widget.showAll || _all || widget.tracks.length <= _showAllUpTo;
+
+  int get _shownCount => _whole ? widget.tracks.length : _shortRows;
 
   @override
   void initState() {
@@ -72,28 +85,35 @@ class _TrackRowsPreviewState extends ConsumerState<TrackRowsPreview> {
     _load();
   }
 
+  /// Songs read per query when a long list shows whole.
+  static const int _batch = 200;
+
   Future<void> _load() async {
     final ids = [
       for (final t in widget.tracks.take(_shownCount))
-        if (_asked.add(t.trackId)) TrackId(t.trackId),
+        // A row without a song (a gone queue entry) has no id to read.
+        if (t.trackId > 0 && _asked.add(t.trackId)) TrackId(t.trackId),
     ];
     if (ids.isEmpty) return;
     // Captured before the await: the card may be gone when it returns.
     final loader = ref.read(trackRowLoaderProvider);
-    try {
-      final rows = await loader(ids);
-      if (!mounted) return;
-      setState(() {
-        for (final r in rows) {
-          _infos[r.id.value] = r;
-        }
-        _read.addAll(ids.map((i) => i.value));
-      });
-    } on Object catch (e, s) {
-      // Rows keep the text the engine stored; only covers are missing. The
-      // ids stay unknown (not "gone") and are asked again on the next load.
-      _log.warning('reading the card songs failed: ${e.runtimeType}', e, s);
-      _asked.removeAll(ids.map((i) => i.value));
+    for (var i = 0; i < ids.length; i += _batch) {
+      final chunk = ids.sublist(i, math.min(i + _batch, ids.length));
+      try {
+        final rows = await loader(chunk);
+        if (!mounted) return;
+        setState(() {
+          for (final r in rows) {
+            _infos[r.id.value] = r;
+          }
+          _read.addAll(chunk.map((i) => i.value));
+        });
+      } on Object catch (e, s) {
+        // Rows keep the text the engine stored; only covers are missing. The
+        // ids stay unknown (not "gone") and are asked again on the next load.
+        _log.warning('reading the card songs failed: ${e.runtimeType}', e, s);
+        _asked.removeAll(chunk.map((i) => i.value));
+      }
     }
   }
 
@@ -114,14 +134,21 @@ class _TrackRowsPreviewState extends ConsumerState<TrackRowsPreview> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            for (var i = 0; i < shown; i++) ...[
-              if (i > 0) const SizedBox(height: KSpace.x1 / 2),
-              _SongLine(
+            KCappedList(
+              itemCount: shown,
+              maxVisible: chatListMaxRows,
+              gap: chatListGap,
+              rowExtent: chatSongRowExtent(
+                context,
+                cover: KIconSize.xl,
+                vertical: KSpace.x1,
+              ),
+              itemBuilder: (context, i) => _SongLine(
                 track: tracks[i],
                 info: _infos[tracks[i].trackId],
                 loaded: _read.contains(tracks[i].trackId),
               ),
-            ],
+            ),
             if (rest > 0)
               Align(
                 alignment: AlignmentDirectional.centerStart,
