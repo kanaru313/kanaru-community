@@ -321,6 +321,8 @@ A plugin of type `streaming` declares `search` and `stream`, and may declare `au
 
 **`autocomplete`.** Input: `{ query }`. Output: a JSON array of strings (an object such as `{ suggestions: [...] }` is invalid). Each is cleaned, 1-200 code points; non-strings, empty entries and repeats are skipped; the first 10 are kept.
 
+Real outputs of these scripts (Audius, Jamendo, YouTube, recorded live; the README there lists two known Jamendo deviations) are in `test/online/fixtures/`.
+
 **Errors.** The app reads `Response.error` kinds for streaming plugins like this: `unavailable` = the item is gone (removed or geo-blocked), `unsupported` = content the plugin cannot serve (a livestream), `auth` on `stream` = this item needs an account or an age check (on `search` it is a source problem the user fixes), `network` = the plugin saw the network fail, `rateLimited` / `quota` = wait and retry. A failure the runtime saw inside a run (a failed `fetch`, a 429) that the script caught still counts when the answer comes back empty: an empty page with such a failure is shown as that failure, never as "no results". A page with at least one card is shown as it is.
 
 **Time.** `autocomplete` is cut after 5 s, `search` and `stream` after 20 s. One script of a plugin runs at a time (a `stream` goes ahead of waiting searches); `autocomplete` is the exception: it runs beside them, starts with an empty `localStorage` and saves nothing, and a newer call cancels the older one. The input of these scripts is never written to the run log.
