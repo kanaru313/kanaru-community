@@ -79,8 +79,9 @@ class KChip extends StatelessWidget {
 
   /// A small insertable code token (a prompt variable such as `{title}`):
   /// outlined (1 dp `outlineVariant`, no fill), radius 8, 28 dp visible
-  /// height, 10 dp side padding, label in the mono font at 12 sp. On touch
-  /// shells the tap area is padded to 48 dp; the visible shape stays 28.
+  /// height, 10 dp side padding, label in the mono font at 12 sp. The tap area
+  /// is the visible chip itself (28 dp), the same on both shells, never padded
+  /// to 48 dp.
   const KChip.token({
     super.key,
     required this.label,
@@ -201,7 +202,6 @@ class KChip extends StatelessWidget {
   }
 
   Widget _buildToken(BuildContext context, ColorScheme scheme) {
-    final touch = FormFactor.of(context) == FormFactor.mobile;
     final fg = scheme.onSurfaceVariant;
     final pill = Material(
       type: MaterialType.transparency,
@@ -237,7 +237,6 @@ class KChip extends StatelessWidget {
         ),
       ),
     );
-    final target = touch ? KLayout.minTarget : _tokenHeight;
     return Semantics(
       button: true,
       enabled: enabled,
@@ -247,10 +246,7 @@ class KChip extends StatelessWidget {
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: enabled ? onTap : null,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: target),
-            child: Center(widthFactor: 1, heightFactor: 1, child: pill),
-          ),
+          child: pill,
         ),
       ),
     );

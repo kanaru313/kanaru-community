@@ -112,7 +112,7 @@ class PromptBodyField extends StatelessWidget {
             label: l10n.aiSetEdVars,
             child: Wrap(
               spacing: 6,
-              runSpacing: KSpace.x1,
+              runSpacing: 6,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Row(
