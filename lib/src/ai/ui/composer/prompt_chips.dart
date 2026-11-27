@@ -53,6 +53,7 @@ class PromptChips extends ConsumerWidget {
       return KChip(
         label: Text(prompt.label),
         dense: true,
+        outlined: true,
         enabled: enabled && lack == null,
         semanticLabel: why == null ? null : '${prompt.label}. $why',
         onTap: () => usePrompt(ref, prompt.body),

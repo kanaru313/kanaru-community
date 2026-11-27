@@ -97,6 +97,69 @@ void main() {
     semantics.dispose();
   });
 
+  testWidgets('tag with icon shows it and enabled false is outlined', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(
+        const Column(
+          children: [
+            KChip.tag(label: Text('Ảnh'), icon: Icon(Icons.image)),
+            KChip.tag(
+              label: Text('Cụ'),
+              icon: Icon(Icons.build),
+              enabled: false,
+            ),
+          ],
+        ),
+      ),
+    );
+    expect(find.byIcon(Icons.image), findsOneWidget);
+    expect(tester.getSize(find.widgetWithText(KChip, 'Cụ')).height, 20);
+    DecoratedBox box(String l) => tester.widget<DecoratedBox>(
+      find
+          .descendant(
+            of: find.widgetWithText(KChip, l),
+            matching: find.byType(DecoratedBox),
+          )
+          .first,
+    );
+    expect((box('Ảnh').decoration as ShapeDecoration).color, isNotNull);
+    expect((box('Cụ').decoration as ShapeDecoration).color, isNull);
+    expect(
+      find.descendant(
+        of: find.widgetWithText(KChip, 'Cụ'),
+        matching: find.byType(Opacity),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('outlined chip has no fill and stays a button', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(
+      host(
+        const KChip(
+          label: Text('Gợi ý'),
+          dense: true,
+          outlined: true,
+          onTap: _noop,
+        ),
+      ),
+    );
+    final mat = tester.widget<Material>(
+      find
+          .descendant(of: find.byType(KChip), matching: find.byType(Material))
+          .first,
+    );
+    expect(mat.color, Colors.transparent);
+    expect(
+      tester.getSemantics(find.byType(KChip)),
+      isSemantics(isButton: true, isEnabled: true),
+    );
+    semantics.dispose();
+  });
+
   testWidgets('tag tone picks the fill', (tester) async {
     await tester.pumpWidget(
       host(
@@ -265,3 +328,5 @@ void main() {
     );
   }
 }
+
+void _noop() {}

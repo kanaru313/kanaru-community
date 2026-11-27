@@ -16,35 +16,48 @@ String contextSizeText(int tokens) {
   return '$tokens';
 }
 
-/// What a model can do as one line: image, tools, context, and "Tuỳ chỉnh" for
-/// a model the user added. A capability the model lacks is struck through.
+/// What a model can do as small tag chips: image, tools, context, and
+/// "Tuỳ chỉnh" for a model the user added. A capability the model lacks is a
+/// dimmed outlined chip (no strikethrough).
 Widget modelTags(AppLocalizations l10n, ChatModelOption model) {
   final caps = model.capabilities;
-  TextSpan tag(String label, bool on) => TextSpan(
-    text: label,
-    style: on ? null : const TextStyle(decoration: TextDecoration.lineThrough),
-  );
-  const sep = TextSpan(text: ' · ');
-  return Text.rich(
-    TextSpan(
-      children: [
-        tag(l10n.aiChatCapVision, caps.vision),
-        sep,
-        tag(l10n.aiChatCapTools, caps.tools),
-        sep,
-        TextSpan(text: contextSizeText(caps.context)),
-        if (model.isCustom) TextSpan(text: ' · ${l10n.aiChatModelCustom}'),
-      ],
+  Widget cap(String label, IconData icon, bool on) => KChip.tag(
+    // A missing capability is said as unavailable, not just dimmed.
+    label: Text(
+      label,
+      semanticsLabel: on ? null : l10n.aiChatCapUnavailable(label),
     ),
+    icon: Icon(icon),
+    tone: KTagTone.muted,
+    enabled: on,
+  );
+  return Wrap(
+    spacing: KSpace.x1,
+    runSpacing: KSpace.x1,
+    children: [
+      cap(l10n.aiChatCapVision, KIcons.image, caps.vision),
+      cap(l10n.aiChatCapTools, KIcons.advanced, caps.tools),
+      KChip.tag(
+        label: Text(contextSizeText(caps.context)),
+        tone: KTagTone.muted,
+      ),
+      if (model.isCustom)
+        KChip.tag(label: Text(l10n.aiChatModelCustom), outlined: true),
+    ],
   );
 }
 
-/// The same line as plain words, for screen readers.
+/// The same chips as plain words, for screen readers; a missing capability is
+/// said as unavailable.
 String modelTagsSpoken(AppLocalizations l10n, ChatModelOption model) {
   final caps = model.capabilities;
   return [
-    if (caps.vision) l10n.aiChatCapVision,
-    if (caps.tools) l10n.aiChatCapTools,
+    caps.vision
+        ? l10n.aiChatCapVision
+        : l10n.aiChatCapUnavailable(l10n.aiChatCapVision),
+    caps.tools
+        ? l10n.aiChatCapTools
+        : l10n.aiChatCapUnavailable(l10n.aiChatCapTools),
     contextSizeText(caps.context),
     if (model.isCustom) l10n.aiChatModelCustom,
   ].join(', ');

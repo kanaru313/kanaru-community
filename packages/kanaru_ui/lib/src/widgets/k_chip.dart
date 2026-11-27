@@ -29,8 +29,8 @@ class KChip extends StatelessWidget {
     this.semanticLabel,
     this.onRaised = false,
     this.tintWhenSelected = true,
+    this.outlined = false,
   }) : trailing = null,
-       outlined = false,
        tone = KTagTone.neutral,
        _interactive = true,
        _tag = false,
@@ -57,16 +57,18 @@ class KChip extends StatelessWidget {
   /// A small label that only shows a value (the kind and the author on a
   /// plugin row): 20 dp tall, `labelSmall`, radius 6, label centred, no ink,
   /// never a button. Filled with `secondaryContainer`, or only outlined when
-  /// [outlined]; one line, a long label ends with an ellipsis. Put it in a
-  /// [KTagRow]. At 1.5x text it grows with the label.
+  /// [outlined]; one line, a long label ends with an ellipsis. An optional
+  /// [icon] sits before the label. `enabled: false` marks a value that does
+  /// not apply: outlined and dimmed (the caller says it in words for screen
+  /// readers). Put it in a [KTagRow]. At 1.5x text it grows with the label.
   const KChip.tag({
     super.key,
     required this.label,
     this.outlined = false,
     this.tone = KTagTone.neutral,
-  }) : icon = null,
-       selected = false,
-       enabled = true,
+    this.icon,
+    this.enabled = true,
+  }) : selected = false,
        onTap = null,
        dense = true,
        semanticLabel = null,
@@ -128,7 +130,7 @@ class KChip extends StatelessWidget {
   /// Widget after the label of a [KChip.static] (its own action).
   final Widget? trailing;
 
-  /// Outline instead of fill ([KChip.tag] only).
+  /// Outline instead of fill (a [KChip] that is not selected, and [KChip.tag]).
   final bool outlined;
 
   /// What the fill says ([KChip.tag] only).
@@ -179,13 +181,22 @@ class KChip extends StatelessWidget {
         ),
       ),
     );
+    final radius = dense && touch ? KRadius.sm : KRadius.full;
+    final ringed = outlined && !tinted;
     final pill = Material(
-      color: tinted
+      color: ringed
+          ? Colors.transparent
+          : tinted
           ? scheme.secondaryContainer
           : onRaised
           ? scheme.surfaceContainerHighest
           : scheme.surfaceContainerHigh,
-      shape: KShape.of(dense && touch ? KRadius.sm : KRadius.full),
+      shape: ringed
+          ? RoundedRectangleBorder(
+              borderRadius: radius,
+              side: BorderSide(color: scheme.outlineVariant),
+            )
+          : KShape.of(radius),
       clipBehavior: Clip.antiAlias,
       child: _interactive
           ? InkWell(onTap: enabled ? onTap : null, child: content)
@@ -272,14 +283,15 @@ class KChip extends StatelessWidget {
       ),
       KTagTone.problem => (scheme.errorContainer, scheme.onErrorContainer),
     };
-    final fg = outlined ? scheme.onSurfaceVariant : on;
+    final flat = outlined || !enabled;
+    final fg = flat ? scheme.onSurfaceVariant : on;
     final large = KTagRow.isLarge(context);
-    return DecoratedBox(
+    final tag = DecoratedBox(
       decoration: ShapeDecoration(
-        color: outlined ? null : fill,
+        color: flat ? null : fill,
         shape: RoundedRectangleBorder(
           borderRadius: _tagRadius,
-          side: outlined
+          side: flat
               ? BorderSide(color: scheme.outlineVariant)
               : BorderSide.none,
         ),
@@ -309,15 +321,29 @@ class KChip extends StatelessWidget {
                 maxLines: 1,
                 softWrap: false,
                 overflow: TextOverflow.ellipsis,
-                child: label,
+                child: icon == null
+                    ? label
+                    : Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconTheme.merge(
+                            data: IconThemeData(color: fg, size: _tagIconSize),
+                            child: icon!,
+                          ),
+                          const KGap(KSpace.x1),
+                          Flexible(child: label),
+                        ],
+                      ),
               ),
             ),
           ),
         ),
       ),
     );
+    return enabled ? tag : Opacity(opacity: 0.6, child: tag);
   }
 
+  static const double _tagIconSize = 12;
   static const double _tagHeight = 20;
   static const double _tagMaxWidth = 154;
   static const BorderRadius _tagRadius = BorderRadius.all(Radius.circular(6));

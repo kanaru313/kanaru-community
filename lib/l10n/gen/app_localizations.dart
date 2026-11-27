@@ -12095,6 +12095,12 @@ abstract class AppLocalizations {
   /// **'Tools'**
   String get aiChatCapTools;
 
+  /// Spoken form of a capability the model lacks.
+  ///
+  /// In en, this message translates to:
+  /// **'{cap}: unavailable'**
+  String aiChatCapUnavailable(String cap);
+
   /// Title of the plugin picker in the composer.
   ///
   /// In en, this message translates to:

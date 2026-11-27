@@ -7549,6 +7549,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get aiChatCapTools => 'Công cụ';
 
   @override
+  String aiChatCapUnavailable(String cap) {
+    return '$cap: không dùng được';
+  }
+
+  @override
   String get aiChatPluginPickerTitle => 'Dịch vụ AI';
 
   @override

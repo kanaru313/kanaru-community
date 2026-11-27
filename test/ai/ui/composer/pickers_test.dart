@@ -7,6 +7,8 @@ import 'package:kanaru/src/ai/ui/auto_mode_confirm.dart';
 import 'package:kanaru/src/platform/state/settings_providers.dart';
 import 'package:material_ui/material_ui.dart';
 
+import 'package:kanaru_ui/kanaru_ui.dart' show KChip, SelectionRow;
+
 import '../../../support/icon_button_finders.dart';
 import '../../../support/kanaru_ui_finders.dart';
 import '../../../support/memory_settings_store.dart';
@@ -166,8 +168,23 @@ void main() {
       expect(find.text('Model 2'), findsOneWidget);
       expect(bySemanticsSelected('Model 1'), findsOneWidget);
       // Tags: images, tools, context; a custom model says so.
-      expect(find.textContaining('Images · Tools · 200K'), findsOneWidget);
-      expect(find.textContaining('32K · Custom'), findsOneWidget);
+      expect(find.widgetWithText(KChip, 'Images'), findsNWidgets(2));
+      expect(find.widgetWithText(KChip, 'Tools'), findsNWidgets(2));
+      expect(find.widgetWithText(KChip, '200K'), findsOneWidget);
+      expect(find.widgetWithText(KChip, '32K'), findsOneWidget);
+      expect(find.widgetWithText(KChip, 'Custom'), findsOneWidget);
+      // The model without images / tools shows those chips dimmed, said aloud.
+      expect(
+        tester
+            .getSemantics(
+              find.ancestor(
+                of: find.text('Model 2'),
+                matching: find.byType(SelectionRow),
+              ),
+            )
+            .label,
+        'Model 2\nImages: unavailable\nTools: unavailable\n32K\nCustom',
+      );
 
       await tester.tap(find.text('Model 2'));
       await tester.pumpAndSettle();

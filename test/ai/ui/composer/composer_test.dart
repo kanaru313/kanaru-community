@@ -7,6 +7,7 @@ import 'package:kanaru/src/ai/domain/conversation/parts.dart';
 import 'package:kanaru/src/ai/domain/loop/loop_state.dart';
 import 'package:kanaru/src/ai/domain/output/chat_readiness.dart';
 import 'package:kanaru/src/ai/domain/settings/prompt_template.dart';
+import 'package:kanaru_ui/kanaru_ui.dart' show KChip;
 import 'package:kanaru/src/ai/domain/settings/tool_groups.dart';
 import 'package:kanaru/src/ai/domain/variables/template_analysis.dart';
 import 'package:kanaru/src/ai/domain/variables/variable_catalog.dart';
@@ -198,6 +199,12 @@ void main() {
           .read(fakeComposerSettingsProvider.notifier)
           .set(prompts());
       await tester.pump();
+
+      // Small prompt chips are outlined, like the empty-chat prompt buttons.
+      expect(
+        tester.widget<KChip>(find.widgetWithText(KChip, 'Say hi')).outlined,
+        isTrue,
+      );
 
       // An empty field sends at once.
       await tester.tap(find.text('Say hi'));

@@ -8084,6 +8084,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aiChatCapTools => 'Tools';
 
   @override
+  String aiChatCapUnavailable(String cap) {
+    return '$cap: unavailable';
+  }
+
+  @override
   String get aiChatPluginPickerTitle => 'AI service';
 
   @override
